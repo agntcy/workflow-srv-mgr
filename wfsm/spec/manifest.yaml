@@ -1,0 +1,195 @@
+openapi: 3.1.1
+info:
+  title: Agent Manifest Definition
+  version: '0.1'
+paths: {}
+components:
+  schemas:
+    AgentManifest:
+      title: Agent Manifest
+      description: >-
+        Describe all the ACP specs of an agent, including schemas and protocol
+        features.
+      type: object
+      properties:
+        metadata:
+          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentMetadata'
+        specs:
+          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentACPSpec'
+        deployment:
+          $ref: '#/components/schemas/AgentDeployment'
+      required:
+        - metadata
+        - specs
+    AgentDeployment:
+      title: Agent Workflow Server Deployment Manifest
+      description: >-
+        Describe all the details needed to deploy an agent by the Agent Workflow Server
+      type: object
+      properties:
+        deployment_options:
+          title: Deployment Options
+          description: >-
+            List of possible methods to instantiate or consume the agent.  Any
+            of the available option could be used.
+            
+            Every option could be associated with a unique name within this
+            agent. If present, when another manifest refers to this manifest, it
+            can also select the preferred deployment option.
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/SourceCodeDeployment'
+              - $ref: '#/components/schemas/RemoteServiceDeployment'
+              - $ref: '#/components/schemas/DockerDeployment'
+            discriminator:
+              propertyName: type
+              mapping:
+                source_code: '#/components/schemas/SourceCodeDeployment'
+                remote_service: '#/components/schemas/RemoteServiceDeployment'
+                docker: '#/components/schemas/DockerDeployment'
+        dependencies:
+          title: Agent Dependencies
+          description: List of all other agents this agent depends on
+          type: array
+          items:
+            $ref: './acp-spec/openapi.yaml#/components/schemas/AgentRef'
+      required:
+        - deployment_options
+        - dependencies
+
+    SourceCodeDeployment:
+      title: Source Code Deployment
+      description: >-
+        Describes the source code where the agent is available. It specifies
+        also the type of deployer that it supports.
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - source_code
+        name:
+          type: string
+          title: Deployment Option Name
+          description: >-
+            Name this deployment option is referred to within this agent. This
+            is needed to indicate which one is preferred when this manifest is
+            referred. Can be omitted, in such case selection is not possible.
+        url:
+          title: Source Code Locator
+          description: >-
+            Location of the source code. E.g. path to code root, github repo url
+            etc.
+          type: string
+          format: uri
+        framework_config:
+          oneOf:
+            - $ref: '#/components/schemas/LangGraphConfig'
+            - $ref: '#/components/schemas/LlamaIndexConfig'
+          discriminator:
+            propertyName: framework_type
+            mapping:
+              langgraph: '#/components/schemas/LangGraphConfig'
+              llamaindex: '#/components/schemas/LlamaIndexConfig'
+      required:
+        - type
+        - url
+        - framework_config
+    LangGraphConfig:
+      title: Langgraph Config
+      description: Describes langgraph based agent deployment config
+      type: object
+      properties:
+        framework_type:
+          type: string
+          enum:
+            - langgraph
+        graph:
+          type: string
+      required:
+        - framework_type
+        - graph
+    LlamaIndexConfig:
+      title: Llamaindex Config
+      description: Describes llamaindex based agent deployment config
+      type: object
+      properties:
+        framework_type:
+          type: string
+          enum:
+            - llamaindex
+        path:
+          type: string
+      required:
+        - framework_type
+        - path
+    RemoteServiceDeployment:
+      title: Remote Service
+      description: Describes the network endpoint where the agent is available
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - remote_service
+        protocol:
+          $ref: '#/components/schemas/AgentConnectProtocol'
+      required:
+        - type
+        - protocol
+    DockerDeployment:
+      title: Docker Deployment
+      description: Describes the docker deployment for this agent
+      properties:
+        type:
+          type: string
+          enum:
+            - docker
+        image:
+          title: Agent Docker image
+          description: Container image for the agent
+          type: string
+          format: uri
+        protocol:
+          $ref: '#/components/schemas/AgentConnectProtocol'
+      required:
+        - type
+        - image
+        - protocol
+    AgentConnectProtocol:
+      title: ACP Details
+      description: ACP endpoint description
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - ACP
+        url:
+          title: ACP URL
+          description: URL pointing to the ACP endpoint root.
+          type: string
+          format: uri
+        agent_id:
+          title: Agent identifier
+          type: string
+          description: >-
+            Agent identifier in ACP server. If missing, the first returned agent
+            with matching name and version should be used.
+          format: uuid
+        authentication:
+          $ref: '#/components/schemas/SecurityScheme'
+      required:
+        - type
+        - url
+    SecurityScheme:
+      type: object
+      description: >-
+        This object contains an instance of an OpenAPI schema object, formatted
+        as per the OpenAPI specs:
+        https://spec.openapis.org/oas/v3.1.1.html#security-scheme-object-0
+      examples:
+        - type: apiKey
+          name: api-key
+          in: header
