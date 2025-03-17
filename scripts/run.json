@@ -1,0 +1,14 @@
+{
+    "agent_id": "1",
+    "thread_id": "1",
+    "input": {
+        "messages": [
+            {
+                "role": "user",
+                "content": "Write email about product Acme. Features: Acme is the best agentic software in the market, easy to use. Audience: IT people. Offer: 2 months free on annual subscription. Tone must be friendly."
+            }
+        ]
+    },
+    "metadata": {},
+    "config": {}
+}

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - "main"
+  workflow_dispatch:
+
+# Grant read access for GITHUB_TOKEN on all jobs
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+  packages: write # needed to push docker image to gar or ecr
+
+jobs:
+  build:
+    name: Build project
+    runs-on: ubuntu-latest
+
+    env:
+      GO_VERSION: 1.23.4
+      GOFLAGS: -mod=readonly
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go module dependencies
+        id: cache-go-module-dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-cache-${{ runner.os }}-${{ env.GO_VERSION }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            go-mod-cache-${{ runner.os }}-${{ env.GO_VERSION }}
+            go-mod-cache-${{ runner.os }}
+            go-mod-cache
+
+      - name: Build
+        run: |
+          cd wfsm
+          make build
+
+      - name: Run tests
+        run: |
+          cd wfsm
+          make test
