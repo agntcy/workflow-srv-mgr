@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "name": "agentA",
+    "version": "1.0.0",
+    "description": "Agent A description"
+  },
+  "specs": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "inputA": {
+          "type": "string"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "outputA": {
+          "type": "string"
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "configA": {
+          "type": "boolean"
+        }
+      }
+    },
+    "capabilities": {
+      "threads": false,
+      "interrupts": false,
+      "callbacks": false
+    },
+    "interrupts": []
+  },
+  "deployment": {
+    "dependencies": [
+      {
+        "name": "mailcomposer_deployed_1",
+        "ref": {
+          "name": "agentB",
+          "version": "1.0.0",
+          "url": "agentB_manifest.json"
+        },
+        "deployment_option": "src",
+        "env_var_values": {
+          "values": {
+            "ENV_VAR_B": "some value"
+          },
+          "dependencies": []
+        }
+      }
+    ],
+    "deployment_options": [
+      {
+        "type": "source_code",
+        "name": "src",
+        "url": "https://github.com/example/agentA",
+        "framework_config": {
+          "framework_type": "langgraph",
+          "graph": "agentA.graph"
+        }
+      }
+    ],
+    "env_vars": [
+      {
+        "desc": "Environment variable for agentA",
+        "name": "MAILCOMPOSER_DEPLOYENT_1_API_KEY",
+        "required": true,
+        "defaultValue": "valueA",
+        "type": "apiKey"
+      },
+      {
+        "desc": "Open AI API Key",
+        "name": "OPENAI_API_KEY",
+        "required": true
+      }
+    ]
+  }
+}

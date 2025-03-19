@@ -17,7 +17,7 @@ import (
 // checks if the AgentReference type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &AgentReference{}
 
-// AgentReference Reference to an Agent Record in the Agent Directory, it includes name, version and a locator.
+// AgentReference Reference to the agent in the agent directory. It includes the version and the locator.
 type AgentReference struct {
 	// Name of the agent that identifies the agent in its record
 	Name string `json:"name"`
