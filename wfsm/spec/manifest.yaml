@@ -48,16 +48,86 @@ components:
                 source_code: '#/components/schemas/SourceCodeDeployment'
                 remote_service: '#/components/schemas/RemoteServiceDeployment'
                 docker: '#/components/schemas/DockerDeployment'
+        env_vars:
+          title: Environment Variables
+          description: >-
+            List of possible environment variables that the agent may require to be set
+            before it can be used.
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvVar'                 
         dependencies:
           title: Agent Dependencies
           description: List of all other agents this agent depends on
           type: array
           items:
-            $ref: './acp-spec/openapi.yaml#/components/schemas/AgentRef'
+            $ref: '#/components/schemas/AgentDependency'
       required:
         - deployment_options
-        - dependencies
-
+    AgentDependency:
+      title: Agent Reference
+      description: >-
+        Reference to an Agent Record in the Agent Directory, it includes name,
+        version and a locator.
+      type: object
+      properties:
+        name:
+          description: Name of the agent dependency
+          title: Name
+          type: string
+        ref:
+          description: >-
+            Reference to the agent in the agent directory. It includes the
+            version and the locator.
+          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentRef'
+        deployment_option:
+          description: >-
+            Selected deployment option for this agent. 
+          title: Deployment Option
+          type: string
+        env_var_values:
+          title: Environment Variable Values
+          description: Environment variable values to be set for this agent.
+          $ref: '#/components/schemas/EnvVarValues'
+      required:
+        - name
+        - ref
+    EnvVarValues:
+      title: Environment Variable Values
+      description: >-
+        Describes the values of the environment variables for a specific agent and it's dependencies
+      type: object
+      properties:
+        values: 
+          type: object
+          additionalProperties:
+            type: string
+        dependencies:
+          type: array
+          items:
+            type: object
+            properties:
+              name: 
+                type: string 
+                description: name of the agent dependency these environment variables are for
+              values:
+                $ref: '#/components/schemas/EnvVarValues'            
+    EnvVar:
+      title: Environment Variable
+      description: Describes an environment variable
+      type: object
+      properties:
+        desc:
+          type: string
+        name:
+          type: string
+        required:
+          type: boolean
+        defaultValue:
+          type: string
+      required:
+        - desc
+        - name
     SourceCodeDeployment:
       title: Source Code Deployment
       description: >-
@@ -79,8 +149,13 @@ components:
         url:
           title: Source Code Locator
           description: >-
-            Location of the source code. E.g. path to code root, github repo url
-            etc.
+            Location of the source code.             
+            Can be a local path to a directory or a tar/gz/zip file containing sources, 
+            e.g., /path/to/your/local/folder or file:///path/to/your/local/folder.
+            Can point to a GitHub repository, e.g., github.com/cisco-eti/agent-connect-protocol.git//examples/agents/mailcomposer 
+            or https://github.com/cisco-eti/agent-connect-protocol.git//examples/agents/mailcomposer, 
+            which indicates that source files can be found in the /examples/agents/mailcomposer subfolder in the repository. 
+            You can also specify a branch, e.g., github.com/cisco-eti/agent-connect-protocol.git?ref=branch_name.
           type: string
           format: uri
         framework_config:

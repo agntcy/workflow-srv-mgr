@@ -22,7 +22,7 @@ type SourceCodeDeployment struct {
 	Type string `json:"type"`
 	// Name this deployment option is referred to within this agent. This is needed to indicate which one is preferred when this manifest is referred. Can be omitted, in such case selection is not possible.
 	Name *string `json:"name,omitempty"`
-	// Location of the source code. E.g. path to code root, github repo url etc.
+	// Location of the source code.              Can be a local path to a directory or a tar/gz/zip file containing sources,  e.g., /path/to/your/local/folder or file:///path/to/your/local/folder. Can point to a GitHub repository, e.g., github.com/cisco-eti/agent-connect-protocol.git//examples/agents/mailcomposer  or https://github.com/cisco-eti/agent-connect-protocol.git//examples/agents/mailcomposer,  which indicates that source files can be found in the /examples/agents/mailcomposer subfolder in the repository.  You can also specify a branch, e.g., github.com/cisco-eti/agent-connect-protocol.git?ref=branch_name.
 	Url             string                              `json:"url"`
 	FrameworkConfig SourceCodeDeploymentFrameworkConfig `json:"framework_config"`
 }
