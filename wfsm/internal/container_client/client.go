@@ -54,11 +54,12 @@ func CreateContainer(
 	return createResp.ID, nil
 }
 
+// if the container is running, return the public port or 0 otherwise
 func IsContainerRunning(
 	ctx context.Context,
 	client *dockerclient.Client,
 	image string,
-	containerName string) (string, error) {
+	containerName string) (int, error) {
 
 	log := zerolog.Ctx(ctx).With().Str("container_name", containerName).Logger()
 
@@ -70,24 +71,34 @@ func IsContainerRunning(
 		}),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to list containers: %w", err)
+		return 0, fmt.Errorf("failed to list containers: %w", err)
 	}
 
 	if len(cList) > 0 {
 		for _, c := range cList {
-			//if c.Image == image {
 			log.Debug().Msg("container_client found")
-			return c.ID, nil
-			//}
-
+			publicPort := getPublicPort(c.Ports)
+			return publicPort, nil
 		}
 
 		log.Info().Msg("container_client already running")
-		return "", nil
+		return 0, nil
 	}
 
 	log.Debug().Msg("container_client not found")
-	return "", nil
+	return 0, nil
+}
+
+func getPublicPort(ports []container.Port) int {
+	if len(ports) == 0 {
+		return 0
+	}
+	for _, port := range ports {
+		if port.IP == "0.0.0.0" && port.PublicPort != 0 {
+			return int(port.PublicPort)
+		}
+	}
+	return 0
 }
 
 func RemoveContainer(ctx context.Context, client *dockerclient.Client, containerID string) error {
