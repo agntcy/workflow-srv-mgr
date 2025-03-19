@@ -16,7 +16,7 @@ func main() {
 	err := workflowServerManager.Execute()
 
 	if err != nil {
-		// error code 1 is cross platform compatible.
+		// error code 1 is cross platforms compatible.
 		exitCode = 1
 	}
 

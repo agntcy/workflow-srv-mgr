@@ -19,7 +19,9 @@ var _ MappedNullable = &RemoteServiceDeployment{}
 
 // RemoteServiceDeployment Describes the network endpoint where the agent is available
 type RemoteServiceDeployment struct {
-	Type     string               `json:"type"`
+	Type string `json:"type"`
+	// Name this deployment option is referred to within this agent. This is needed to indicate which one is preferred when this manifest is referred. Can be omitted, in such case selection is not possible.            -
+	Name     *string              `json:"name,omitempty"`
 	Protocol AgentConnectProtocol `json:"protocol"`
 }
 
@@ -66,6 +68,38 @@ func (o *RemoteServiceDeployment) SetType(v string) {
 	o.Type = v
 }
 
+// GetName returns the Name field value if set, zero value otherwise.
+func (o *RemoteServiceDeployment) GetName() string {
+	if o == nil || IsNil(o.Name) {
+		var ret string
+		return ret
+	}
+	return *o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *RemoteServiceDeployment) GetNameOk() (*string, bool) {
+	if o == nil || IsNil(o.Name) {
+		return nil, false
+	}
+	return o.Name, true
+}
+
+// HasName returns a boolean if a field has been set.
+func (o *RemoteServiceDeployment) HasName() bool {
+	if o != nil && !IsNil(o.Name) {
+		return true
+	}
+
+	return false
+}
+
+// SetName gets a reference to the given string and assigns it to the Name field.
+func (o *RemoteServiceDeployment) SetName(v string) {
+	o.Name = &v
+}
+
 // GetProtocol returns the Protocol field value
 func (o *RemoteServiceDeployment) GetProtocol() AgentConnectProtocol {
 	if o == nil {
@@ -101,6 +135,9 @@ func (o RemoteServiceDeployment) MarshalJSON() ([]byte, error) {
 func (o RemoteServiceDeployment) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type"] = o.Type
+	if !IsNil(o.Name) {
+		toSerialize["name"] = o.Name
+	}
 	toSerialize["protocol"] = o.Protocol
 	return toSerialize, nil
 }
