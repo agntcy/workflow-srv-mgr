@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "name": "agentB",
+    "version": "1.0.0",
+    "description": "Agent B description"
+  },
+  "specs": {
+    "input": {
+      "type": "object",
+      "properties": {
+        "inputB": {
+          "type": "string"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "outputB": {
+          "type": "string"
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "configB": {
+          "type": "boolean"
+        }
+      }
+    },
+    "capabilities": {
+      "threads": false,
+      "interrupts": false,
+      "callbacks": false
+    },
+    "interrupts": []
+  },
+  "deployment": {
+    "dependencies": [],
+    "deployment_options": [
+      {
+        "type": "source_code",
+        "name": "src",
+        "url": "https://github.com/example/agentB",
+        "framework_config": {
+          "framework_type": "langgraph",
+          "graph": "agentB.graph"
+        }
+      }
+    ],
+    "env_vars": [
+      {
+        "desc": "Environment variable for agentB",
+        "name": "ENV_VAR_B",
+        "required": true,
+        "defaultValue": "valueB"
+      },
+      {
+        "desc": "Open AI API Key",
+        "name": "OPENAI_API_KEY",
+        "required": true
+      }
+    ]
+  }
+}

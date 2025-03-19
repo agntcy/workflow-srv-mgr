@@ -20,17 +20,17 @@ var _ MappedNullable = &AgentDeployment{}
 // AgentDeployment Describe all the details needed to deploy an agent by the Agent Workflow Server
 type AgentDeployment struct {
 	DeploymentOptions []AgentDeploymentDeploymentOptionsInner `json:"deployment_options"`
-	Dependencies      []AgentReference                        `json:"dependencies"`
+	EnvVars           []EnvVar                                `json:"env_vars,omitempty"`
+	Dependencies      []AgentDependency                       `json:"dependencies,omitempty"`
 }
 
 // NewAgentDeployment instantiates a new AgentDeployment object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAgentDeployment(deploymentOptions []AgentDeploymentDeploymentOptionsInner, dependencies []AgentReference) *AgentDeployment {
+func NewAgentDeployment(deploymentOptions []AgentDeploymentDeploymentOptionsInner) *AgentDeployment {
 	this := AgentDeployment{}
 	this.DeploymentOptions = deploymentOptions
-	this.Dependencies = dependencies
 	return &this
 }
 
@@ -66,27 +66,67 @@ func (o *AgentDeployment) SetDeploymentOptions(v []AgentDeploymentDeploymentOpti
 	o.DeploymentOptions = v
 }
 
-// GetDependencies returns the Dependencies field value
-func (o *AgentDeployment) GetDependencies() []AgentReference {
-	if o == nil {
-		var ret []AgentReference
+// GetEnvVars returns the EnvVars field value if set, zero value otherwise.
+func (o *AgentDeployment) GetEnvVars() []EnvVar {
+	if o == nil || IsNil(o.EnvVars) {
+		var ret []EnvVar
 		return ret
 	}
+	return o.EnvVars
+}
 
+// GetEnvVarsOk returns a tuple with the EnvVars field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AgentDeployment) GetEnvVarsOk() ([]EnvVar, bool) {
+	if o == nil || IsNil(o.EnvVars) {
+		return nil, false
+	}
+	return o.EnvVars, true
+}
+
+// HasEnvVars returns a boolean if a field has been set.
+func (o *AgentDeployment) HasEnvVars() bool {
+	if o != nil && !IsNil(o.EnvVars) {
+		return true
+	}
+
+	return false
+}
+
+// SetEnvVars gets a reference to the given []EnvVar and assigns it to the EnvVars field.
+func (o *AgentDeployment) SetEnvVars(v []EnvVar) {
+	o.EnvVars = v
+}
+
+// GetDependencies returns the Dependencies field value if set, zero value otherwise.
+func (o *AgentDeployment) GetDependencies() []AgentDependency {
+	if o == nil || IsNil(o.Dependencies) {
+		var ret []AgentDependency
+		return ret
+	}
 	return o.Dependencies
 }
 
-// GetDependenciesOk returns a tuple with the Dependencies field value
+// GetDependenciesOk returns a tuple with the Dependencies field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentDeployment) GetDependenciesOk() ([]AgentReference, bool) {
-	if o == nil {
+func (o *AgentDeployment) GetDependenciesOk() ([]AgentDependency, bool) {
+	if o == nil || IsNil(o.Dependencies) {
 		return nil, false
 	}
 	return o.Dependencies, true
 }
 
-// SetDependencies sets field value
-func (o *AgentDeployment) SetDependencies(v []AgentReference) {
+// HasDependencies returns a boolean if a field has been set.
+func (o *AgentDeployment) HasDependencies() bool {
+	if o != nil && !IsNil(o.Dependencies) {
+		return true
+	}
+
+	return false
+}
+
+// SetDependencies gets a reference to the given []AgentDependency and assigns it to the Dependencies field.
+func (o *AgentDeployment) SetDependencies(v []AgentDependency) {
 	o.Dependencies = v
 }
 
@@ -101,7 +141,12 @@ func (o AgentDeployment) MarshalJSON() ([]byte, error) {
 func (o AgentDeployment) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["deployment_options"] = o.DeploymentOptions
-	toSerialize["dependencies"] = o.Dependencies
+	if !IsNil(o.EnvVars) {
+		toSerialize["env_vars"] = o.EnvVars
+	}
+	if !IsNil(o.Dependencies) {
+		toSerialize["dependencies"] = o.Dependencies
+	}
 	return toSerialize, nil
 }
 
