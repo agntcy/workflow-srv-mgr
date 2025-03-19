@@ -20,6 +20,8 @@ var _ MappedNullable = &DockerDeployment{}
 // DockerDeployment Describes the docker deployment for this agent
 type DockerDeployment struct {
 	Type string `json:"type"`
+	// Name this deployment option is referred to within this agent. This is needed to indicate which one is preferred when this manifest is referred. Can be omitted, in such case selection is not possible.            -
+	Name *string `json:"name,omitempty"`
 	// Container image for the agent
 	Image    string               `json:"image"`
 	Protocol AgentConnectProtocol `json:"protocol"`
@@ -67,6 +69,38 @@ func (o *DockerDeployment) GetTypeOk() (*string, bool) {
 // SetType sets field value
 func (o *DockerDeployment) SetType(v string) {
 	o.Type = v
+}
+
+// GetName returns the Name field value if set, zero value otherwise.
+func (o *DockerDeployment) GetName() string {
+	if o == nil || IsNil(o.Name) {
+		var ret string
+		return ret
+	}
+	return *o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *DockerDeployment) GetNameOk() (*string, bool) {
+	if o == nil || IsNil(o.Name) {
+		return nil, false
+	}
+	return o.Name, true
+}
+
+// HasName returns a boolean if a field has been set.
+func (o *DockerDeployment) HasName() bool {
+	if o != nil && !IsNil(o.Name) {
+		return true
+	}
+
+	return false
+}
+
+// SetName gets a reference to the given string and assigns it to the Name field.
+func (o *DockerDeployment) SetName(v string) {
+	o.Name = &v
 }
 
 // GetImage returns the Image field value
@@ -128,6 +162,9 @@ func (o DockerDeployment) MarshalJSON() ([]byte, error) {
 func (o DockerDeployment) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["type"] = o.Type
+	if !IsNil(o.Name) {
+		toSerialize["name"] = o.Name
+	}
 	toSerialize["image"] = o.Image
 	toSerialize["protocol"] = o.Protocol
 	return toSerialize, nil
