@@ -1,0 +1,7 @@
+values:
+  ENV_VAR_A: valueA
+  OPENAI_API_KEY: key
+dependencies:
+  - name: agentB_deployment
+    values:
+      OPENAI_API_KEY: key
