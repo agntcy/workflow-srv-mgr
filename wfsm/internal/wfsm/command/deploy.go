@@ -2,13 +2,15 @@ package command
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"time"
 
-	"github.com/joho/godotenv"
+	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -74,50 +76,29 @@ func runDeploy(manifestPath string, envFilePath string, deleteBuildFolders bool)
 
 	ctx := logger.WithContext(context.Background())
 
-	manifestSvc := manifest.NewManifestService(manifestPath)
-	if err := manifestSvc.Validate(ctx); err != nil {
-		return errors.New(fmt.Sprintf("invalid manifest: %v", err))
-	}
-
-	manifest, err := manifestSvc.GetManifest(ctx)
-
+	envVarValues, err := getEnvVars(ctx, envFilePath)
 	if err != nil {
 		return err
 	}
-	deployment := manifest.Deployment
-	if deployment == nil {
-		return errors.New("invalid agent manifest: no deployment found in manifest")
-	}
-	if len(deployment.DeploymentOptions) == 0 {
-		return errors.New("invalid agent manifest: no deployment option found in manifest")
-	}
-	if len(deployment.DeploymentOptions) > 1 {
-		return errors.New("invalid agent manifest: to many deployment options found in manifest")
-	}
 
-	//TODO get dependencies from manifest and build them all then create a deployment spec with all the dependencies
-
-	builder := builder.GetAgentBuilder(deployment.DeploymentOptions[0], deleteBuildFolders)
-	envVars, err := godotenv.Read(envFilePath)
+	agsb := manifest.NewAgentSpecBuilder()
+	err = agsb.BuildAgentSpec(manifestPath, "", nil, envVarValues)
 	if err != nil {
-		return fmt.Errorf("failed to get envVars: %v", err)
+		return err
 	}
 
-	agentSpec := internal.AgentSpec{
-		DeploymentName:           manifest.Metadata.Ref.Name,
-		Manifest:                 manifest,
-		SelectedDeploymentOption: 0,
-		EnvVars:                  envVars,
-	}
-	agdbSpec, err := builder.Build(ctx, agentSpec)
-	if err != nil {
-		return fmt.Errorf("failed to build agent: %v", err)
+	agDeploymentSpecs := make(map[string]internal.AgentDeploymentBuildSpec, len(agsb.AgentSpecs))
+
+	for depName, agentSpec := range agsb.AgentSpecs {
+		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders)
+		agdbSpec, err := builder.Build(ctx, agentSpec)
+		if err != nil {
+			return fmt.Errorf("failed to build agent: %v", err)
+		}
+		agDeploymentSpecs[depName] = agdbSpec
 	}
 
-	agDeploymentSpec := internal.AgentDeploymentSpec{
-		AgentDeploymentBuildSpec: agdbSpec,
-		//TODO add dependencies
-	}
+	// run deployment of agent(s)
 
 	hostStorageFolder, err := getHostStorage()
 	if err != nil {
@@ -125,7 +106,7 @@ func runDeploy(manifestPath string, envFilePath string, deleteBuildFolders bool)
 	}
 	runner := docker.NewDockerComposeRunner(hostStorageFolder)
 
-	afs, err := runner.Deploy(ctx, agDeploymentSpec, false)
+	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, false)
 	if err != nil {
 		return fmt.Errorf("failed to deploy agent: %v", err)
 	}
@@ -152,4 +133,26 @@ func getHostStorage() (string, error) {
 		}
 	}
 	return hostStorageFolder, nil
+}
+
+func getEnvVars(ctx context.Context, envFilePath string) (manifests.EnvVarValues, error) {
+	file, err := os.Open(envFilePath)
+	if err != nil {
+		return manifests.EnvVarValues{}, errors.New("failed to open env file")
+	}
+	defer file.Close()
+
+	// Read the file into a byte slice
+	byteSlice, err := io.ReadAll(file)
+	if err != nil {
+		return manifests.EnvVarValues{}, errors.New("failed to read env file")
+	}
+
+	envVarValues := manifests.EnvVarValues{}
+
+	if err := json.Unmarshal(byteSlice, &envVarValues); err != nil {
+		return manifests.EnvVarValues{}, err
+	}
+
+	return envVarValues, nil
 }
