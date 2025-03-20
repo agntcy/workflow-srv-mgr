@@ -83,17 +83,22 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 
 	//platforms := strings.Split(util.CurrentArchToDockerPlatform(), "/")
 	//dockerPlatform := &imagespecv1.Platform{OS: platforms[0], Architecture: platforms[1]}
-
-	if r.hostStorageFolder != "" {
-		envVars["AGWS_STORAGE_FILE"] = path.Join("/opt/storage", fmt.Sprintf("agws_storage_%s.pkl", agentName))
+	agDeploymentFolder := path.Join(r.hostStorageFolder, deploymentSpec.DeploymentName)
+	// make sure the folder exists
+	if _, err := os.Stat(agDeploymentFolder); os.IsNotExist(err) {
+		if err := os.Mkdir(agDeploymentFolder, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create deployment folder for agent: %v", err)
+		}
 	}
+
+	envVars["AGWS_STORAGE_FILE"] = path.Join("/opt/storage", fmt.Sprintf("agws_storage.pkl"))
 
 	manifestFileBuf, err := manifests.NewNullableAgentManifest(&deploymentSpec.Manifest).MarshalJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal agent manifest: %v", err)
 	}
 
-	err = os.WriteFile(path.Join(r.hostStorageFolder, "manifest.yaml"), manifestFileBuf, util.OwnerCanReadWrite)
+	err = os.WriteFile(path.Join(agDeploymentFolder, "manifest.yaml"), manifestFileBuf, util.OwnerCanReadWrite)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write manifest to temporary workspace dir: %v", err)
 	}
@@ -121,7 +126,7 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 		Volumes: []types.ServiceVolumeConfig{
 			{
 				Type:   "bind",
-				Source: r.hostStorageFolder,
+				Source: agDeploymentFolder,
 				Target: "/opt/storage",
 			},
 		},
