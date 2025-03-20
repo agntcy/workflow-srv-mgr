@@ -148,13 +148,17 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 		return nil, err
 	}
 
-	list, err := backend.Ps(ctx, project.Name, api.PsOptions{All: true})
-	if err != nil {
-		return nil, err
-	}
-	for _, c := range list {
-		log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on port: %d status: %s", c.Name, port, c.Status))
-	}
+	//list, err := backend.Ps(ctx, project.Name, api.PsOptions{All: true})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//for _, c := range list {
+	//	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on port: %d status: %s", c.Name, port, c.Status))
+	//}
+
+	log.Info().Msg("---------------------------------------------------------------------")
+	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", deploymentSpec.ServiceName, port))
+	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
 	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
@@ -166,8 +170,6 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 	if err != nil {
 		return nil, err
 	}
-
-	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on port: %d", deploymentSpec.ServiceName, port))
 
 	return project.MarshalYAML()
 }
