@@ -24,6 +24,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const ManifestCheckSum = "org.agntcy.wfsm.manifest"
 const SERVER_PORT = "8000/tcp"
 const API_HOST = "0.0.0.0"
 const API_PORT = "8000"
@@ -119,6 +120,7 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 			api.ProjectLabel: project.Name,
 			api.OneoffLabel:  "False",
 			api.ServiceLabel: deploymentSpec.ServiceName,
+			ManifestCheckSum: util.CalculateCheckSum(manifestFileBuf),
 		},
 		//ContainerName: serviceName,
 		Image:       deploymentSpec.Image,
