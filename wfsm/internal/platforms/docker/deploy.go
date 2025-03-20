@@ -26,9 +26,9 @@ import (
 )
 
 const ManifestCheckSum = "org.agntcy.wfsm.manifest"
-const SERVER_PORT = "8000/tcp"
-const API_HOST = "0.0.0.0"
-const API_PORT = "8000"
+const ServerPort = "8000/tcp"
+const ApiHost = "0.0.0.0"
+const ApiPort = "8000"
 
 func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploymentSpec, dryRun bool) (internal.DeploymentArtifact, error) {
 	log := zerolog.Ctx(ctx)
@@ -58,8 +58,8 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 	manifestPath := "/opt/storage/manifest.yaml"
 	envVars := deploymentSpec.EnvVars
 	envVars["AGENT_MANIFEST_PATH"] = manifestPath
-	envVars["API_HOST"] = API_HOST
-	envVars["API_PORT"] = API_PORT
+	envVars["ApiHost"] = ApiHost
+	envVars["ApiPort"] = ApiPort
 	apiKey := uuid.NewString()
 	envVars["API_KEY"] = apiKey
 
@@ -108,7 +108,7 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 		Name: projectName,
 	}
 
-	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, SERVER_PORT))
+	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, ServerPort))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse port config: %v", err)
 	}
@@ -206,7 +206,6 @@ func getDockerCLI(ctx context.Context) (*command.DockerCli, error) {
 		TLS:       false,
 		TLSVerify: false,
 	}
-	dockerCli.CurrentContext()
 	err = dockerCli.Initialize(&clientOptions)
 	return dockerCli, err
 }
