@@ -1,8 +1,9 @@
 package manifest
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,27 +12,40 @@ import (
 )
 
 type ManifestService interface {
-	Validate(ctx context.Context) error
-	GetManifest(ctx context.Context) (manifests.AgentManifest, error)
+	ValidateDeploymentOptions() error
+	GetManifest() manifests.AgentManifest
 }
 
 type manifestService struct {
-	filePath string
+	manifest manifests.AgentManifest
 }
 
-func NewManifestService(filePath string) ManifestService {
-	return &manifestService{
-		filePath: filePath,
+func NewManifestService(filePath string) (ManifestService, error) {
+	manifest, err := loadManifest(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load manifest: %s", err)
 	}
+	return &manifestService{
+		manifest: manifest,
+	}, nil
 }
 
-func (m manifestService) Validate(ctx context.Context) error {
-	_, err := m.GetManifest(ctx)
-	return err
+func (m manifestService) ValidateDeploymentOptions() error {
+	deployment := m.manifest.Deployment
+	if deployment == nil {
+		return errors.New("invalid agent manifest: no deployment found in manifest")
+	}
+	if len(deployment.DeploymentOptions) == 0 {
+		return errors.New("invalid agent manifest: no deployment option found in manifest")
+	}
+	if len(deployment.DeploymentOptions) > 1 {
+		return errors.New("invalid agent manifest: to many deployment options found in manifest")
+	}
+	return nil
 }
 
-func (m manifestService) GetManifest(ctx context.Context) (manifests.AgentManifest, error) {
-	file, err := os.Open(m.filePath)
+func loadManifest(filePath string) (manifests.AgentManifest, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		log.Fatalf("failed to open file: %s", err)
 	}
@@ -43,11 +57,15 @@ func (m manifestService) GetManifest(ctx context.Context) (manifests.AgentManife
 		log.Fatalf("failed to read file: %s", err)
 	}
 
-	manifestJson := manifests.AgentManifest{}
+	manifest := manifests.AgentManifest{}
 
-	if err := json.Unmarshal(byteSlice, &manifestJson); err != nil {
+	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
 		return manifests.AgentManifest{}, err
 	}
 
-	return manifestJson, nil
+	return manifest, nil
+}
+
+func (m manifestService) GetManifest() manifests.AgentManifest {
+	return m.manifest
 }

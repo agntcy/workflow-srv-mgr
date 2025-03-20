@@ -7,14 +7,14 @@ import (
 )
 
 // builder implementation of AgentDeployer
-type builder struct {
+type cbuilder struct {
 }
 
-func NewContainerAgentBuilder() *builder {
-	return &builder{}
+func NewContainerAgentBuilder() internal.AgentDeploymentBuilder {
+	return &cbuilder{}
 }
 
-func (b *builder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
+func (b *cbuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
 	return internal.AgentDeploymentBuildSpec{
 		AgentSpec:   inputSpec,
 		Image:       getImageName(inputSpec),
@@ -27,6 +27,6 @@ func getImageName(spec internal.AgentSpec) string {
 	return dopts.DockerDeployment.Image
 }
 
-func (b *builder) Validate(ctx context.Context, inputSpec internal.AgentSpec) error {
+func (b *cbuilder) Validate(ctx context.Context, inputSpec internal.AgentSpec) error {
 	return nil
 }

@@ -30,7 +30,7 @@ const ServerPort = "8000/tcp"
 const ApiHost = "0.0.0.0"
 const ApiPort = "8000"
 
-func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploymentSpec, dryRun bool) (internal.DeploymentArtifact, error) {
+func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (internal.DeploymentArtifact, error) {
 	log := zerolog.Ctx(ctx)
 
 	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
@@ -39,8 +39,84 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 	}
 	defer containerClient.Close(ctx, cli)
 
-	projectName := deploymentSpec.DeploymentName
-	containerName := strings.Join([]string{projectName, deploymentSpec.DeploymentName}, "-")
+	projectName := deploymentName
+	project := &types.Project{
+		Name: projectName,
+	}
+	project.Services = make(map[string]types.ServiceConfig)
+
+	for _, deploymentSpec := range agentDeploymentSpecs {
+		sc, err := r.createServiceConfig(ctx, deploymentName, deploymentSpec, cli)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create service config: %v", err)
+		}
+		project.Services[deploymentSpec.ServiceName] = *sc
+	}
+
+	dockerCli, err := getDockerCLI(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize docker client: %v", err)
+	}
+	defer dockerCli.Client().Close()
+
+	composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", deploymentName))
+	prjOpts := cmdcmp.ProjectOptions{
+		ConfigPaths: []string{
+			composeFilePath,
+		},
+	}
+
+	projectYaml, err := project.MarshalYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.WriteFile(composeFilePath, projectYaml, util.OwnerCanReadWrite)
+	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{deploymentSpec.ServiceName})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create project: %v", err)
+	}
+
+	if dryRun {
+		return projectYaml, nil
+	}
+
+	backend := compose.NewComposeService(dockerCli) //.(commands.Backend)
+	err = backend.Up(ctx, project, api.UpOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	//list, err := backend.Ps(ctx, project.Name, api.PsOptions{All: true})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//for _, c := range list {
+	//	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on port: %d status: %s", c.Name, port, c.Status))
+	//}
+
+	log.Info().Msg("---------------------------------------------------------------------")
+	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", deploymentSpec.ServiceName, port))
+	log.Info().Msg(fmt.Sprintf("API Key: %s", apiKey))
+	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
+
+	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
+	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
+		Project:  project,
+		Services: []string{deploymentSpec.ServiceName},
+		Tail:     "100",
+		Follow:   true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return project.MarshalYAML()
+}
+
+func (r *runner) createServiceConfig(ctx context.Context, deploymentName string, deploymentSpec internal.AgentDeploymentBuildSpec, cli *dockerClient.Client) (*types.ServiceConfig, error) {
+	log := zerolog.Ctx(ctx)
+	containerName := strings.Join([]string{deploymentName, deploymentSpec.DeploymentName}, "-")
 	port, err := containerClient.IsContainerRunning(ctx, cli, deploymentSpec.Image, containerName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if agent is running: %v", err)
@@ -104,19 +180,14 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 		return nil, fmt.Errorf("failed to write manifest to temporary workspace dir: %v", err)
 	}
 
-	project := &types.Project{
-		Name: projectName,
-	}
-
 	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, ServerPort))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse port config: %v", err)
 	}
-	project.Services = make(map[string]types.ServiceConfig)
-	project.Services[deploymentSpec.ServiceName] = types.ServiceConfig{
+	sc := types.ServiceConfig{
 		Name: deploymentSpec.ServiceName,
 		Labels: map[string]string{
-			api.ProjectLabel: project.Name,
+			api.ProjectLabel: deploymentName,
 			api.OneoffLabel:  "False",
 			api.ServiceLabel: deploymentSpec.ServiceName,
 			ManifestCheckSum: util.CalculateCheckSum(manifestFileBuf),
@@ -133,65 +204,7 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 			},
 		},
 	}
-
-	dockerCli, err := getDockerCLI(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize docker client: %v", err)
-	}
-	defer dockerCli.Client().Close()
-
-	prjOpts := cmdcmp.ProjectOptions{
-		ConfigPaths: []string{
-			path.Join(agDeploymentFolder, "compose.yaml"),
-		},
-	}
-
-	projectYaml, err := project.MarshalYAML()
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.WriteFile(path.Join(agDeploymentFolder, "compose.yaml"), projectYaml, util.OwnerCanReadWrite)
-	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{deploymentSpec.ServiceName})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create project: %v", err)
-	}
-
-	if dryRun {
-		return projectYaml, nil
-	}
-
-	backend := compose.NewComposeService(dockerCli) //.(commands.Backend)
-	err = backend.Up(ctx, project, api.UpOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	//list, err := backend.Ps(ctx, project.Name, api.PsOptions{All: true})
-	//if err != nil {
-	//	return nil, err
-	//}
-	//for _, c := range list {
-	//	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on port: %d status: %s", c.Name, port, c.Status))
-	//}
-
-	log.Info().Msg("---------------------------------------------------------------------")
-	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", deploymentSpec.ServiceName, port))
-	log.Info().Msg(fmt.Sprintf("API Key: %s", apiKey))
-	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
-
-	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
-	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
-		Project:  project,
-		Services: []string{deploymentSpec.ServiceName},
-		Tail:     "100",
-		Follow:   true,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return project.MarshalYAML()
+	return &sc, nil
 }
 
 func getDockerCLI(ctx context.Context) (*command.DockerCli, error) {
