@@ -19,9 +19,10 @@ Wraps an agent into a web server and exposes the agent functionality through ACP
 It also provides commands for managing existing deployments and cleanup tasks
 `
 
-const readTheDocs = "please take a look at the documentation."
-const cmdError = "%s. If the problem persists, " + readTheDocs
-const cmdErrorHelp = "%s. For additional help, " + readTheDocs
+const (
+	ReadTheDocsText  = "please take a look at the documentation."
+	CmdErrorHelpText = "%s.\n\nFor additional help, " + ReadTheDocsText
+)
 
 // NewRootCmd constructs a base command object
 func newRootCmd(version string) *cobra.Command {
@@ -46,6 +47,7 @@ func newRootCmd(version string) *cobra.Command {
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	rootCmd.AddCommand(deployCmd)
+	rootCmd.AddCommand(checkCmd)
 
 	return rootCmd
 }
