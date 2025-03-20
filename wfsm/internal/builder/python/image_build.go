@@ -11,8 +11,8 @@ import (
 	"path"
 
 	"github.com/cisco-eti/wfsm/assets"
+	"github.com/cisco-eti/wfsm/internal/builder/python/source"
 	containerclient "github.com/cisco-eti/wfsm/internal/container_client"
-	"github.com/cisco-eti/wfsm/internal/deployer/python/source"
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -23,17 +23,17 @@ import (
 	dockerclient "github.com/docker/docker/client"
 )
 
-// containerImageBuildLock is used to synchronize the build of container_client images
+// containerImageBuildLock is used to synchronize the build of container images
 //
 //nolint:mnd
 var containerImageBuildLock = util.NewStripedLock(100)
 
-// EnsureContainerImage - ensure container_client image is available. If the image exists, it returns the name of the
-// existing container_client image, otherwise it builds a new container_client image with the necessary packages installed
+// EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
+// existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
 func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool) (string, bool, error) {
 
-	log := zerolog.Ctx(ctx).With().Str("platform", "container_client runtime").Logger()
+	log := zerolog.Ctx(ctx).With().Str("platforms", "runtime").Logger()
 	ctx = log.WithContext(ctx)
 
 	containerImageBuildLock.Lock(img)
@@ -71,7 +71,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 
 	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", false, fmt.Errorf("failed to create container_client runtime client: %w", err)
+		return "", false, fmt.Errorf("failed to create runtime client: %w", err)
 	}
 	defer containerclient.Close(ctx, client)
 
@@ -86,19 +86,19 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	if len(imageList) == 1 {
-		log.Debug().Str("image", img).Msg("found image on container_client runtime host")
+		log.Debug().Str("image", img).Msg("found image on runtime host")
 		return img, false, nil
 	}
 	if len(imageList) > 1 {
-		return "", false, fmt.Errorf("more than one image %q found on container_client runtime host", img)
+		return "", false, fmt.Errorf("more than one image %q found on runtime host", img)
 	}
 
-	log.Debug().Str("image", img).Msg("image not found on container_client runtime host")
+	log.Debug().Str("image", img).Msg("image not found on runtime host")
 
 	// build image
 	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders)
 	if err != nil {
-		return "", false, fmt.Errorf("failed to build container_client image %s: %w", img, err)
+		return "", false, fmt.Errorf("failed to build image %s: %w", img, err)
 	}
 
 	return img, true, nil
@@ -108,12 +108,12 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	log := zerolog.Ctx(ctx).With().Str("image", img).Logger()
 
 	if err := os.WriteFile(path.Join(workspacePath, "Dockerfile"), dockerFile, util.OwnerCanReadWrite); err != nil {
-		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building container_client image: %w", err)
+		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
 	}
 
 	imageBuildContext, err := containerclient.CreateBuildContext(workspacePath)
 	if err != nil {
-		return fmt.Errorf("failed to create build context for container_client image building: %w", err)
+		return fmt.Errorf("failed to create build context for image building: %w", err)
 	}
 	defer func() {
 		if err := imageBuildContext.Close(); err != nil {
@@ -164,7 +164,7 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 
 			if imageBuildLogLine.Error != nil {
 				log.Error().Str("log_line", imageBuildLogLine.Error.Error()).Msg("image build")
-				return errors.New("failed to build container_client image")
+				return errors.New("failed to build image")
 			}
 			if len(imageBuildLogLine.Stream) > 0 {
 				log.Debug().Str("log_line", imageBuildLogLine.Stream).Msg("image build")
@@ -173,6 +173,6 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 		}
 	}
 
-	log.Debug().Msg("successfully built container_client image")
+	log.Debug().Msg("successfully built image")
 	return nil
 }
