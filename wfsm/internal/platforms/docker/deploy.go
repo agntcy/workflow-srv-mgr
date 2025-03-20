@@ -13,6 +13,7 @@ import (
 	"github.com/docker/compose/v2/cmd/formatter"
 	"github.com/docker/compose/v2/pkg/api"
 	dockerClient "github.com/docker/docker/client"
+	"github.com/google/uuid"
 
 	containerClient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
@@ -31,9 +32,6 @@ const API_PORT = "8000"
 
 func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploymentSpec, dryRun bool) (internal.DeploymentArtifact, error) {
 	log := zerolog.Ctx(ctx)
-	ctx = log.With().Str("serviceName", deploymentSpec.ServiceName).
-		Logger().WithContext(ctx)
-	log = zerolog.Ctx(ctx)
 
 	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 	if err != nil {
@@ -62,22 +60,23 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 	envVars["AGENT_MANIFEST_PATH"] = manifestPath
 	envVars["API_HOST"] = API_HOST
 	envVars["API_PORT"] = API_PORT
-	//TODO add AGENT_ID and API_KEY
+	apiKey := uuid.NewString()
+	envVars["API_KEY"] = apiKey
 
-	agentName := deploymentSpec.Manifest.Metadata.Ref.Name
+	agentID := uuid.NewString()
 
 	srcDeployment := deploymentSpec.Manifest.Deployment.DeploymentOptions[deploymentSpec.SelectedDeploymentOption].SourceCodeDeployment
 	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
 
 		envVars["AGENT_FRAMEWORK"] = "langgraph"
 		graph := srcDeployment.FrameworkConfig.LangGraphConfig.Graph
-		envVars["AGENTS_REF"] = fmt.Sprintf(`{"%s": "%s"}`, agentName, graph)
+		envVars["AGENTS_REF"] = fmt.Sprintf(`{"%s": "%s"}`, agentID, graph)
 
 	} else if srcDeployment.FrameworkConfig.LlamaIndexConfig != nil {
 
 		envVars["AGENT_FRAMEWORK"] = "llamaindex"
 		path := srcDeployment.FrameworkConfig.LlamaIndexConfig.Path
-		envVars["AGENTS_REF"] = fmt.Sprintf(`{"%s": "%s"}`, agentName, path)
+		envVars["AGENTS_REF"] = fmt.Sprintf(`{"%s": "%s"}`, agentID, path)
 
 	} else {
 		return nil, fmt.Errorf("unsupported framework config")
@@ -178,6 +177,7 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 
 	log.Info().Msg("---------------------------------------------------------------------")
 	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", deploymentSpec.ServiceName, port))
+	log.Info().Msg(fmt.Sprintf("API Key: %s", apiKey))
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
@@ -206,6 +206,7 @@ func getDockerCLI(ctx context.Context) (*command.DockerCli, error) {
 		TLS:       false,
 		TLSVerify: false,
 	}
+	dockerCli.CurrentContext()
 	err = dockerCli.Initialize(&clientOptions)
 	return dockerCli, err
 }
