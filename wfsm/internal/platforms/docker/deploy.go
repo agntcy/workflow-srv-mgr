@@ -19,6 +19,7 @@ import (
 	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/docker/cli/cli/command"
 
+	cmdcmp "github.com/docker/compose/v2/cmd/compose"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/rs/zerolog"
 )
@@ -132,15 +133,32 @@ func (r *runner) Deploy(ctx context.Context, deploymentSpec internal.AgentDeploy
 		},
 	}
 
-	if dryRun {
-		return project.MarshalYAML()
-	}
-
 	dockerCli, err := getDockerCLI(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize docker client: %v", err)
 	}
 	defer dockerCli.Client().Close()
+
+	prjOpts := cmdcmp.ProjectOptions{
+		ConfigPaths: []string{
+			path.Join(agDeploymentFolder, "compose.yaml"),
+		},
+	}
+
+	projectYaml, err := project.MarshalYAML()
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.WriteFile(path.Join(agDeploymentFolder, "compose.yaml"), projectYaml, util.OwnerCanReadWrite)
+	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{deploymentSpec.ServiceName})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create project: %v", err)
+	}
+
+	if dryRun {
+		return projectYaml, nil
+	}
 
 	backend := compose.NewComposeService(dockerCli) //.(commands.Backend)
 	err = backend.Up(ctx, project, api.UpOptions{})
