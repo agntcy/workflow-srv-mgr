@@ -8,11 +8,12 @@ import (
 	"path"
 	"time"
 
-	"github.com/cisco-eti/wfsm/internal"
-	"github.com/cisco-eti/wfsm/internal/platforms/docker"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
+	"github.com/cisco-eti/wfsm/internal"
+	"github.com/cisco-eti/wfsm/internal/platforms/docker"
 
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
@@ -50,7 +51,7 @@ var deployCmd = &cobra.Command{
 		err := runDeploy(manifestPath, envFilePath, deleteBuildFolders)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
-			return fmt.Errorf(cmdErrorHelp, deployError)
+			return fmt.Errorf(CmdErrorHelpText, deployError)
 		}
 		return nil
 	},
