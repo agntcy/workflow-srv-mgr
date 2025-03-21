@@ -77,7 +77,7 @@ func mergeEnvVarValues(dest *manifests.EnvVarValues, src manifests.EnvVarValues,
 	if dest == nil {
 		dest = &manifests.EnvVarValues{}
 	}
-
+	//TODO merge dependencies values
 	for _, depEnv := range src.Dependencies {
 		if depEnv.GetName() == dependencyName {
 			dest.Values = mergeMaps(dest.Values, depEnv.GetValues().Values)
