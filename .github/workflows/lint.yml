@@ -14,7 +14,7 @@ permissions: read-all
 
 jobs:
   super-linter:
-    if: false # TODO: Enable this job once the super-linter action has been configured
+    if: true # TODO: Enable this job once the super-linter action has been configured
     runs-on: ubuntu-latest
     permissions:
       contents: read
