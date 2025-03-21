@@ -14,53 +14,49 @@ import (
 	"github.com/cisco-eti/wfsm/internal/util"
 )
 
-var stopLongHelp = `
+var listLongHelp = `
 This command takes one required flag: --agentDeploymentName <agentDeploymentName>  
 Agent deployment name is the name of the agent in the manifest file.
-                                   
+                                      
 Optional flags:
 	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 		
 Examples:
-- Stops all running agents in 'emailreviewer' agent deployment:
-	wfsm stop emailreviewer
+- List all running agent containers in 'emailreviewer' deployment:
+	wfsm list emailreviewer
 `
 
-const agentDeploymentNameFlag string = "agentDeploymentName"
+const listFail = "List Status: Failed - %s"
+const listError string = "get failed"
 
-const stopFail = "Stop Status: Failed - %s"
-const stopError string = "get failed"
-
-// stopCmd stops the deployment of the agent(s)
-var stopCmd = &cobra.Command{
-	Use:   "stop --agentDeploymentName agentDeploymentName",
-	Short: "Stop an ACP agent deployment",
+// listCmd lists running agent container(s) in a deployment
+var listCmd = &cobra.Command{
+	Use:   "list --agentDeploymentName agentDeploymentName",
+	Short: "List an ACP agents running in the deployment",
 	Long:  deployLongHelp,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
 
-		err := runStop(agentDeploymentName)
+		err := runList(agentDeploymentName)
 		if err != nil {
-			util.OutputMessage(stopFail, err.Error())
-			return fmt.Errorf(CmdErrorHelpText, stopError)
+			util.OutputMessage(listFail, err.Error())
+			return fmt.Errorf(CmdErrorHelpText, listError)
 		}
 		return nil
 	},
 }
 
 func init() {
-	stopCmd.Flags().StringP(agentDeploymentNameFlag, "n", "docker", "Environment file for the application")
-	stopCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
+	listCmd.Flags().StringP(agentDeploymentNameFlag, "n", "docker", "Environment file for the application")
+	listCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 }
 
-func runStop(agentDeploymentName string) error {
+func runList(agentDeploymentName string) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
 
 	ctx := logger.WithContext(context.Background())
-
-	// stop deployment of agent(s)
 
 	hostStorageFolder, err := getHostStorage()
 	if err != nil {
@@ -68,7 +64,7 @@ func runStop(agentDeploymentName string) error {
 	}
 	runner := docker.NewDockerComposeRunner(hostStorageFolder)
 
-	err = runner.Remove(ctx, agentDeploymentName)
+	err = runner.List(ctx, agentDeploymentName)
 	if err != nil {
 		return fmt.Errorf("failed to stop agent deployment: %v", err)
 	}

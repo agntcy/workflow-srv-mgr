@@ -46,9 +46,11 @@ func newRootCmd(version string) *cobra.Command {
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(deployCmd)
 	rootCmd.AddCommand(stopCmd)
-	rootCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(logsCmd)
 
 	return rootCmd
 }
