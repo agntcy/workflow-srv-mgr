@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/cisco-eti/wfsm/internal"
@@ -33,6 +34,26 @@ const ApiPort = "8000"
 func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (internal.DeploymentArtifact, error) {
 	log := zerolog.Ctx(ctx)
 
+	// generate api keys and agent IDs
+	apiKeys := make(map[string]string)
+	agentIDs := make(map[string]string)
+	for agentName := range agentDeploymentSpecs {
+		apiKeys[agentName] = uuid.NewString()
+		agentIDs[agentName] = uuid.NewString()
+	}
+
+	// insert api keys, agent IDs and service names as host into the deployment specs
+	for agName, deps := range dependencies {
+		agSpec := agentDeploymentSpecs[agName]
+		for _, depName := range deps {
+			depAgPrefix := calculateEnvVarPrefix(depName)
+			agSpec.EnvVars[depAgPrefix+"API_KEY"] = apiKeys[depName]
+			agSpec.EnvVars[depAgPrefix+"ID"] = agentIDs[depName]
+			depSpec := agentDeploymentSpecs[depName]
+			agSpec.EnvVars[depAgPrefix+"HOST"] = depSpec.ServiceName
+		}
+	}
+
 	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create docker client: %v", err)
@@ -50,8 +71,8 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 	if err != nil {
 		return nil, err
 	}
-	mainAgentID := uuid.NewString()
-	mainAgentAPiKey := uuid.NewString()
+	mainAgentID := agentIDs[mainAgentName]
+	mainAgentAPiKey := apiKeys[mainAgentID]
 	sc, err := r.createServiceConfig(mainAgentName, mainAgentID, mainAgentAPiKey, mainAgentSpec)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service config: %v", err)
@@ -66,7 +87,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 
 	// generate service configs for dependencies
 	for _, deploymentSpec := range agentDeploymentSpecs {
-		sc, err := r.createServiceConfig(mainAgentName, uuid.NewString(), uuid.NewString(), deploymentSpec)
+		sc, err := r.createServiceConfig(mainAgentName, agentIDs[deploymentSpec.DeploymentName], apiKeys[deploymentSpec.DeploymentName], deploymentSpec)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create service config: %v", err)
 		}
@@ -134,6 +155,14 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 	}
 
 	return nil, nil
+}
+
+func calculateEnvVarPrefix(agName string) string {
+	prefix := strings.ToUpper(agName)
+	// replace all non-alphanumeric characters with _
+	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	prefix = re.ReplaceAllString(prefix, "_")
+	return prefix + "_"
 }
 
 func (r *runner) getMainAgentPublicPort(ctx context.Context, cli *dockerClient.Client, mainAgentName string, mainAgentSpec internal.AgentDeploymentBuildSpec) (int, error) {

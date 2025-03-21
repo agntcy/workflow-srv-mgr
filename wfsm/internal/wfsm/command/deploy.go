@@ -2,13 +2,14 @@ package command
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path"
 	"time"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/rs/zerolog"
@@ -160,7 +161,7 @@ func getEnvVars(ctx context.Context, envFilePath string) (manifests.EnvVarValues
 
 	envVarValues := manifests.EnvVarValues{}
 
-	if err := json.Unmarshal(byteSlice, &envVarValues); err != nil {
+	if err := yaml.Unmarshal(byteSlice, &envVarValues); err != nil {
 		return manifests.EnvVarValues{}, err
 	}
 
