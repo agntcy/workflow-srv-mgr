@@ -146,7 +146,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
 	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
 		Project:  project,
-		Services: []string{mainAgentName},
+		Services: []string{},
 		Tail:     "100",
 		Follow:   true,
 	})

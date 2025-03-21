@@ -102,6 +102,10 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 
 	for depName, agentSpec := range agsb.AgentSpecs {
 		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders)
+		if err = builder.Validate(ctx, agentSpec); err != nil {
+			return fmt.Errorf("agent %s confis is invalid: %v", agentSpec.DeploymentName, err)
+		}
+
 		agdbSpec, err := builder.Build(ctx, agentSpec)
 		if err != nil {
 			return fmt.Errorf("failed to build agent: %v", err)

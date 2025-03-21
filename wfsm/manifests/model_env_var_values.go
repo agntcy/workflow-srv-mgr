@@ -19,8 +19,10 @@ var _ MappedNullable = &EnvVarValues{}
 
 // EnvVarValues Describes the values of the environment variables for a specific agent and it's dependencies
 type EnvVarValues struct {
-	Values       map[string]string               `json:"values,omitempty"`
-	Dependencies []EnvVarValuesDependenciesInner `json:"dependencies,omitempty"`
+	// name of the agent dependency these environment variables are for
+	Name         *string           `json:"name,omitempty"`
+	Values       map[string]string `json:"values,omitempty"`
+	Dependencies []EnvVarValues    `json:"dependencies,omitempty"`
 }
 
 // NewEnvVarValues instantiates a new EnvVarValues object
@@ -38,6 +40,38 @@ func NewEnvVarValues() *EnvVarValues {
 func NewEnvVarValuesWithDefaults() *EnvVarValues {
 	this := EnvVarValues{}
 	return &this
+}
+
+// GetName returns the Name field value if set, zero value otherwise.
+func (o *EnvVarValues) GetName() string {
+	if o == nil || IsNil(o.Name) {
+		var ret string
+		return ret
+	}
+	return *o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *EnvVarValues) GetNameOk() (*string, bool) {
+	if o == nil || IsNil(o.Name) {
+		return nil, false
+	}
+	return o.Name, true
+}
+
+// HasName returns a boolean if a field has been set.
+func (o *EnvVarValues) HasName() bool {
+	if o != nil && !IsNil(o.Name) {
+		return true
+	}
+
+	return false
+}
+
+// SetName gets a reference to the given string and assigns it to the Name field.
+func (o *EnvVarValues) SetName(v string) {
+	o.Name = &v
 }
 
 // GetValues returns the Values field value if set, zero value otherwise (both if not set or set to explicit null).
@@ -74,9 +108,9 @@ func (o *EnvVarValues) SetValues(v map[string]string) {
 }
 
 // GetDependencies returns the Dependencies field value if set, zero value otherwise.
-func (o *EnvVarValues) GetDependencies() []EnvVarValuesDependenciesInner {
+func (o *EnvVarValues) GetDependencies() []EnvVarValues {
 	if o == nil || IsNil(o.Dependencies) {
-		var ret []EnvVarValuesDependenciesInner
+		var ret []EnvVarValues
 		return ret
 	}
 	return o.Dependencies
@@ -84,7 +118,7 @@ func (o *EnvVarValues) GetDependencies() []EnvVarValuesDependenciesInner {
 
 // GetDependenciesOk returns a tuple with the Dependencies field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *EnvVarValues) GetDependenciesOk() ([]EnvVarValuesDependenciesInner, bool) {
+func (o *EnvVarValues) GetDependenciesOk() ([]EnvVarValues, bool) {
 	if o == nil || IsNil(o.Dependencies) {
 		return nil, false
 	}
@@ -100,8 +134,8 @@ func (o *EnvVarValues) HasDependencies() bool {
 	return false
 }
 
-// SetDependencies gets a reference to the given []EnvVarValuesDependenciesInner and assigns it to the Dependencies field.
-func (o *EnvVarValues) SetDependencies(v []EnvVarValuesDependenciesInner) {
+// SetDependencies gets a reference to the given []EnvVarValues and assigns it to the Dependencies field.
+func (o *EnvVarValues) SetDependencies(v []EnvVarValues) {
 	o.Dependencies = v
 }
 
@@ -115,6 +149,9 @@ func (o EnvVarValues) MarshalJSON() ([]byte, error) {
 
 func (o EnvVarValues) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if !IsNil(o.Name) {
+		toSerialize["name"] = o.Name
+	}
 	if o.Values != nil {
 		toSerialize["values"] = o.Values
 	}
