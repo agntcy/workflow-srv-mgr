@@ -35,7 +35,7 @@ const stopError string = "get failed"
 var stopCmd = &cobra.Command{
 	Use:   "stop --agentDeploymentName agentDeploymentName",
 	Short: "Stop an ACP agent deployment",
-	Long:  deployLongHelp,
+	Long:  stopLongHelp,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
