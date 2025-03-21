@@ -60,9 +60,9 @@ func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName st
 				return fmt.Errorf("ref url is required for dependency: %s", dependency.Name)
 			}
 
+			// merge env vars
 			dependency.EnvVarValues = mergeEnvVarValues(dependency.EnvVarValues, envVarValues, dependency.Name)
 
-			// merge env vars
 			err = a.BuildAgentSpec(*dependency.Ref.Url, dependency.Name, dependency.DeploymentOption, *dependency.EnvVarValues)
 			if err != nil {
 				return fmt.Errorf("failed building spec for dependent agent: %s", err)
@@ -77,11 +77,27 @@ func mergeEnvVarValues(dest *manifests.EnvVarValues, src manifests.EnvVarValues,
 	if dest == nil {
 		dest = &manifests.EnvVarValues{}
 	}
-	//TODO merge dependencies values
+
 	for _, depEnv := range src.Dependencies {
 		if depEnv.GetName() == dependencyName {
-			dest.Values = mergeMaps(dest.Values, depEnv.GetValues().Values)
+			// merge env var values for dependencyName
+			dest.Values = mergeMaps(dest.Values, depEnv.Values)
+			// merge env vars of dependencies of dependencyName
+			dest.Dependencies = mergeDepEnvVarValues(dest.Dependencies, depEnv.Dependencies)
 		}
+	}
+	return dest
+}
+
+func mergeDepEnvVarValues(dest []manifests.EnvVarValues, src []manifests.EnvVarValues) []manifests.EnvVarValues {
+	if src == nil {
+		return dest
+	}
+	if dest == nil {
+		dest = make([]manifests.EnvVarValues, 0, len(src))
+	}
+	for _, depEnv := range src {
+		dest = append(dest, *mergeEnvVarValues(&depEnv, depEnv, depEnv.GetName()))
 	}
 	return dest
 }

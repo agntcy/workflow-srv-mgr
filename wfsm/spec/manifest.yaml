@@ -98,6 +98,9 @@ components:
         Describes the values of the environment variables for a specific agent and it's dependencies
       type: object
       properties:
+        name:
+          type: string
+          description: name of the agent dependency these environment variables are for
         values: 
           type: object
           additionalProperties:
@@ -105,13 +108,7 @@ components:
         dependencies:
           type: array
           items:
-            type: object
-            properties:
-              name: 
-                type: string 
-                description: name of the agent dependency these environment variables are for
-              values:
-                $ref: '#/components/schemas/EnvVarValues'            
+            $ref: '#/components/schemas/EnvVarValues'
     EnvVar:
       title: Environment Variable
       description: Describes an environment variable

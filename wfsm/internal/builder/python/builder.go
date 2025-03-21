@@ -25,8 +25,21 @@ func NewPythonAgentBuilder(deleteBuildFolders bool) internal.AgentDeploymentBuil
 }
 
 func (b *pyBuilder) Validate(ctx context.Context, inputSpec internal.AgentSpec) error {
+	log := zerolog.Ctx(ctx)
 	// validate that all required env vars are present in inputSpec.EnvVars
 	// validate that SourceCodeDeploymentFrameworkConfig settings are correct
+	for _, envVarDefs := range inputSpec.Manifest.Deployment.EnvVars {
+		if envVarDefs.GetRequired() {
+			if _, ok := inputSpec.EnvVars[envVarDefs.GetName()]; !ok {
+				if envVarDefs.HasDefaultValue() {
+					log.Warn().Msgf("agent %s config is missing required env var %s, using default value %s", inputSpec.DeploymentName, envVarDefs.GetName(), envVarDefs.GetDefaultValue())
+					inputSpec.EnvVars[envVarDefs.GetName()] = envVarDefs.GetDefaultValue()
+				} else {
+					return fmt.Errorf("missing required env var %s", envVarDefs.GetName())
+				}
+			}
+		}
+	}
 	return nil
 }
 
