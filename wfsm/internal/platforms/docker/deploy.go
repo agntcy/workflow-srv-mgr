@@ -125,7 +125,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 	}
 
 	backend := compose.NewComposeService(dockerCli) //.(commands.Backend)
-	err = backend.Up(ctx, project, api.UpOptions{})
+	err = backend.Up(ctx, project, api.UpOptions{api.CreateOptions{RemoveOrphans: true}, api.StartOptions{}})
 	if err != nil {
 		return nil, err
 	}
