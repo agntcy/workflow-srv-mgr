@@ -51,9 +51,9 @@ const deployError string = "get failed"
 
 const manifestPathFlag string = "manifestPath"
 const envFilePathFlag string = "envFilePath"
-const platformsFlag string = "docker"
-const dryRunFlag string = "false"
-const deleteBuildFoldersFlag string = "true"
+const platformsFlag string = "platform"
+const dryRunFlag string = "dryRun"
+const deleteBuildFoldersFlag string = "deleteBuildFolders"
 
 // deployCmd represents the image build and run docker commands
 var deployCmd = &cobra.Command{
