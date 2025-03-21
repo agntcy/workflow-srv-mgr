@@ -109,7 +109,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 
 	projectYaml, err := project.MarshalYAML()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal compose config: %v", err)
 	}
 
 	err = os.WriteFile(composeFilePath, projectYaml, util.OwnerCanReadWrite)

@@ -30,8 +30,21 @@ func (r *runner) Remove(ctx context.Context, deploymentName string) error {
 	}
 	defer dockerCli.Client().Close()
 
+	//composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", deploymentName))
+	//prjOpts := cmdcmp.ProjectOptions{
+	//	ConfigPaths: []string{
+	//		composeFilePath,
+	//	},
+	//}
+	//project, _, err := prjOpts.ToProject(ctx, dockerCli, []string{})
+	//if err != nil {
+	//	return fmt.Errorf("failed to load compose config: %v", err)
+	//}
+
 	backend := compose.NewComposeService(dockerCli)
-	err = backend.Remove(ctx, deploymentName, api.RemoveOptions{})
+	err = backend.Down(ctx, deploymentName, api.DownOptions{
+		//Project: project,
+	})
 	if err != nil {
 		return err
 	}
