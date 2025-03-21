@@ -3,7 +3,7 @@ builds:
     main: ./cmd/main.go
     binary: wfsm
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     ldflags: "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
     goos:
       - linux

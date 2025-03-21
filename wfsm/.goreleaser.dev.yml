@@ -1,9 +1,8 @@
 builds:
-  -
-    main: ./cmd/main.go
+  - main: ./cmd/main.go
     binary: wfsm
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     ldflags: "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
     goos:
       - linux
@@ -13,8 +12,7 @@ builds:
       - arm64
 
 archives:
-  -
-    name_template: "wfsm{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - name_template: "wfsm{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: "acpilot_checksums.txt"
@@ -23,8 +21,7 @@ changelog:
   skip: true
 
 nfpms:
-  -
-    vendor: Outshift by Cisco
+  - vendor: Outshift by Cisco
     maintainer: Outshift <outshift@cisco.com>
     homepage: https://cisco.com/
     description: Command-line interface for Agent Workflow Server
