@@ -30,7 +30,7 @@ const ServerPort = "8000/tcp"
 const ApiHost = "0.0.0.0"
 const ApiPort = "8000"
 
-func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (internal.DeploymentArtifact, error) {
+func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (internal.DeploymentArtifact, error) {
 	log := zerolog.Ctx(ctx)
 
 	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
@@ -39,14 +39,34 @@ func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploym
 	}
 	defer containerClient.Close(ctx, cli)
 
-	projectName := deploymentName
 	project := &types.Project{
-		Name: projectName,
+		Name: mainAgentName,
 	}
 	project.Services = make(map[string]types.ServiceConfig)
 
+	// only the main agent will be exposed to the outside world
+	mainAgentSpec := agentDeploymentSpecs[mainAgentName]
+	port, err := r.getMainAgentPublicPort(ctx, cli, mainAgentName, mainAgentSpec)
+	if err != nil {
+		return nil, err
+	}
+	mainAgentID := uuid.NewString()
+	mainAgentAPiKey := uuid.NewString()
+	sc, err := r.createServiceConfig(mainAgentName, mainAgentID, mainAgentAPiKey, mainAgentSpec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create service config: %v", err)
+	}
+	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, ServerPort))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse port config: %v", err)
+	}
+	sc.Ports = pc
+	project.Services[mainAgentSpec.ServiceName] = *sc
+	delete(agentDeploymentSpecs, mainAgentName)
+
+	// generate service configs for dependencies
 	for _, deploymentSpec := range agentDeploymentSpecs {
-		sc, err := r.createServiceConfig(ctx, deploymentName, deploymentSpec, cli)
+		sc, err := r.createServiceConfig(mainAgentName, uuid.NewString(), uuid.NewString(), deploymentSpec)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create service config: %v", err)
 		}
@@ -59,7 +79,7 @@ func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploym
 	}
 	defer dockerCli.Client().Close()
 
-	composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", deploymentName))
+	composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", mainAgentName))
 	prjOpts := cmdcmp.ProjectOptions{
 		ConfigPaths: []string{
 			composeFilePath,
@@ -72,7 +92,9 @@ func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploym
 	}
 
 	err = os.WriteFile(composeFilePath, projectYaml, util.OwnerCanReadWrite)
-	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{deploymentSpec.ServiceName})
+	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{
+		//deploymentSpec.ServiceName
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %v", err)
 	}
@@ -96,14 +118,14 @@ func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploym
 	//}
 
 	log.Info().Msg("---------------------------------------------------------------------")
-	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", deploymentSpec.ServiceName, port))
-	log.Info().Msg(fmt.Sprintf("API Key: %s", apiKey))
+	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", mainAgentName, port))
+	log.Info().Msg(fmt.Sprintf("API Key: %s", mainAgentAPiKey))
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
 	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
 		Project:  project,
-		Services: []string{deploymentSpec.ServiceName},
+		Services: []string{mainAgentName},
 		Tail:     "100",
 		Follow:   true,
 	})
@@ -111,35 +133,37 @@ func (r *runner) Deploy(ctx context.Context, deploymentName string, agentDeploym
 		return nil, err
 	}
 
-	return project.MarshalYAML()
+	return nil, nil
 }
 
-func (r *runner) createServiceConfig(ctx context.Context, deploymentName string, deploymentSpec internal.AgentDeploymentBuildSpec, cli *dockerClient.Client) (*types.ServiceConfig, error) {
+func (r *runner) getMainAgentPublicPort(ctx context.Context, cli *dockerClient.Client, mainAgentName string, mainAgentSpec internal.AgentDeploymentBuildSpec) (int, error) {
 	log := zerolog.Ctx(ctx)
-	containerName := strings.Join([]string{deploymentName, deploymentSpec.DeploymentName}, "-")
-	port, err := containerClient.IsContainerRunning(ctx, cli, deploymentSpec.Image, containerName)
+
+	containerName := strings.Join([]string{mainAgentName, mainAgentSpec.DeploymentName}, "-")
+	port, err := containerClient.IsContainerRunning(ctx, cli, mainAgentSpec.Image, containerName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check if agent is running: %v", err)
+		return 0, fmt.Errorf("failed to check if agent is running: %v", err)
 	}
 	if port > 0 {
 		log.Info().Msg(fmt.Sprintf("agent is already using port: %d", port))
 	} else {
 		port, err = util.GetNextAvailablePort()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get next available port: %v", err)
+			return 0, fmt.Errorf("failed to get next available port: %v", err)
 		}
 		log.Debug().Msgf("agent will listen on port: %d", port)
 	}
+	return port, nil
+}
+
+func (r *runner) createServiceConfig(projectName string, agentID string, apiKey string, deploymentSpec internal.AgentDeploymentBuildSpec) (*types.ServiceConfig, error) {
 
 	manifestPath := "/opt/storage/manifest.yaml"
 	envVars := deploymentSpec.EnvVars
 	envVars["AGENT_MANIFEST_PATH"] = manifestPath
-	envVars["ApiHost"] = ApiHost
-	envVars["ApiPort"] = ApiPort
-	apiKey := uuid.NewString()
+	envVars["API_HOST"] = ApiHost
+	envVars["API_PORT"] = ApiPort
 	envVars["API_KEY"] = apiKey
-
-	agentID := uuid.NewString()
 
 	srcDeployment := deploymentSpec.Manifest.Deployment.DeploymentOptions[deploymentSpec.SelectedDeploymentOption].SourceCodeDeployment
 	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
@@ -180,21 +204,16 @@ func (r *runner) createServiceConfig(ctx context.Context, deploymentName string,
 		return nil, fmt.Errorf("failed to write manifest to temporary workspace dir: %v", err)
 	}
 
-	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, ServerPort))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse port config: %v", err)
-	}
 	sc := types.ServiceConfig{
 		Name: deploymentSpec.ServiceName,
 		Labels: map[string]string{
-			api.ProjectLabel: deploymentName,
+			api.ProjectLabel: projectName,
 			api.OneoffLabel:  "False",
 			api.ServiceLabel: deploymentSpec.ServiceName,
 			ManifestCheckSum: util.CalculateCheckSum(manifestFileBuf),
 		},
 		//ContainerName: serviceName,
 		Image:       deploymentSpec.Image,
-		Ports:       pc,
 		Environment: getEnvVars(envVars),
 		Volumes: []types.ServiceVolumeConfig{
 			{

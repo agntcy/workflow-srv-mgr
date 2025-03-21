@@ -25,7 +25,11 @@ import (
 var deployLongHelp = `
 This command takes two required flags: --manifestPath path/to/acpManifest
                                        --envFilePath path/to/envFile
-An optional flag --deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
+Optional flags:
+	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
+	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
+	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
+   
 		
 Examples:
 - Build an agent with a manifest and environment file:
@@ -37,6 +41,8 @@ const deployError string = "get failed"
 
 const manifestPathFlag string = "manifestPath"
 const envFilePathFlag string = "envFilePath"
+const platformsFlag string = "docker"
+const dryRunFlag string = "false"
 const deleteBuildFoldersFlag string = "true"
 
 // deployCmd represents the image build and run docker commands
@@ -48,9 +54,11 @@ var deployCmd = &cobra.Command{
 
 		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
 		envFilePath, _ := cmd.Flags().GetString(envFilePathFlag)
+		platform, _ := cmd.Flags().GetString(platformsFlag)
+		dryRun, _ := cmd.Flags().GetBool(dryRunFlag)
 		deleteBuildFolders, _ := cmd.Flags().GetBool(deleteBuildFoldersFlag)
 
-		err := runDeploy(manifestPath, envFilePath, deleteBuildFolders)
+		err := runDeploy(manifestPath, envFilePath, platform, dryRun, deleteBuildFolders)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, deployError)
@@ -63,6 +71,8 @@ func init() {
 	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
 	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
 
+	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
+	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
 
 	deployCmd.MarkPersistentFlagRequired(envFilePathFlag)
@@ -70,7 +80,7 @@ func init() {
 
 }
 
-func runDeploy(manifestPath string, envFilePath string, deleteBuildFolders bool) error {
+func runDeploy(manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
 
@@ -106,7 +116,7 @@ func runDeploy(manifestPath string, envFilePath string, deleteBuildFolders bool)
 	}
 	runner := docker.NewDockerComposeRunner(hostStorageFolder)
 
-	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, false)
+	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, dryRun)
 	if err != nil {
 		return fmt.Errorf("failed to deploy agent: %v", err)
 	}
