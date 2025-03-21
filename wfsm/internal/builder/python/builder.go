@@ -14,23 +14,23 @@ import (
 const AgentImage = "agntcy/wfsm"
 
 // builder implementation of AgentDeployer
-type builder struct {
+type pyBuilder struct {
 	deleteBuildFolders bool
 }
 
-func NewPythonAgentBuilder(deleteBuildFolders bool) *builder {
-	return &builder{
+func NewPythonAgentBuilder(deleteBuildFolders bool) internal.AgentDeploymentBuilder {
+	return &pyBuilder{
 		deleteBuildFolders: deleteBuildFolders,
 	}
 }
 
-func (b *builder) Validate(ctx context.Context, inputSpec internal.AgentSpec) error {
+func (b *pyBuilder) Validate(ctx context.Context, inputSpec internal.AgentSpec) error {
 	// validate that all required env vars are present in inputSpec.EnvVars
 	// validate that SourceCodeDeploymentFrameworkConfig settings are correct
 	return nil
 }
 
-func (b *builder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
+func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
 	log := zerolog.Ctx(ctx)
 
 	deploymentSpec := internal.AgentDeploymentBuildSpec{AgentSpec: inputSpec}

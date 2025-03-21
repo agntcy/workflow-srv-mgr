@@ -1,13 +1,17 @@
 package docker
 
-import "context"
+import (
+	"context"
+
+	"github.com/cisco-eti/wfsm/internal"
+)
 
 // DockerComposeRunner implementation of AgentDeploymentRunner
 type runner struct {
 	hostStorageFolder string
 }
 
-func NewDockerComposeRunner(hostStorageFolder string) *runner {
+func NewDockerComposeRunner(hostStorageFolder string) internal.AgentDeploymentRunner {
 	return &runner{
 		hostStorageFolder: hostStorageFolder,
 	}
