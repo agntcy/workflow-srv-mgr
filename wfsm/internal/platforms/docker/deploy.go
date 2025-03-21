@@ -72,7 +72,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 		return nil, err
 	}
 	mainAgentID := agentIDs[mainAgentName]
-	mainAgentAPiKey := apiKeys[mainAgentID]
+	mainAgentAPiKey := apiKeys[mainAgentName]
 	sc, err := r.createServiceConfig(mainAgentName, mainAgentID, mainAgentAPiKey, mainAgentSpec)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service config: %v", err)
