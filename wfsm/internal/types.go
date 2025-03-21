@@ -31,6 +31,6 @@ type AgentDeploymentRunner interface {
 	Deploy(ctx context.Context, deploymentName string, agentDeploymentSpecs map[string]AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (DeploymentArtifact, error)
 
 	Remove(ctx context.Context, deploymentName string) error
-	Logs(ctx context.Context, deploymentName string) error
+	Logs(ctx context.Context, deploymentName string, agentNames []string) error
 	List(ctx context.Context, deploymentName string) error
 }

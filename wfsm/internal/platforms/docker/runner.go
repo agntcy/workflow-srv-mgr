@@ -2,8 +2,14 @@ package docker
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/cisco-eti/wfsm/internal"
+	"github.com/docker/compose/v2/cmd/formatter"
+	"github.com/docker/compose/v2/pkg/api"
+	"github.com/docker/compose/v2/pkg/compose"
+	"github.com/rs/zerolog"
 )
 
 // DockerComposeRunner implementation of AgentDeploymentRunner
@@ -18,13 +24,72 @@ func NewDockerComposeRunner(hostStorageFolder string) internal.AgentDeploymentRu
 }
 
 func (r *runner) Remove(ctx context.Context, deploymentName string) error {
+	dockerCli, err := getDockerCLI(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize docker client: %v", err)
+	}
+	defer dockerCli.Client().Close()
+
+	//composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", deploymentName))
+	//prjOpts := cmdcmp.ProjectOptions{
+	//	ConfigPaths: []string{
+	//		composeFilePath,
+	//	},
+	//}
+	//project, _, err := prjOpts.ToProject(ctx, dockerCli, []string{})
+	//if err != nil {
+	//	return fmt.Errorf("failed to load compose config: %v", err)
+	//}
+
+	backend := compose.NewComposeService(dockerCli)
+	err = backend.Down(ctx, deploymentName, api.DownOptions{
+		//Project: project,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (r *runner) Logs(ctx context.Context, deploymentName string) error {
+func (r *runner) Logs(ctx context.Context, deploymentName string, agentNames []string) error {
+	dockerCli, err := getDockerCLI(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize docker client: %v", err)
+	}
+	defer dockerCli.Client().Close()
+
+	backend := compose.NewComposeService(dockerCli)
+	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
+	err = backend.Logs(ctx, deploymentName, logConsumer, api.LogOptions{
+		Services: agentNames,
+		Tail:     "100",
+		Follow:   true,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (r *runner) List(ctx context.Context, deploymentName string) error {
+	log := zerolog.Ctx(ctx)
+
+	dockerCli, err := getDockerCLI(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize docker client: %v", err)
+	}
+	defer dockerCli.Client().Close()
+
+	backend := compose.NewComposeService(dockerCli)
+	list, err := backend.Ps(ctx, deploymentName, api.PsOptions{All: true})
+	if err != nil {
+		return err
+	}
+	for _, c := range list {
+		log.Info().Msg(fmt.Sprintf("agent running in container: %s, status: '%s'", c.Name, c.Status))
+	}
+
 	return nil
 }

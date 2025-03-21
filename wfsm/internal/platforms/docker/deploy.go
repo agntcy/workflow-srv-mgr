@@ -109,7 +109,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 
 	projectYaml, err := project.MarshalYAML()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal compose config: %v", err)
 	}
 
 	err = os.WriteFile(composeFilePath, projectYaml, util.OwnerCanReadWrite)
@@ -125,7 +125,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 	}
 
 	backend := compose.NewComposeService(dockerCli) //.(commands.Backend)
-	err = backend.Up(ctx, project, api.UpOptions{})
+	err = backend.Up(ctx, project, api.UpOptions{api.CreateOptions{RemoveOrphans: true}, api.StartOptions{}})
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeployme
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
 	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
 		Project:  project,
-		Services: []string{mainAgentName},
+		Services: []string{},
 		Tail:     "100",
 		Follow:   true,
 	})

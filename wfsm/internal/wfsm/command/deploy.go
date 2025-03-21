@@ -30,14 +30,23 @@ Optional flags:
 	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
-   
+
+Env file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
+Example:
+
+values:
+  ENV_VAR_1: "sample value 1"
+dependencies:
+  - name: <agent_dependency_name>
+    values:
+      ENV_VAR_2: "sample value 2"
 		
 Examples:
 - Build an agent with a manifest and environment file:
 	wfsm deploy --manifestPath path/to/acpManifest --envFilePath path/to/envFile
 `
 
-const deployFail = "Build Status: Failed - %s"
+const deployFail = "Deploy Status: Failed - %s"
 const deployError string = "get failed"
 
 const manifestPathFlag string = "manifestPath"
@@ -102,6 +111,10 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 
 	for depName, agentSpec := range agsb.AgentSpecs {
 		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders)
+		if err = builder.Validate(ctx, agentSpec); err != nil {
+			return fmt.Errorf("agent %s confis is invalid: %v", agentSpec.DeploymentName, err)
+		}
+
 		agdbSpec, err := builder.Build(ctx, agentSpec)
 		if err != nil {
 			return fmt.Errorf("failed to build agent: %v", err)
