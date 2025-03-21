@@ -52,7 +52,7 @@ func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName st
 	a.AgentSpecs[deploymentName] = agentSpec
 
 	if len(manifest.Deployment.Dependencies) > 0 {
-		depNames := make([]string, len(manifest.Deployment.Dependencies), 0)
+		depNames := make([]string, 0, len(manifest.Deployment.Dependencies))
 		for _, dependency := range manifest.Deployment.Dependencies {
 			depNames = append(depNames, dependency.Name)
 
