@@ -98,4 +98,7 @@ release-dev: bin/goreleaser # Publish an experimental release
 
 .DEFAULT_GOAL := help
 
+# enable CGO for the project (instrument the build in the included makefile)
+build: export CGO_ENABLED=1
+
 
