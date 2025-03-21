@@ -37,7 +37,7 @@ Examples:
 	wfsm deploy --manifestPath path/to/acpManifest --envFilePath path/to/envFile
 `
 
-const deployFail = "Build Status: Failed - %s"
+const deployFail = "Deploy Status: Failed - %s"
 const deployError string = "get failed"
 
 const manifestPathFlag string = "manifestPath"
