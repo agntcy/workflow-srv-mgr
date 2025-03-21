@@ -30,7 +30,16 @@ Optional flags:
 	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
-   
+
+Env file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
+Example:
+
+values:
+  ENV_VAR_1: "sample value 1"
+dependencies:
+  - name: <agent_dependency_name>
+    values:
+      ENV_VAR_2: "sample value 2"
 		
 Examples:
 - Build an agent with a manifest and environment file:
