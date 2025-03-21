@@ -33,7 +33,7 @@ const logsError string = "get failed"
 var logsCmd = &cobra.Command{
 	Use:   "logs --agentDeploymentName agentDeploymentName",
 	Short: "Show logs of an ACP agent deployment(s)",
-	Long:  deployLongHelp,
+	Long:  logsLongHelp,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)

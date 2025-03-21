@@ -33,7 +33,7 @@ const listError string = "get failed"
 var listCmd = &cobra.Command{
 	Use:   "list --agentDeploymentName agentDeploymentName",
 	Short: "List an ACP agents running in the deployment",
-	Long:  deployLongHelp,
+	Long:  listLongHelp,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
