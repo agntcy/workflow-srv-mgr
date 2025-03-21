@@ -28,8 +28,8 @@ import (
 
 const ManifestCheckSum = "org.agntcy.wfsm.manifest"
 const ServerPort = "8000/tcp"
-const ApiHost = "0.0.0.0"
-const ApiPort = "8000"
+const APIHost = "0.0.0.0"
+const APIPort = "8000"
 
 func (r *runner) Deploy(ctx context.Context, mainAgentName string, agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (internal.DeploymentArtifact, error) {
 	log := zerolog.Ctx(ctx)
@@ -190,8 +190,8 @@ func (r *runner) createServiceConfig(projectName string, agentID string, apiKey 
 	manifestPath := "/opt/storage/manifest.yaml"
 	envVars := deploymentSpec.EnvVars
 	envVars["AGENT_MANIFEST_PATH"] = manifestPath
-	envVars["API_HOST"] = ApiHost
-	envVars["API_PORT"] = ApiPort
+	envVars["API_HOST"] = APIHost
+	envVars["API_PORT"] = APIPort
 	envVars["API_KEY"] = apiKey
 
 	srcDeployment := deploymentSpec.Manifest.Deployment.DeploymentOptions[deploymentSpec.SelectedDeploymentOption].SourceCodeDeployment
@@ -261,8 +261,6 @@ func getDockerCLI(ctx context.Context) (*command.DockerCli, error) {
 		return nil, fmt.Errorf("failed to create docker cli: %v", err)
 	}
 	clientOptions := flags.ClientOptions{
-		Hosts: []string{"unix:///var/run/docker.sock"},
-		//opts := &flags.ClientOptions{Hosts: []string{fmt.Sprintf("unix://%s", socket)}}
 		LogLevel:  "debug",
 		TLS:       false,
 		TLSVerify: false,
