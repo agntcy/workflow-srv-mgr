@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal"
-	"github.com/cisco-eti/wfsm/internal/platforms/docker"
+	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
