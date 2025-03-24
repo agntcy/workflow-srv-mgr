@@ -1,14 +1,16 @@
 {
   "metadata": {
-    "name": "agentA",
-    "version": "1.0.0",
-    "description": "Agent A description"
+    "ref": {
+      "name": "agent_C",
+      "version": "1.0.0"
+    },
+    "description": "Agent C description"
   },
   "specs": {
     "input": {
       "type": "object",
       "properties": {
-        "inputA": {
+        "inputB": {
           "type": "string"
         }
       }
@@ -16,7 +18,7 @@
     "output": {
       "type": "object",
       "properties": {
-        "outputA": {
+        "outputB": {
           "type": "string"
         }
       }
@@ -24,7 +26,7 @@
     "config": {
       "type": "object",
       "properties": {
-        "configA": {
+        "configB": {
           "type": "boolean"
         }
       }
@@ -38,44 +40,39 @@
   },
   "deployment": {
     "dependencies": [
-      {
-        "name": "mailcomposer_deployed_1",
-        "ref": {
-          "name": "agentB",
-          "version": "1.0.0",
-          "url": "agentB_manifest.json"
-        },
-        "deployment_option": "src",
-        "env_var_values": {
-          "values": {
-            "ENV_VAR_B": "some value"
+        {
+          "name": "agent_C_1",
+          "ref": {
+            "name": "agent_C",
+            "version": "1.0.0",
+            "url": "test/manifest_4/agent_C_manifest.json"
           },
-          "dependencies": []
+          "deployment_option": "src",
+          "env_var_values": {
+            "values": {
+              "ENV_VAR_AGENT_C_1": "env_var_value_agent_c_b1",
+              "ENV_VAR_AGENT_C_2": "env_var_value_agent_c_b2"
+            }
+          }
         }
-      }
     ],
     "deployment_options": [
       {
         "type": "source_code",
         "name": "src",
-        "url": "https://github.com/example/agentA",
+        "url": "https://github.com/example/agent_C",
         "framework_config": {
           "framework_type": "langgraph",
-          "graph": "agentA.graph"
+          "graph": "agentC.graph"
         }
       }
     ],
     "env_vars": [
       {
-        "desc": "Environment variable for agentA",
-        "name": "MAILCOMPOSER_DEPLOYENT_1_API_KEY",
+        "desc": "Environment variable for agent C",
+        "name": "ENV_VAR_AGENT_C_1",
         "required": true,
-        "defaultValue": "valueA"
-      },
-      {
-        "desc": "Open AI API Key",
-        "name": "OPENAI_API_KEY",
-        "required": true
+        "defaultValue": "valueB"
       }
     ]
   }
