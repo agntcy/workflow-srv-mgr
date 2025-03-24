@@ -18,7 +18,7 @@ func (b *cbuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (int
 	return internal.AgentDeploymentBuildSpec{
 		AgentSpec:   inputSpec,
 		Image:       getImageName(inputSpec),
-		ServiceName: "wfsm",
+		ServiceName: inputSpec.DeploymentName,
 	}, nil
 }
 
