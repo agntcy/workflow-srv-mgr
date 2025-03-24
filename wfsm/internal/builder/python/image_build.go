@@ -40,7 +40,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	defer containerImageBuildLock.Unlock(img)
 
 	var err error
-	workspacePath, err := os.MkdirTemp("", "agent_build_")
+	workspacePath, err := os.MkdirTemp("", "wfsm_build_")
 	if err != nil {
 		return "", false, fmt.Errorf("creating temporary workspace dir failed: %v", err)
 	}

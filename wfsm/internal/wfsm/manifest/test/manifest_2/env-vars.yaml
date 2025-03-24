@@ -1,0 +1,10 @@
+values:
+  ENV_VAR_AGENT_A: env_var_value_agent_a_override
+dependencies:
+  - name: agent_B_1
+    values:
+      ENV_VAR_AGENT_B_1: env_var_value_agent_b_1_override
+    dependencies:
+      - name: agent_C_1
+        values:
+          ENV_VAR_AGENT_C_1: env_var_value_agent_c_1_override

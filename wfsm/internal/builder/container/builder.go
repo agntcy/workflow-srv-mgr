@@ -26,7 +26,3 @@ func getImageName(spec internal.AgentSpec) string {
 	dopts := spec.Manifest.Deployment.DeploymentOptions[spec.SelectedDeploymentOption]
 	return dopts.DockerDeployment.Image
 }
-
-func (b *cbuilder) Validate(ctx context.Context, inputSpec internal.AgentSpec) error {
-	return nil
-}

@@ -4,14 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
-	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -96,13 +92,13 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 
 	ctx := logger.WithContext(context.Background())
 
-	envVarValues, err := getEnvVars(ctx, envFilePath)
+	envVarValues, err := manifest.LoadEnvVars(envFilePath)
 	if err != nil {
 		return err
 	}
 
 	agsb := manifest.NewAgentSpecBuilder()
-	err = agsb.BuildAgentSpec(manifestPath, "", nil, envVarValues)
+	err = agsb.BuildAgentSpec(ctx, manifestPath, "", nil, envVarValues)
 	if err != nil {
 		return err
 	}
@@ -111,10 +107,6 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 
 	for depName, agentSpec := range agsb.AgentSpecs {
 		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders)
-		if err = builder.Validate(ctx, agentSpec); err != nil {
-			return fmt.Errorf("agent %s confis is invalid: %v", agentSpec.DeploymentName, err)
-		}
-
 		agdbSpec, err := builder.Build(ctx, agentSpec)
 		if err != nil {
 			return fmt.Errorf("failed to build agent: %v", err)
@@ -130,7 +122,7 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 	}
 	runner := docker.NewDockerComposeRunner(hostStorageFolder)
 
-	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, dryRun)
+	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, 0, dryRun)
 	if err != nil {
 		return fmt.Errorf("failed to deploy agent: %v", err)
 	}
@@ -157,26 +149,4 @@ func getHostStorage() (string, error) {
 		}
 	}
 	return hostStorageFolder, nil
-}
-
-func getEnvVars(ctx context.Context, envFilePath string) (manifests.EnvVarValues, error) {
-	file, err := os.Open(envFilePath)
-	if err != nil {
-		return manifests.EnvVarValues{}, errors.New("failed to open env file")
-	}
-	defer file.Close()
-
-	// Read the file into a byte slice
-	byteSlice, err := io.ReadAll(file)
-	if err != nil {
-		return manifests.EnvVarValues{}, errors.New("failed to read env file")
-	}
-
-	envVarValues := manifests.EnvVarValues{}
-
-	if err := yaml.Unmarshal(byteSlice, &envVarValues); err != nil {
-		return manifests.EnvVarValues{}, err
-	}
-
-	return envVarValues, nil
 }
