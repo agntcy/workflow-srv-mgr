@@ -10,7 +10,7 @@ services:
             API_KEY: 4a69e02d-b03a-47e4-99ab-f0782be35f62
             API_PORT: "8000"
             ENV_VAR_AGENT_A: valueA
-            TEST_AGENT_B_API_KEY: 657425ba-fc18-4a6d-9144-14e6a79fdcf4
+            TEST_AGENT_B_API_KEY: "{\"x-api-key\": \"657425ba-fc18-4a6d-9144-14e6a79fdcf4\"}"
             TEST_AGENT_B_HOST: test-agent-b-service
             TEST_AGENT_B_ID: 39c8d1ab-d155-440c-aa4c-7b2d244d1c09
         image: test-agent-a-image

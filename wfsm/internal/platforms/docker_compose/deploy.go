@@ -45,7 +45,7 @@ func (r *runner) Deploy(ctx context.Context,
 		for _, depName := range deps {
 			depAgPrefix := calculateEnvVarPrefix(depName)
 			depSpec := agentDeploymentSpecs[depName]
-			agSpec.EnvVars[depAgPrefix+"API_KEY"] = depSpec.ApiKey
+			agSpec.EnvVars[depAgPrefix+"API_KEY"] = fmt.Sprintf("{\"x-api-key\": \"%s\"}", depSpec.ApiKey)
 			agSpec.EnvVars[depAgPrefix+"ID"] = depSpec.AgentID
 			agSpec.EnvVars[depAgPrefix+"HOST"] = depSpec.ServiceName
 		}
