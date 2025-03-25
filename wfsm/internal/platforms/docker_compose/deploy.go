@@ -47,7 +47,7 @@ func (r *runner) Deploy(ctx context.Context,
 			depSpec := agentDeploymentSpecs[depName]
 			agSpec.EnvVars[depAgPrefix+"API_KEY"] = fmt.Sprintf("{\"x-api-key\": \"%s\"}", depSpec.ApiKey)
 			agSpec.EnvVars[depAgPrefix+"ID"] = depSpec.AgentID
-			agSpec.EnvVars[depAgPrefix+"HOST"] = depSpec.ServiceName
+			agSpec.EnvVars[depAgPrefix+"ENDPOINT"] = fmt.Sprintf("http://%s:%s", depSpec.ServiceName, APIPort)
 		}
 	}
 
@@ -137,7 +137,8 @@ func (r *runner) Deploy(ctx context.Context,
 
 	log.Info().Msg("---------------------------------------------------------------------")
 	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", mainAgentName, port))
-	log.Info().Msg(fmt.Sprintf("Agent ID: %s API Key: %s", mainAgentID, mainAgentAPiKey))
+	log.Info().Msg(fmt.Sprintf("Agent ID: %s", mainAgentID))
+	log.Info().Msg(fmt.Sprintf("API Key: %s", mainAgentAPiKey))
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
