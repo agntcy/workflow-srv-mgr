@@ -1,9 +1,17 @@
 package manifest
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/cisco-eti/wfsm/internal"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+	"gopkg.in/yaml.v3"
+
 	"github.com/cisco-eti/wfsm/manifests"
 )
 
@@ -21,14 +29,14 @@ func NewAgentSpecBuilder() *AgentSpecBuilder {
 	}
 }
 
-func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName string, selectedDeploymentOption *string, envVarValues manifests.EnvVarValues) error {
+func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath string, deploymentName string, selectedDeploymentOption *string, envVarValues manifests.EnvVarValues) error {
 
 	manifestSvc, err := NewManifestService(manifestPath)
 	if err != nil {
 		return err
 	}
 
-	if manifestSvc.ValidateDeploymentOptions() != nil {
+	if manifestSvc.Validate() != nil {
 		return fmt.Errorf("manifest validation failed: %s", err)
 	}
 
@@ -36,6 +44,11 @@ func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName st
 	if deploymentName == "" {
 		deploymentName = manifest.Metadata.Ref.Name
 		a.DeploymentName = deploymentName
+	}
+
+	// check deployment name is unique among dependencies
+	if _, ok := a.AgentSpecs[deploymentName]; ok {
+		return fmt.Errorf("agent deployment name must be unique: %s", deploymentName)
 	}
 
 	selectedDeploymentOptionIdx := 0
@@ -48,6 +61,8 @@ func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName st
 		Manifest:                 manifest,
 		SelectedDeploymentOption: selectedDeploymentOptionIdx,
 		EnvVars:                  envVarValues.Values,
+		AgentID:                  uuid.NewString(),
+		ApiKey:                   uuid.NewString(),
 	}
 	a.AgentSpecs[deploymentName] = agentSpec
 
@@ -62,8 +77,13 @@ func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName st
 
 			// merge env vars
 			dependency.EnvVarValues = mergeEnvVarValues(dependency.EnvVarValues, envVarValues, dependency.Name)
+			// validate required env vars
+			err := validateEnvVarValues(ctx, agentSpec)
+			if err != nil {
+				return fmt.Errorf("failed validating env vars for %s agent: %s", dependency.Name, err)
+			}
 
-			err = a.BuildAgentSpec(*dependency.Ref.Url, dependency.Name, dependency.DeploymentOption, *dependency.EnvVarValues)
+			err = a.BuildAgentSpec(ctx, *dependency.Ref.Url, dependency.Name, dependency.DeploymentOption, *dependency.EnvVarValues)
 			if err != nil {
 				return fmt.Errorf("failed building spec for dependent agent: %s", err)
 			}
@@ -71,6 +91,35 @@ func (a *AgentSpecBuilder) BuildAgentSpec(manifestPath string, deploymentName st
 		a.Dependencies[deploymentName] = depNames
 	}
 	return nil
+}
+
+func validateEnvVarValues(ctx context.Context, inputSpec internal.AgentSpec) error {
+	log := zerolog.Ctx(ctx)
+	// validate that all required env vars are present in inputSpec.EnvVars
+	// validate that SourceCodeDeploymentFrameworkConfig settings are correct
+	for _, envVarDefs := range inputSpec.Manifest.Deployment.EnvVars {
+		if envVarDefs.GetRequired() {
+			if _, ok := inputSpec.EnvVars[envVarDefs.GetName()]; !ok {
+				if envVarDefs.HasDefaultValue() {
+					log.Warn().Msgf("agent %s config is missing required env var %s, using default value %s", inputSpec.DeploymentName, envVarDefs.GetName(), envVarDefs.GetDefaultValue())
+					inputSpec.EnvVars[envVarDefs.GetName()] = envVarDefs.GetDefaultValue()
+				} else {
+					return fmt.Errorf("missing required env var %s", envVarDefs.GetName())
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func mergeMaps(dest map[string]string, src map[string]string) map[string]string {
+	if dest == nil {
+		dest = make(map[string]string)
+	}
+	for key, value := range src {
+		dest[key] = value
+	}
+	return dest
 }
 
 func mergeEnvVarValues(dest *manifests.EnvVarValues, src manifests.EnvVarValues, dependencyName string) *manifests.EnvVarValues {
@@ -102,16 +151,6 @@ func mergeDepEnvVarValues(dest []manifests.EnvVarValues, src []manifests.EnvVarV
 	return dest
 }
 
-func mergeMaps(dest map[string]string, src map[string]string) map[string]string {
-	if dest == nil {
-		dest = make(map[string]string)
-	}
-	for key, value := range src {
-		dest[key] = value
-	}
-	return dest
-}
-
 func getSelectedDeploymentOptionIdx(options []manifests.AgentDeploymentDeploymentOptionsInner, option string) int {
 	for i, opt := range options {
 		if opt.SourceCodeDeployment != nil &&
@@ -126,4 +165,26 @@ func getSelectedDeploymentOptionIdx(options []manifests.AgentDeploymentDeploymen
 		}
 	}
 	return 0
+}
+
+func LoadEnvVars(envFilePath string) (manifests.EnvVarValues, error) {
+	file, err := os.Open(envFilePath)
+	if err != nil {
+		return manifests.EnvVarValues{}, errors.New("failed to open env file")
+	}
+	defer file.Close()
+
+	// Read the file into a byte slice
+	byteSlice, err := io.ReadAll(file)
+	if err != nil {
+		return manifests.EnvVarValues{}, errors.New("failed to read env file")
+	}
+
+	envVarValues := manifests.EnvVarValues{}
+
+	if err := yaml.Unmarshal(byteSlice, &envVarValues); err != nil {
+		return manifests.EnvVarValues{}, err
+	}
+
+	return envVarValues, nil
 }

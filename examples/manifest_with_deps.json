@@ -76,7 +76,24 @@
     "interrupts": []
   },
   "deployment": {
-    "dependencies": [],
+    "dependencies": [
+      {
+        "name": "email_reviewer_1",
+        "ref": {
+          "name": "email_reviewer",
+          "version": "1.0.0",
+          "url": "/Users/smagyari/dev/genai/demo/llama_manifest.json"
+        },
+        "deployment_option": "src",
+        "env_var_values": {
+          "values": {
+            "AZURE_OPENAI_MODEL": "gpt-4o-mini",
+            "TEST_ENV_VAR": "some test value"
+          },
+          "dependencies": []
+        }
+      }
+    ],
     "deployment_options": [
       {
         "type": "source_code",
@@ -110,7 +127,7 @@
         "name": "OPENAI_API_VERSION",
         "required": true,
         "defaultValue": "2024-07-01-preview"
-      } 
-    ]    
+      }      
+    ]
   }
 }

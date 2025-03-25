@@ -34,7 +34,6 @@ func GetAgentSource(deployment *manifests.SourceCodeDeployment) (AgentSource, er
 		return &GoGetSource{
 			URL: deployment.Url,
 		}, nil
-		return nil, fmt.Errorf("unsupported source code deployment URL: %s", deployment.Url)
 	case "file":
 		// remove file:// prefix from deployment URL
 		deploymentUrl := strings.TrimPrefix(deployment.Url, "file://")
