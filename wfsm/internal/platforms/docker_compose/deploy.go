@@ -136,9 +136,10 @@ func (r *runner) Deploy(ctx context.Context,
 	}
 
 	log.Info().Msg("---------------------------------------------------------------------")
-	log.Info().Msg(fmt.Sprintf("agent running in container: %s, listening on: http://127.0.0.1:%d", mainAgentName, port))
-	log.Info().Msg(fmt.Sprintf("Agent ID: %s", mainAgentID))
-	log.Info().Msg(fmt.Sprintf("API Key: %s", mainAgentAPiKey))
+	log.Info().Msgf("agent deployment name: %s", mainAgentName)
+	log.Info().Msgf("agent running in container: %s, listening on: http://127.0.0.1:%d", mainAgentName, port)
+	log.Info().Msgf("Agent ID: %s", mainAgentID)
+	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
