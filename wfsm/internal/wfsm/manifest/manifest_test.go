@@ -21,7 +21,7 @@ func Test_manifestService_Validate(t *testing.T) {
 		{
 			name: "read the manifest from the file",
 			fields: fields{
-				filePath: "../../../../examples/manifest.json",
+				filePath: "test/manifest_1/manifest.json",
 			},
 			args: args{
 				ctx: context.Background(),
@@ -35,7 +35,7 @@ func Test_manifestService_Validate(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewManifestService error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if err := m.ValidateDeploymentOptions(); (err != nil) != tt.wantErr {
+			if err := m.Validate(); (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

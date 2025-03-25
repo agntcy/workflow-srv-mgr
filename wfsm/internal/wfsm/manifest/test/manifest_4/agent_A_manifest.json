@@ -1,7 +1,9 @@
 {
   "metadata": {
-    "name": "agentA",
-    "version": "1.0.0",
+    "ref": {
+      "name": "agent_A",
+      "version": "1.0.0"
+    },
     "description": "Agent A description"
   },
   "specs": {
@@ -39,18 +41,27 @@
   "deployment": {
     "dependencies": [
       {
-        "name": "mailcomposer_deployed_1",
+        "name": "agent_B_1",
         "ref": {
-          "name": "agentB",
+          "name": "agent_B",
           "version": "1.0.0",
-          "url": "agentB_manifest.json"
+          "url": "test/manifest_4/agent_B_manifest.json"
         },
         "deployment_option": "src",
         "env_var_values": {
           "values": {
-            "ENV_VAR_B": "some value"
+            "ENV_VAR_AGENT_B_1": "env_var_value_agent_b_a1",
+            "ENV_VAR_AGENT_B_2": "env_var_value_agent_b_a2"
           },
-          "dependencies": []
+          "dependencies": [
+            {
+              "name": "agent_C_1",
+              "values": {
+                "ENV_VAR_AGENT_C_1": "env_var_value_agent_c_a1",
+                "ENV_VAR_AGENT_C_2": "env_var_value_agent_c_a2"
+              }
+            }
+          ]
         }
       }
     ],
@@ -58,7 +69,7 @@
       {
         "type": "source_code",
         "name": "src",
-        "url": "https://github.com/example/agentA",
+        "url": "https://github.com/example/agent_A",
         "framework_config": {
           "framework_type": "langgraph",
           "graph": "agentA.graph"
@@ -67,15 +78,10 @@
     ],
     "env_vars": [
       {
-        "desc": "Environment variable for agentA",
-        "name": "MAILCOMPOSER_DEPLOYENT_1_API_KEY",
+        "desc": "Environment variable for agent A",
+        "name": "ENV_VAR_AGENT_A_1",
         "required": true,
         "defaultValue": "valueA"
-      },
-      {
-        "desc": "Open AI API Key",
-        "name": "OPENAI_API_KEY",
-        "required": true
       }
     ]
   }

@@ -12,7 +12,7 @@ import (
 )
 
 type ManifestService interface {
-	ValidateDeploymentOptions() error
+	Validate() error
 	GetManifest() manifests.AgentManifest
 }
 
@@ -28,6 +28,18 @@ func NewManifestService(filePath string) (ManifestService, error) {
 	return &manifestService{
 		manifest: manifest,
 	}, nil
+}
+
+func (m manifestService) Validate() error {
+	// validate ref name and version
+	if m.manifest.Metadata.Ref.Name == "" {
+		return errors.New("invalid agent manifest: no name found in manifest")
+	}
+	if m.manifest.Metadata.Ref.Version == "" {
+		return errors.New("invalid agent manifest: no version found in manifest")
+	}
+	//TODO what elso to validate here?
+	return m.ValidateDeploymentOptions()
 }
 
 func (m manifestService) ValidateDeploymentOptions() error {
