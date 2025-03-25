@@ -1,21 +1,73 @@
 builds:
-  - main: ./cmd/main.go
+  - id: darwin-amd64
+    main: ./cmd/main.go
     binary: wfsm
-    env:
-      - CGO_ENABLED=1
-    ldflags: "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
     goos:
-      - linux
       - darwin
     goarch:
       - amd64
+    env:
+      - CGO_ENABLED=1
+      - PKG_CONFIG_SYSROOT_DIR=/sysroot/macos/amd64
+      - PKG_CONFIG_PATH=/sysroot/macos/amd64/usr/local/lib/pkgconfig
+      - CC=o64-clang
+      - CXX=o64-clang++
+
+    flags:
+        - -mod=readonly
+    ldflags:
+        - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+
+  - id: darwin-arm64
+    main: ./cmd/main.go
+    binary: wfsm
+    goos:
+      - darwin
+    goarch:
       - arm64
+    env:
+      - CGO_ENABLED=1
+      - PKG_CONFIG_SYSROOT_DIR=/sysroot/macos/arm64
+      - PKG_CONFIG_PATH=/sysroot/macos/arm64/usr/local/lib/pkgconfig
+      - CC=o64-clang
+      - CXX=o64-clang++
+
+    flags:
+        - -mod=readonly
+    ldflags:
+        - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+
+  - id: linux-armhf
+    main: ./cmd/main.go
+    binary: wfsm
+    goos:
+      - linux
+    goarch:
+      - arm
+    goarm:
+      - 7
+    env:
+      - CGO_ENABLED=1
+      - CC=arm-linux-gnueabihf-gcc
+      - CXX=arm-linux-gnueabihf-g++
+      - CGO_CFLAGS=--sysroot=/sysroot/linux/armhf
+      - CGO_LDFLAGS=--sysroot=/sysroot/linux/armhf
+      - PKG_CONFIG_SYSROOT_DIR=/sysroot/linux/armhf
+      - PKG_CONFIG_PATH=/sysroot/linux/armhf/opt/vc/lib/pkgconfig:/sysroot/linux/armhf/usr/lib/arm-linux-gnueabihf/pkgconfig:/sysroot/linux/armhf/usr/lib/pkgconfig:/sysroot/linux/armhf/usr/local/lib/pkgconfig
+    flags:
+      - -mod=readonly
+    ldflags:
+      - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
 
 archives:
   - name_template: "wfsm{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - darwin-amd64
+      - darwin-arm64
+      - linux-armhf
 
 checksum:
-  name_template: "acpilot_checksums.txt"
+  name_template: "wfsm_checksums.txt"
 
 changelog:
   skip: true

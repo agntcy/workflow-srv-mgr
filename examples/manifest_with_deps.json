@@ -82,7 +82,7 @@
         "ref": {
           "name": "email_reviewer",
           "version": "1.0.0",
-          "url": "/Users/smagyari/dev/genai/demo/llama_manifest.json"
+          "url": "llama_manifest.json"
         },
         "deployment_option": "src",
         "env_var_values": {
