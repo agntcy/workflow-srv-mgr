@@ -33,7 +33,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
-func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool) (string, bool, error) {
+func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, baseImage string) (string, bool, error) {
 
 	log := zerolog.Ctx(ctx).With().Str("platforms", "runtime").Logger()
 	ctx = log.WithContext(ctx)
@@ -68,7 +68,8 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	// calc. hash based on agent source files will be used as image tag
-	hashCode := calculateHash(agentSrcPath)
+
+	hashCode := calculateHash(agentSrcPath, baseImage)
 	img = fmt.Sprintf("%s:%s", img, hashCode)
 
 	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
@@ -98,7 +99,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	log.Debug().Str("image", img).Msg("image not found on runtime host")
 
 	// build image
-	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders)
+	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to build image %s: %w", img, err)
 	}
@@ -106,7 +107,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	return img, true, nil
 }
 
-func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool) error {
+func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool, baseImage string) error {
 	log := zerolog.Ctx(ctx).With().Str("image", img).Logger()
 
 	if err := os.WriteFile(path.Join(workspacePath, "Dockerfile"), dockerFile, util.OwnerCanReadWrite); err != nil {
@@ -125,8 +126,10 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	}()
 
 	buildArgs := map[string]*string{
-		"AGENT_DIR": &agentSourceDir,
+		"AGENT_DIR":  &agentSourceDir,
+		"BASE_IMAGE": &baseImage,
 	}
+
 	buildResp, err := client.ImageBuild(ctx, imageBuildContext, types.ImageBuildOptions{
 		Dockerfile: "Dockerfile",
 		Tags:       []string{img},

@@ -1,11 +1,10 @@
 # Copyright AGNTCY Contributors (https://github.com/agntcy)
 # SPDX-License-Identifier: Apache-2.0
 
-FROM workflowserver:latest
+ARG BASE_IMAGE=ghcr.io/agntcy/acp/wfsrv:latest
+FROM $BASE_IMAGE
 
 ARG AGENT_DIR
-ARG MANIFEST_FILE
-ARG ENV_FILE
 
 WORKDIR /opt/agent-workflow-server
 
