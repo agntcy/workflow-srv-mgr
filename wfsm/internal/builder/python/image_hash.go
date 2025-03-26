@@ -12,7 +12,7 @@ import (
 
 // CalculateHash calculates a hash code for the given path by iterating over all files and folders
 // recursively and using the size of each file.
-func calculateHash(path string) string {
+func calculateHash(path string, baseImage string) string {
 	hasher := sha256.New()
 
 	// Walk through the directory recursively
@@ -37,7 +37,7 @@ func calculateHash(path string) string {
 	}
 
 	// Get the final hash sum
-	hashSum := hasher.Sum(nil)
+	hashSum := hasher.Sum([]byte(baseImage))
 
 	// Convert the hash sum to a hexadecimal string
 	hashCode := fmt.Sprintf("%x", hashSum)

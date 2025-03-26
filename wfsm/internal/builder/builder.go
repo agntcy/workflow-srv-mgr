@@ -9,11 +9,11 @@ import (
 	"github.com/cisco-eti/wfsm/manifests"
 )
 
-func GetAgentBuilder(deploymentOption manifests.AgentDeploymentDeploymentOptionsInner, deleteBuildFolders bool) internal.AgentDeploymentBuilder {
+func GetAgentBuilder(deploymentOption manifests.AgentDeploymentDeploymentOptionsInner, deleteBuildFolders bool, baseImage string) internal.AgentDeploymentBuilder {
 	if deploymentOption.DockerDeployment != nil {
 		return container.NewContainerAgentBuilder()
 	} else if deploymentOption.SourceCodeDeployment != nil {
-		return python.NewPythonAgentBuilder(deleteBuildFolders)
+		return python.NewPythonAgentBuilder(baseImage, deleteBuildFolders)
 	}
 	return nil
 }

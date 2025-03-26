@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal"
-	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
+	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
@@ -47,11 +47,12 @@ Examples:
 const deployFail = "Deploy Status: Failed - %s"
 const deployError string = "get failed"
 
-const manifestPathFlag string = "manifestPath"
-const envFilePathFlag string = "envFilePath"
-const platformsFlag string = "platform"
-const dryRunFlag string = "dryRun"
+const baseImageFlag string = "baseImage"
 const deleteBuildFoldersFlag string = "deleteBuildFolders"
+const dryRunFlag string = "dryRun"
+const envFilePathFlag string = "envFilePath"
+const manifestPathFlag string = "manifestPath"
+const platformsFlag string = "platform"
 
 // deployCmd represents the image build and run docker commands
 var deployCmd = &cobra.Command{
@@ -60,13 +61,14 @@ var deployCmd = &cobra.Command{
 	Long:  deployLongHelp,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
-		envFilePath, _ := cmd.Flags().GetString(envFilePathFlag)
-		platform, _ := cmd.Flags().GetString(platformsFlag)
-		dryRun, _ := cmd.Flags().GetBool(dryRunFlag)
+		baseImage, _ := cmd.Flags().GetString(baseImageFlag)
 		deleteBuildFolders, _ := cmd.Flags().GetBool(deleteBuildFoldersFlag)
+		dryRun, _ := cmd.Flags().GetBool(dryRunFlag)
+		envFilePath, _ := cmd.Flags().GetString(envFilePathFlag)
+		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
+		platform, _ := cmd.Flags().GetString(platformsFlag)
 
-		err := runDeploy(manifestPath, envFilePath, platform, dryRun, deleteBuildFolders)
+		err := runDeploy(manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, baseImage)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, deployError)
@@ -76,19 +78,20 @@ var deployCmd = &cobra.Command{
 }
 
 func init() {
-	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
+	deployCmd.Flags().StringP(baseImageFlag, "b", "ghcr.io/agntcy/acp/wfsrv:v0.2.0-dev.1", "Base image to be used as the workflowserver for the agent")
 	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
+	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
 
-	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
-	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
+	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
+	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
 	deployCmd.MarkPersistentFlagRequired(envFilePathFlag)
 	deployCmd.MarkPersistentFlagRequired(manifestPathFlag)
 
 }
 
-func runDeploy(manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool) error {
+func runDeploy(manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, baseImage string) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
 
@@ -108,7 +111,7 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 	agDeploymentSpecs := make(map[string]internal.AgentDeploymentBuildSpec, len(agsb.AgentSpecs))
 
 	for depName, agentSpec := range agsb.AgentSpecs {
-		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders)
+		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders, baseImage)
 		agdbSpec, err := builder.Build(ctx, agentSpec)
 		if err != nil {
 			return fmt.Errorf("failed to build agent: %v", err)
