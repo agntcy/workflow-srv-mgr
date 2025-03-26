@@ -8,13 +8,12 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal"
-	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
+	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
@@ -23,13 +22,13 @@ import (
 
 var deployLongHelp = `
 This command takes two required flags: --manifestPath path/to/acpManifest
-                                       --envFilePath path/to/envFile
+                                       --envFilePath path/to/envConfigFile
 Optional flags:
 	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
 
-Env file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
+Env config file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
 Example:
 
 values:
@@ -41,7 +40,7 @@ dependencies:
 		
 Examples:
 - Build an agent with a manifest and environment file:
-	wfsm deploy --manifestPath path/to/acpManifest --envFilePath path/to/envFile
+	wfsm deploy --manifestPath path/to/acpManifest --envFilePath path/to/envConfigFile
 `
 
 const deployFail = "Deploy Status: Failed - %s"
@@ -68,7 +67,7 @@ var deployCmd = &cobra.Command{
 		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
 		platform, _ := cmd.Flags().GetString(platformsFlag)
 
-		err := runDeploy(manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, baseImage)
+		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, baseImage)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, deployError)
@@ -86,16 +85,13 @@ func init() {
 	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
 	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
-	deployCmd.MarkPersistentFlagRequired(envFilePathFlag)
-	deployCmd.MarkPersistentFlagRequired(manifestPathFlag)
+	deployCmd.MarkFlagRequired(envFilePathFlag)
+	deployCmd.MarkFlagRequired(manifestPathFlag)
 
 }
 
-func runDeploy(manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, baseImage string) error {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
-	zerolog.DefaultContextLogger = &logger
-
-	ctx := logger.WithContext(context.Background())
+func runDeploy(ctx context.Context, manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, baseImage string) error {
+	log := zerolog.Ctx(ctx)
 
 	envVarValues, err := manifest.LoadEnvVars(envFilePath)
 	if err != nil {
@@ -120,7 +116,6 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 	}
 
 	// run deployment of agent(s)
-
 	hostStorageFolder, err := getHostStorage()
 	if err != nil {
 		return err
@@ -131,7 +126,7 @@ func runDeploy(manifestPath string, envFilePath string, platform string, dryRun 
 	if err != nil {
 		return fmt.Errorf("failed to deploy agent: %v", err)
 	}
-	logger.Debug().Msg(string(afs))
+	log.Debug().Msg(string(afs))
 
 	return nil
 }

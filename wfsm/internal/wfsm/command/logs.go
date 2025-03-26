@@ -40,7 +40,7 @@ var logsCmd = &cobra.Command{
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
 
-		err := runLogs(agentDeploymentName)
+		err := runLogs(getContextWithLogger(cmd), agentDeploymentName)
 		if err != nil {
 			util.OutputMessage(logsFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, logsError)
@@ -52,13 +52,12 @@ var logsCmd = &cobra.Command{
 func init() {
 	logsCmd.Flags().StringP(agentDeploymentNameFlag, "n", "docker", "Environment file for the application")
 	logsCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
+	logsCmd.MarkFlagRequired(agentDeploymentNameFlag)
 }
 
-func runLogs(agentDeploymentName string) error {
+func runLogs(ctx context.Context, agentDeploymentName string) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
-
-	ctx := logger.WithContext(context.Background())
 
 	hostStorageFolder, err := getHostStorage()
 	if err != nil {

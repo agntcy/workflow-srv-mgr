@@ -42,7 +42,7 @@ var stopCmd = &cobra.Command{
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
 
-		err := runStop(agentDeploymentName)
+		err := runStop(getContextWithLogger(cmd), agentDeploymentName)
 		if err != nil {
 			util.OutputMessage(stopFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, stopError)
@@ -54,13 +54,12 @@ var stopCmd = &cobra.Command{
 func init() {
 	stopCmd.Flags().StringP(agentDeploymentNameFlag, "n", "docker", "Environment file for the application")
 	stopCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
+	stopCmd.MarkFlagRequired(agentDeploymentNameFlag)
 }
 
-func runStop(agentDeploymentName string) error {
+func runStop(ctx context.Context, agentDeploymentName string) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
-
-	ctx := logger.WithContext(context.Background())
 
 	// stop deployment of agent(s)
 

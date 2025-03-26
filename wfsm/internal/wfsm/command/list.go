@@ -5,10 +5,7 @@ package command
 import (
 	"context"
 	"fmt"
-	"os"
-	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
@@ -40,7 +37,7 @@ var listCmd = &cobra.Command{
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
 
-		err := runList(agentDeploymentName)
+		err := runList(getContextWithLogger(cmd), agentDeploymentName)
 		if err != nil {
 			util.OutputMessage(listFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, listError)
@@ -52,13 +49,10 @@ var listCmd = &cobra.Command{
 func init() {
 	listCmd.Flags().StringP(agentDeploymentNameFlag, "n", "docker", "Environment file for the application")
 	listCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
+	listCmd.MarkFlagRequired(agentDeploymentNameFlag)
 }
 
-func runList(agentDeploymentName string) error {
-	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
-	zerolog.DefaultContextLogger = &logger
-
-	ctx := logger.WithContext(context.Background())
+func runList(ctx context.Context, agentDeploymentName string) error {
 
 	hostStorageFolder, err := getHostStorage()
 	if err != nil {

@@ -23,8 +23,6 @@ Examples:
 - Check the prerequisites for the host:
 	wfsm check
 `
-
-	verboseChecksFlag string = "true"
 )
 
 // checkCmd represents the check command
@@ -50,10 +48,6 @@ var checkCmd = &cobra.Command{
 		logger.Info().Msg("Checking prerequisites check passed")
 		return nil
 	},
-}
-
-func init() {
-	checkCmd.Flags().BoolP(verboseChecksFlag, "v", false, "Output verbose logs for the checks")
 }
 
 func runChecks(verbose bool, logger zerolog.Logger) error {
