@@ -33,7 +33,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // and returns its name.
 func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool) (string, bool, error) {
 
-	log := zerolog.Ctx(ctx).With().Str("platforms", "runtime").Logger()
+	log := zerolog.Ctx(ctx)
 	ctx = log.WithContext(ctx)
 
 	containerImageBuildLock.Lock(img)
@@ -45,12 +45,12 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 		return "", false, fmt.Errorf("creating temporary workspace dir failed: %v", err)
 	}
 
-	log.Debug().Str("workspace_path", workspacePath).Msg("created temporary workspace dir")
+	log.Info().Str("workspace_path", workspacePath).Msg("created temporary workspace dir")
 
 	agentSourceDir := "agent_src"
 	agentSrcPath := path.Join(workspacePath, agentSourceDir)
 
-	log.Debug().Str("agent_src_path", agentSrcPath).Msg("copying agent source to workspace")
+	log.Info().Str("agent_src_path", agentSrcPath).Msg("copying agent source to workspace")
 
 	err = src.CopyToWorkspace(agentSrcPath)
 	if err != nil {
@@ -86,14 +86,14 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	if len(imageList) == 1 {
-		log.Debug().Str("image", img).Msg("found image on runtime host")
+		log.Info().Str("image", img).Msg("found image on runtime host")
 		return img, false, nil
 	}
 	if len(imageList) > 1 {
 		return "", false, fmt.Errorf("more than one image %q found on runtime host", img)
 	}
 
-	log.Debug().Str("image", img).Msg("image not found on runtime host")
+	log.Info().Str("image", img).Msg("image not found on runtime host, building image")
 
 	// build image
 	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders)
@@ -105,7 +105,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 }
 
 func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool) error {
-	log := zerolog.Ctx(ctx).With().Str("image", img).Logger()
+	log := zerolog.Ctx(ctx)
 
 	if err := os.WriteFile(path.Join(workspacePath, "Dockerfile"), dockerFile, util.OwnerCanReadWrite); err != nil {
 		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
@@ -167,12 +167,12 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 				return errors.New("failed to build image")
 			}
 			if len(imageBuildLogLine.Stream) > 0 {
-				log.Debug().Str("log_line", imageBuildLogLine.Stream).Msg("image build")
+				log.Info().Str("log_line", imageBuildLogLine.Stream).Msg("image build")
 			}
 			logLine = logLine[:0]
 		}
 	}
 
-	log.Debug().Msg("successfully built image")
+	log.Info().Msg("successfully built image")
 	return nil
 }

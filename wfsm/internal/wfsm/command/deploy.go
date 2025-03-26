@@ -21,13 +21,13 @@ import (
 
 var deployLongHelp = `
 This command takes two required flags: --manifestPath path/to/acpManifest
-                                       --envFilePath path/to/envFile
+                                       --envFilePath path/to/envConfigFile
 Optional flags:
 	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
 
-Env file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
+Env config file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
 Example:
 
 values:
@@ -39,7 +39,7 @@ dependencies:
 		
 Examples:
 - Build an agent with a manifest and environment file:
-	wfsm deploy --manifestPath path/to/acpManifest --envFilePath path/to/envFile
+	wfsm deploy --manifestPath path/to/acpManifest --envFilePath path/to/envConfigFile
 `
 
 const deployFail = "Deploy Status: Failed - %s"
@@ -75,9 +75,9 @@ var deployCmd = &cobra.Command{
 
 func init() {
 	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
-	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
+	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment values config yaml for the application")
 
-	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
+	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Platform to deploy the agent(s) to. Currently only 'docker' is supported.")
 	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
 

@@ -121,6 +121,7 @@ func (r *runner) Deploy(ctx context.Context,
 	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{
 		//deploymentSpec.ServiceName
 	})
+	log.Info().Msgf("compose file generated at: %s", composeFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %v", err)
 	}
@@ -136,8 +137,8 @@ func (r *runner) Deploy(ctx context.Context,
 	}
 
 	log.Info().Msg("---------------------------------------------------------------------")
-	log.Info().Msgf("agent deployment name: %s", mainAgentName)
-	log.Info().Msgf("agent running in container: %s, listening on: http://127.0.0.1:%d", mainAgentName, port)
+	log.Info().Msgf("ACP agent deployment name: %s", mainAgentName)
+	log.Info().Msgf("ACP agent running in container: %s, listening for ACP request on: http://127.0.0.1:%d", mainAgentName, port)
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
