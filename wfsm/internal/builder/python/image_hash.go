@@ -36,8 +36,10 @@ func calculateHash(path string, baseImage string) string {
 		return ""
 	}
 
+	binary.Write(hasher, binary.LittleEndian, baseImage)
+
 	// Get the final hash sum
-	hashSum := hasher.Sum([]byte(baseImage))
+	hashSum := hasher.Sum(nil)
 
 	// Convert the hash sum to a hexadecimal string
 	hashCode := fmt.Sprintf("%x", hashSum)
