@@ -4,6 +4,7 @@ package python
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"github.com/cisco-eti/wfsm/internal/builder/python/source"
 	containerclient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
+	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/rs/zerolog"
@@ -33,7 +35,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
-func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, baseImage string) (string, bool, error) {
+func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, baseImage string) (string, error) {
 
 	log := zerolog.Ctx(ctx)
 	ctx = log.WithContext(ctx)
@@ -44,7 +46,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	var err error
 	workspacePath, err := os.MkdirTemp("", "wfsm_build_")
 	if err != nil {
-		return "", false, fmt.Errorf("creating temporary workspace dir failed: %v", err)
+		return "", fmt.Errorf("creating temporary workspace dir failed: %v", err)
 	}
 
 	log.Info().Str("workspace_path", workspacePath).Msg("created temporary workspace dir")
@@ -56,7 +58,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 
 	err = src.CopyToWorkspace(agentSrcPath)
 	if err != nil {
-		return "", false, fmt.Errorf("failed to copy agent source to workspace: %v", err)
+		return "", fmt.Errorf("failed to copy agent source to workspace: %v", err)
 	}
 
 	if deleteBuildFolders {
@@ -68,16 +70,53 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	// calc. hash based on agent source files will be used as image tag
-
 	hashCode := calculateHash(agentSrcPath, baseImage)
 	img = fmt.Sprintf("%s:%s", img, hashCode)
 
 	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", false, fmt.Errorf("failed to create runtime client: %w", err)
+		return "", fmt.Errorf("failed to create runtime client: %w", err)
 	}
 	defer containerclient.Close(ctx, client)
 
+	found, err := findImage(ctx, client, baseImage)
+	if err != nil {
+		return "", err
+	}
+	if !found {
+		log.Info().Str("image", baseImage).Msg("base image not found on container runtime host")
+		// image not available locally, see if it can be pulled from registry
+		err = pullImage(ctx, client, baseImage)
+		if err != nil {
+			if !errdefs.IsNotFound(err) {
+				return "", fmt.Errorf("base image not found %s: %w", baseImage, err)
+			}
+			return "", fmt.Errorf("failed to pull base image %s: %w", baseImage, err)
+		}
+	}
+
+	found, err = findImage(ctx, client, img)
+	if err != nil {
+		return "", err
+	}
+
+	if found {
+		return img, nil
+	}
+
+	log.Info().Str("image", img).Msg("image not found on runtime host")
+
+	// build image
+	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)
+	if err != nil {
+		return "", fmt.Errorf("failed to build image %s: %w", img, err)
+	}
+
+	return img, nil
+}
+
+func findImage(ctx context.Context, client *dockerclient.Client, img string) (bool, error) {
+	log := zerolog.Ctx(ctx)
 	imageList, err := client.ImageList(ctx, image.ListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "reference",
@@ -85,26 +124,18 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 		}),
 	})
 	if err != nil {
-		return "", false, fmt.Errorf("failed to retrieve the list of images from the conainer runtime host: %w", err)
+		return false, fmt.Errorf("failed to retrieve the list of images from the conainer runtime host: %w", err)
 	}
 
 	if len(imageList) == 1 {
-		log.Info().Str("image", img).Msg("found image on runtime host")
-		return img, false, nil
+		log.Info().Str("image", img).Msg("image found on runtime host")
+		return true, nil
 	}
 	if len(imageList) > 1 {
-		return "", false, fmt.Errorf("more than one image %q found on runtime host", img)
+		return false, fmt.Errorf("more than one image %q found on runtime host", img)
 	}
 
-	log.Info().Str("image", img).Msg("image not found on runtime host, building image")
-
-	// build image
-	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)
-	if err != nil {
-		return "", false, fmt.Errorf("failed to build image %s: %w", img, err)
-	}
-
-	return img, true, nil
+	return false, nil
 }
 
 func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool, baseImage string) error {
@@ -179,5 +210,30 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	}
 
 	log.Info().Msg("successfully built image")
+	return nil
+}
+
+func pullImage(ctx context.Context, client *dockerclient.Client, img string) error {
+	log := zerolog.Ctx(ctx)
+
+	reader, err := client.ImagePull(ctx, img, image.PullOptions{Platform: util.CurrentArchToDockerPlatform()})
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := reader.Close(); err != nil {
+			log.Error().Err(err).Msg("failed to close image pull log reader")
+		}
+	}()
+
+	// client.ImagePull is asynchronous.
+	// The reader needs to be read completely for the pull operation to complete.
+	var imgPullLog bytes.Buffer
+	if _, err = io.Copy(&imgPullLog, reader); err != nil {
+		return fmt.Errorf("failed to read image pull logs %s: %w", img, err)
+	}
+	log.Info().Str("image", img).Str("log", imgPullLog.String()).Msg("successfully pulled image")
+
 	return nil
 }
