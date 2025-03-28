@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal"
-	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
+	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
@@ -44,7 +44,7 @@ Examples:
 `
 
 const deployFail = "Deploy Status: Failed - %s"
-const deployError string = "get failed"
+const deployError string = "deploy failed"
 
 const baseImageFlag string = "baseImage"
 const deleteBuildFoldersFlag string = "deleteBuildFolders"

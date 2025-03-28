@@ -40,7 +40,7 @@ func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (in
 	}
 
 	imageName := strings.Join([]string{AgentImage, inputSpec.Manifest.Metadata.Ref.Name}, "-")
-	imgNameWithTag, _, err := EnsureContainerImage(ctx, imageName, agSrc, b.deleteBuildFolders, b.baseImage)
+	imgNameWithTag, err := EnsureContainerImage(ctx, imageName, agSrc, b.deleteBuildFolders, b.baseImage)
 	if err != nil {
 		return deploymentSpec, fmt.Errorf("failed to get/build container image: %v", err)
 	}
