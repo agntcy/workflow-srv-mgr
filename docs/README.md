@@ -20,19 +20,24 @@ The installer script will download the latest release and unpack it into the `bi
 The output of the execution looks like this:
 
 ```bash
- $ curl -L https://raw.githubusercontent.com/agntcy/workflow-srv-mgr/refs/heads/install/install.sh | bash                                                                                      [17:17:28]
-% Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+ curl -L https://raw.githubusercontent.com/agntcy/workflow-srv-mgr/refs/heads/install/install.sh | bash                                                           [16:05:58]
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   858  100   858    0     0   8524      0 --:--:-- --:--:-- --:--:--  8580
+100  1034  100  1034    0     0   2597      0 --:--:-- --:--:-- --:--:--  2597
 Installing the Workflow Server Manager tool:
-OS:	darwin
-ARCH:	amd64
-TAG:	0.0.1-dev.23
-ARCHIVE_URL:	https://github.com/agntcy/workflow-srv-mgr/releases/download/v0.0.1-dev.23/wfsm0.0.1-dev.23_darwin_amd64.tar.gz
-Installation complete. The 'wfsm' binary is located at /Users/john/prj/agntcy/workflow-srv-mgr/bin/wfsm```
 
-Listed variables can be overridden by providing the values as environment variables
+OS: darwin
+ARCH: arm64
+AG: 0.0.1-dev.23
+TARGET: /Users/johndoe/.wfsm/bin
+ARCHIVE_URL: https://github.com/agntcy/workflow-srv-mgr/releases/download/v0.0.1-dev.23/wfsm0.0.1-dev.23_darwin_arm64.tar.gz
+
+
+Installation complete. The 'wfsm' binary is located at /Users/johndoe/.wfsm/bin/wfsm
 ```
+
+Listed variables can be overridden by providing the values as variables to the script
+
 
 
 ### Usage
