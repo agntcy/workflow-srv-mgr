@@ -35,7 +35,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
-func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, baseImage string) (string, error) {
+func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, forceBuild bool, baseImage string) (string, error) {
 
 	log := zerolog.Ctx(ctx)
 	ctx = log.WithContext(ctx)
@@ -79,32 +79,35 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 	defer containerclient.Close(ctx, client)
 
-	found, err := findImage(ctx, client, baseImage)
-	if err != nil {
-		return "", err
-	}
-	if !found {
-		log.Info().Str("image", baseImage).Msg("base image not found on container runtime host")
-		// image not available locally, see if it can be pulled from registry
-		err = pullImage(ctx, client, baseImage)
+	if !forceBuild {
+
+		found, err := findImage(ctx, client, baseImage)
 		if err != nil {
-			if !errdefs.IsNotFound(err) {
-				return "", fmt.Errorf("base image not found %s: %w", baseImage, err)
-			}
-			return "", fmt.Errorf("failed to pull base image %s: %w", baseImage, err)
+			return "", err
 		}
-	}
+		if !found {
+			log.Info().Str("image", baseImage).Msg("base image not found on container runtime host")
+			// image not available locally, see if it can be pulled from registry
+			err = pullImage(ctx, client, baseImage)
+			if err != nil {
+				if !errdefs.IsNotFound(err) {
+					return "", fmt.Errorf("base image not found %s: %w", baseImage, err)
+				}
+				return "", fmt.Errorf("failed to pull base image %s: %w", baseImage, err)
+			}
+		}
 
-	found, err = findImage(ctx, client, img)
-	if err != nil {
-		return "", err
-	}
+		found, err = findImage(ctx, client, img)
+		if err != nil {
+			return "", err
+		}
 
-	if found {
-		return img, nil
-	}
+		if found {
+			return img, nil
+		}
 
-	log.Info().Str("image", img).Msg("image not found on runtime host")
+		log.Info().Str("image", img).Msg("image not found on runtime host")
+	}
 
 	// build image
 	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)

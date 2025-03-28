@@ -11,13 +11,17 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/idtools"
 	imagespecv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/rs/zerolog"
 )
 
 // CreateBuildContext archive a dir and return an io.Reader
 func CreateBuildContext(path string) (io.ReadCloser, error) {
-	return archive.Tar(path, archive.Uncompressed)
+	return archive.TarWithOptions(path, &archive.TarOptions{
+		ExcludePatterns: []string{"**/.env", "**/.venv", "**/.git", "**/.github", "**/.idea", "**/.vscode"},
+		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
+	})
 }
 
 func Close(ctx context.Context, client *dockerclient.Client) {
