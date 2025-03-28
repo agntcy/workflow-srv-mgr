@@ -27,6 +27,7 @@ Optional flags:
 	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
+	--forceBuild can be set to true or false to determine if the build should be forced even if the image already exists.
 
 Env config file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
 Example:
@@ -49,6 +50,7 @@ const deployError string = "deploy failed"
 const baseImageFlag string = "baseImage"
 const deleteBuildFoldersFlag string = "deleteBuildFolders"
 const dryRunFlag string = "dryRun"
+const foreceBuild string = "forceBuild"
 const envFilePathFlag string = "envFilePath"
 const manifestPathFlag string = "manifestPath"
 const platformsFlag string = "platform"
@@ -63,11 +65,12 @@ var deployCmd = &cobra.Command{
 		baseImage, _ := cmd.Flags().GetString(baseImageFlag)
 		deleteBuildFolders, _ := cmd.Flags().GetBool(deleteBuildFoldersFlag)
 		dryRun, _ := cmd.Flags().GetBool(dryRunFlag)
+		foreceBuild, _ := cmd.Flags().GetBool(foreceBuild)
 		envFilePath, _ := cmd.Flags().GetString(envFilePathFlag)
 		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
 		platform, _ := cmd.Flags().GetString(platformsFlag)
 
-		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, baseImage)
+		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, foreceBuild, baseImage)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, deployError)
@@ -83,6 +86,7 @@ func init() {
 
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
 	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
+	deployCmd.Flags().BoolP(foreceBuild, "f", false, "If set to true, the build will be forced even if the image already exists")
 	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
 	deployCmd.MarkFlagRequired(envFilePathFlag)
@@ -90,7 +94,7 @@ func init() {
 
 }
 
-func runDeploy(ctx context.Context, manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, baseImage string) error {
+func runDeploy(ctx context.Context, manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, forceBuild bool, baseImage string) error {
 	log := zerolog.Ctx(ctx)
 
 	envVarValues, err := manifest.LoadEnvVars(envFilePath)
@@ -107,7 +111,7 @@ func runDeploy(ctx context.Context, manifestPath string, envFilePath string, pla
 	agDeploymentSpecs := make(map[string]internal.AgentDeploymentBuildSpec, len(agsb.AgentSpecs))
 
 	for depName, agentSpec := range agsb.AgentSpecs {
-		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders, baseImage)
+		builder := builder.GetAgentBuilder(agentSpec.Manifest.Deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption], deleteBuildFolders, forceBuild, baseImage)
 		agdbSpec, err := builder.Build(ctx, agentSpec)
 		if err != nil {
 			return fmt.Errorf("failed to build agent: %v", err)
