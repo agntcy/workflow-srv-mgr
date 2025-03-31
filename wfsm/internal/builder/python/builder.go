@@ -19,12 +19,14 @@ const AgentImage = "agntcy/wfsm"
 type pyBuilder struct {
 	baseImage          string
 	deleteBuildFolders bool
+	forceBuild         bool
 }
 
-func NewPythonAgentBuilder(baseImage string, deleteBuildFolders bool) internal.AgentDeploymentBuilder {
+func NewPythonAgentBuilder(baseImage string, deleteBuildFolders bool, forceBuild bool) internal.AgentDeploymentBuilder {
 	return &pyBuilder{
 		baseImage:          baseImage,
 		deleteBuildFolders: deleteBuildFolders,
+		forceBuild:         forceBuild,
 	}
 }
 
@@ -40,7 +42,7 @@ func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (in
 	}
 
 	imageName := strings.Join([]string{AgentImage, inputSpec.Manifest.Metadata.Ref.Name}, "-")
-	imgNameWithTag, err := EnsureContainerImage(ctx, imageName, agSrc, b.deleteBuildFolders, b.baseImage)
+	imgNameWithTag, err := EnsureContainerImage(ctx, imageName, agSrc, b.deleteBuildFolders, b.forceBuild, b.baseImage)
 	if err != nil {
 		return deploymentSpec, fmt.Errorf("failed to get/build container image: %v", err)
 	}
