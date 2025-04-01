@@ -217,6 +217,7 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 
 func pullImage(ctx context.Context, client *dockerclient.Client, img string) error {
 	log := zerolog.Ctx(ctx)
+	log.Info().Msgf("pulling image: %s", img)
 
 	reader, err := client.ImagePull(ctx, img, image.PullOptions{Platform: util.CurrentArchToDockerPlatform()})
 	if err != nil {
@@ -228,6 +229,40 @@ func pullImage(ctx context.Context, client *dockerclient.Client, img string) err
 			log.Error().Err(err).Msg("failed to close image pull log reader")
 		}
 	}()
+
+	rd := bufio.NewReader(reader)
+	var logLine []byte
+	var imageBuildLogLine jsonmessage.JSONMessage
+	for {
+		line, isPrefix, err := rd.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return fmt.Errorf("failed to read from image build response: %w", err)
+		}
+		logLine = append(logLine, line...)
+		if !isPrefix {
+			if err = json.Unmarshal(logLine, &imageBuildLogLine); err != nil {
+				return fmt.Errorf("failed to unmarshal image build log line from image build response: %w", err)
+			}
+
+			if imageBuildLogLine.Error != nil {
+				log.Error().Str("log_line", imageBuildLogLine.Error.Error()).Msg("image build")
+				return errors.New("failed to pull image")
+			}
+			if imageBuildLogLine.Progress != nil {
+				percentage := 0
+				if imageBuildLogLine.Progress.Current != 0 && imageBuildLogLine.Progress.Total != 0 {
+					percentage = int(100 * imageBuildLogLine.Progress.Current / imageBuildLogLine.Progress.Total)
+				}
+
+				log.Info().Msgf("%s %s %d %%", imageBuildLogLine.ID, imageBuildLogLine.Status, percentage)
+			}
+			logLine = logLine[:0]
+		}
+	}
 
 	// client.ImagePull is asynchronous.
 	// The reader needs to be read completely for the pull operation to complete.
