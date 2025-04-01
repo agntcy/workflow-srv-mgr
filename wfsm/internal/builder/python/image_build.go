@@ -35,7 +35,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
-func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, baseImage string) (string, error) {
+func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, forceBuild bool, baseImage string) (string, error) {
 
 	log := zerolog.Ctx(ctx)
 	ctx = log.WithContext(ctx)
@@ -79,6 +79,19 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 	defer containerclient.Close(ctx, client)
 
+	// check if image already exists unless forceBuild is set
+	if !forceBuild {
+		found, err := findImage(ctx, client, img)
+		if err != nil {
+			return "", err
+		}
+		if found {
+			return img, nil
+		}
+		log.Info().Str("image", img).Msg("image not found on runtime host")
+	}
+
+	// find base image and pull it if not found
 	found, err := findImage(ctx, client, baseImage)
 	if err != nil {
 		return "", err
@@ -94,17 +107,6 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 			return "", fmt.Errorf("failed to pull base image %s: %w", baseImage, err)
 		}
 	}
-
-	found, err = findImage(ctx, client, img)
-	if err != nil {
-		return "", err
-	}
-
-	if found {
-		return img, nil
-	}
-
-	log.Info().Str("image", img).Msg("image not found on runtime host")
 
 	// build image
 	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)
@@ -215,6 +217,7 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 
 func pullImage(ctx context.Context, client *dockerclient.Client, img string) error {
 	log := zerolog.Ctx(ctx)
+	log.Info().Msgf("pulling image: %s", img)
 
 	reader, err := client.ImagePull(ctx, img, image.PullOptions{Platform: util.CurrentArchToDockerPlatform()})
 	if err != nil {
@@ -226,6 +229,40 @@ func pullImage(ctx context.Context, client *dockerclient.Client, img string) err
 			log.Error().Err(err).Msg("failed to close image pull log reader")
 		}
 	}()
+
+	rd := bufio.NewReader(reader)
+	var logLine []byte
+	var imageBuildLogLine jsonmessage.JSONMessage
+	for {
+		line, isPrefix, err := rd.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return fmt.Errorf("failed to read from image build response: %w", err)
+		}
+		logLine = append(logLine, line...)
+		if !isPrefix {
+			if err = json.Unmarshal(logLine, &imageBuildLogLine); err != nil {
+				return fmt.Errorf("failed to unmarshal image build log line from image build response: %w", err)
+			}
+
+			if imageBuildLogLine.Error != nil {
+				log.Error().Str("log_line", imageBuildLogLine.Error.Error()).Msg("image build")
+				return errors.New("failed to pull image")
+			}
+			if imageBuildLogLine.Progress != nil {
+				percentage := 0
+				if imageBuildLogLine.Progress.Current != 0 && imageBuildLogLine.Progress.Total != 0 {
+					percentage = int(100 * imageBuildLogLine.Progress.Current / imageBuildLogLine.Progress.Total)
+				}
+
+				log.Info().Msgf("%s %s %d %%", imageBuildLogLine.ID, imageBuildLogLine.Status, percentage)
+			}
+			logLine = logLine[:0]
+		}
+	}
 
 	// client.ImagePull is asynchronous.
 	// The reader needs to be read completely for the pull operation to complete.
