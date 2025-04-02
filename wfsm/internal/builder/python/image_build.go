@@ -4,10 +4,8 @@ package python
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -142,6 +140,7 @@ func findImage(ctx context.Context, client *dockerclient.Client, img string) (bo
 
 func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool, baseImage string) error {
 	log := zerolog.Ctx(ctx)
+	log.Info().Str("image", img).Msg("building image")
 
 	if err := os.WriteFile(path.Join(workspacePath, "Dockerfile"), dockerFile, util.OwnerCanReadWrite); err != nil {
 		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
@@ -173,7 +172,7 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 		Platform:   util.CurrentArchToDockerPlatform(),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to build image: %w", err)
+		return err
 	}
 	defer func() {
 		if err := buildResp.Body.Close(); err != nil {
@@ -182,33 +181,9 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 		log.Debug().Msg("closed image build response body")
 	}()
 
-	rd := bufio.NewReader(buildResp.Body)
-	var logLine []byte
-	var imageBuildLogLine jsonmessage.JSONMessage
-	for {
-		line, isPrefix, err := rd.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return fmt.Errorf("failed to read from image build response: %w", err)
-		}
-		logLine = append(logLine, line...)
-		if !isPrefix {
-			if err = json.Unmarshal(logLine, &imageBuildLogLine); err != nil {
-				return fmt.Errorf("failed to unmarshal image build log line from image build response: %w", err)
-			}
-
-			if imageBuildLogLine.Error != nil {
-				log.Error().Str("log_line", imageBuildLogLine.Error.Error()).Msg("image build")
-				return errors.New("failed to build image")
-			}
-			if len(imageBuildLogLine.Stream) > 0 {
-				log.Info().Str("log_line", imageBuildLogLine.Stream).Msg("image build")
-			}
-			logLine = logLine[:0]
-		}
+	err = displayDockerLogs(buildResp.Body)
+	if err != nil {
+		return err
 	}
 
 	log.Info().Msg("successfully built image")
@@ -226,10 +201,19 @@ func pullImage(ctx context.Context, client *dockerclient.Client, img string) err
 
 	defer func() {
 		if err := reader.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close image pull log reader")
+			log.Error().Err(err).Msg("failed to close docker log reader")
 		}
 	}()
 
+	err = displayDockerLogs(reader)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func displayDockerLogs(reader io.ReadCloser) error {
 	rd := bufio.NewReader(reader)
 	var logLine []byte
 	var imageBuildLogLine jsonmessage.JSONMessage
@@ -245,32 +229,14 @@ func pullImage(ctx context.Context, client *dockerclient.Client, img string) err
 		logLine = append(logLine, line...)
 		if !isPrefix {
 			if err = json.Unmarshal(logLine, &imageBuildLogLine); err != nil {
-				return fmt.Errorf("failed to unmarshal image build log line from image build response: %w", err)
+				return fmt.Errorf("failed to unmarshal image build log line: %w", err)
 			}
-
-			if imageBuildLogLine.Error != nil {
-				log.Error().Str("log_line", imageBuildLogLine.Error.Error()).Msg("image build")
-				return errors.New("failed to pull image")
-			}
-			if imageBuildLogLine.Progress != nil {
-				percentage := 0
-				if imageBuildLogLine.Progress.Current != 0 && imageBuildLogLine.Progress.Total != 0 {
-					percentage = int(100 * imageBuildLogLine.Progress.Current / imageBuildLogLine.Progress.Total)
-				}
-
-				log.Info().Msgf("%s %s %d %%", imageBuildLogLine.ID, imageBuildLogLine.Status, percentage)
+			err = imageBuildLogLine.Display(os.Stdout, true)
+			if err != nil {
+				return err
 			}
 			logLine = logLine[:0]
 		}
 	}
-
-	// client.ImagePull is asynchronous.
-	// The reader needs to be read completely for the pull operation to complete.
-	var imgPullLog bytes.Buffer
-	if _, err = io.Copy(&imgPullLog, reader); err != nil {
-		return fmt.Errorf("failed to read image pull logs %s: %w", img, err)
-	}
-	log.Info().Str("image", img).Str("log", imgPullLog.String()).Msg("successfully pulled image")
-
 	return nil
 }
