@@ -18,7 +18,6 @@ services:
             com.docker.compose.oneoff: "False"
             com.docker.compose.project: test-agent-A
             com.docker.compose.service: test-agent-a-service
-            org.agntcy.wfsm.manifest: 564b6d6e97132d6fcae6e051be4bb5e8e44b375634dbaf28e9af5721ff243d35
         ports:
             - host_ip: 0.0.0.0
               mode: ingress
@@ -44,7 +43,6 @@ services:
             com.docker.compose.oneoff: "False"
             com.docker.compose.project: test-agent-A
             com.docker.compose.service: test-agent-b-service
-            org.agntcy.wfsm.manifest: 03c11ba7287f0e661c950946cf9afa66e7b1418e147dabeba72fc38080b8beed
         volumes:
             - source: .wfsm/test-agent-B
               target: /opt/storage

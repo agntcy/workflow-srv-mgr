@@ -77,6 +77,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	manifestFile := path.Join(workspacePath, "manifest.json")
 	err = os.WriteFile(manifestFile, manifestFileBuf, util.OwnerCanReadWrite)
 
+	//TODO add manifest hashcode to calculate hash
 	// calc. hash based on agent source files will be used as image tag
 	hashCode := calculateHash(agentSrcPath, baseImage)
 	img = fmt.Sprintf("%s:%s", img, hashCode)
@@ -117,7 +118,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	// build image
-	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)
+	err = buildImage(ctx, client, img, workspacePath, inputSpec, agentSourceDir, assets.AgentBuilderDockerfile, baseImage)
 	if err != nil {
 		return "", fmt.Errorf("failed to build image %s: %w", img, err)
 	}
@@ -148,7 +149,7 @@ func findImage(ctx context.Context, client *dockerclient.Client, img string) (bo
 	return false, nil
 }
 
-func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool, baseImage string) error {
+func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, inputSpec internal.AgentSpec, agentSourceDir string, dockerFile []byte, baseImage string) error {
 	log := zerolog.Ctx(ctx)
 	log.Info().Str("image", img).Msg("building image")
 
@@ -168,8 +169,11 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	}()
 
 	buildArgs := map[string]*string{
-		"AGENT_DIR":  &agentSourceDir,
-		"BASE_IMAGE": &baseImage,
+		"AGENT_DIR":       &agentSourceDir,
+		"BASE_IMAGE":      &baseImage,
+		"AGENT_FRAMEWORK": &inputSpec.Framework,
+		"AGENTS_REF":      &inputSpec.AgentRef,
+		"API_KEY":         &inputSpec.ApiKey,
 	}
 
 	buildResp, err := client.ImageBuild(ctx, imageBuildContext, types.ImageBuildOptions{

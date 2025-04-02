@@ -59,14 +59,35 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		selectedDeploymentOptionIdx = getSelectedDeploymentOptionIdx(manifest.Deployment.DeploymentOptions, *selectedDeploymentOption)
 	}
 
+	agentID := uuid.NewString()
+	apiKey := uuid.New().String()
+
 	agentSpec := internal.AgentSpec{
 		DeploymentName:           deploymentName,
 		Manifest:                 manifest,
 		SelectedDeploymentOption: selectedDeploymentOptionIdx,
 		EnvVars:                  envVarValues.Values,
-		AgentID:                  uuid.NewString(),
-		ApiKey:                   uuid.NewString(),
+		AgentID:                  agentID,
+		ApiKey:                   apiKey,
 	}
+
+	srcDeployment := manifest.Deployment.DeploymentOptions[selectedDeploymentOptionIdx].SourceCodeDeployment
+	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
+
+		agentSpec.Framework = "langgraph"
+		graph := srcDeployment.FrameworkConfig.LangGraphConfig.Graph
+		agentSpec.AgentRef = fmt.Sprintf(`{"%s": "%s"}`, agentID, graph)
+
+	} else if srcDeployment.FrameworkConfig.LlamaIndexConfig != nil {
+
+		agentSpec.Framework = "llamaindex"
+		path := srcDeployment.FrameworkConfig.LlamaIndexConfig.Path
+		agentSpec.AgentRef = fmt.Sprintf(`{"%s": "%s"}`, agentID, path)
+
+	} else {
+		return fmt.Errorf("unsupported framework config")
+	}
+
 	a.AgentSpecs[deploymentName] = agentSpec
 
 	if len(manifest.Deployment.Dependencies) > 0 {

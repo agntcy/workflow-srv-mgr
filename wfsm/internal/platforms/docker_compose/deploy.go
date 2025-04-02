@@ -189,30 +189,16 @@ func (r *runner) getMainAgentPublicPort(ctx context.Context, cli *dockerClient.C
 
 func (r *runner) createServiceConfig(projectName string, deploymentSpec internal.AgentDeploymentBuildSpec) (*types.ServiceConfig, error) {
 
-	agentID := deploymentSpec.AgentID
 	apiKey := deploymentSpec.ApiKey
 
 	envVars := deploymentSpec.EnvVars
+
 	envVars["API_HOST"] = APIHost
 	envVars["API_PORT"] = APIPort
+
 	envVars["API_KEY"] = apiKey
-
-	srcDeployment := deploymentSpec.Manifest.Deployment.DeploymentOptions[deploymentSpec.SelectedDeploymentOption].SourceCodeDeployment
-	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
-
-		envVars["AGENT_FRAMEWORK"] = "langgraph"
-		graph := srcDeployment.FrameworkConfig.LangGraphConfig.Graph
-		envVars["AGENTS_REF"] = fmt.Sprintf(`{"%s": "%s"}`, agentID, graph)
-
-	} else if srcDeployment.FrameworkConfig.LlamaIndexConfig != nil {
-
-		envVars["AGENT_FRAMEWORK"] = "llamaindex"
-		path := srcDeployment.FrameworkConfig.LlamaIndexConfig.Path
-		envVars["AGENTS_REF"] = fmt.Sprintf(`{"%s": "%s"}`, agentID, path)
-
-	} else {
-		return nil, fmt.Errorf("unsupported framework config")
-	}
+	envVars["AGENT_FRAMEWORK"] = deploymentSpec.Framework
+	envVars["AGENTS_REF"] = deploymentSpec.AgentRef
 
 	agDeploymentFolder := path.Join(r.hostStorageFolder, deploymentSpec.DeploymentName)
 	// make sure the folder exists
@@ -221,8 +207,6 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 			return nil, fmt.Errorf("failed to create deployment folder for agent: %v", err)
 		}
 	}
-
-	envVars["AGWS_STORAGE_FILE"] = path.Join("/opt/storage", fmt.Sprintf("agws_storage.pkl"))
 
 	sc := types.ServiceConfig{
 		Name: deploymentSpec.ServiceName,

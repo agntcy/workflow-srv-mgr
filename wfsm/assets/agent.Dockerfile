@@ -5,6 +5,9 @@ ARG BASE_IMAGE=ghcr.io/agntcy/acp/wfsrv:latest
 FROM $BASE_IMAGE
 
 ARG AGENT_DIR
+ARG AGENT_FRAMEWORK
+ARG AGENTS_REF
+ARG API_KEY
 
 WORKDIR /opt/agent-workflow-server
 
@@ -13,6 +16,8 @@ RUN poetry run pip install /opt/agent_src
 
 COPY manifest.json /opt/spec/manifest.json
 ENV AGENT_MANIFEST_PATH=/opt/spec/manifest.json
+
+ENV AGWS_STORAGE_FILE=/opt/storage/agws_storage.pkl
 
 ENV AGENT_FRAMEWORK=$AGENT_FRAMEWORK
 ENV AGENTS_REF=$AGENTS_REF
