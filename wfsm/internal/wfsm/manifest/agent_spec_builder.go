@@ -38,7 +38,8 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		return err
 	}
 
-	if manifestSvc.Validate() != nil {
+	err = manifestSvc.Validate()
+	if err != nil {
 		return fmt.Errorf("manifest validation failed: %s", err)
 	}
 

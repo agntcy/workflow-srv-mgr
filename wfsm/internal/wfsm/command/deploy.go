@@ -24,10 +24,12 @@ var deployLongHelp = `
 This command takes two required flags: --manifestPath path/to/acpManifest
                                        --envFilePath path/to/envConfigFile
 Optional flags:
-	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
-	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
+	--baseImage can be set to determine which base image is used as the workflowserver for the agent.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
+	--deploymentOption can be set to determine which deployment option to use from the manifest. It defaults to the first deployment option.
+	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--forceBuild can be set to true or false to determine if the build should be forced even if the image already exists.
+	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
 
 Env config file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
 Example:
@@ -49,9 +51,10 @@ const deployError string = "deploy failed"
 
 const baseImageFlag string = "baseImage"
 const deleteBuildFoldersFlag string = "deleteBuildFolders"
+const deploymentOptionFlag string = "deploymentOption"
 const dryRunFlag string = "dryRun"
-const foreceBuild string = "forceBuild"
 const envFilePathFlag string = "envFilePath"
+const foreceBuild string = "forceBuild"
 const manifestPathFlag string = "manifestPath"
 const platformsFlag string = "platform"
 
@@ -64,13 +67,14 @@ var deployCmd = &cobra.Command{
 
 		baseImage, _ := cmd.Flags().GetString(baseImageFlag)
 		deleteBuildFolders, _ := cmd.Flags().GetBool(deleteBuildFoldersFlag)
+		deploymentOption, _ := cmd.Flags().GetString(deploymentOptionFlag)
 		dryRun, _ := cmd.Flags().GetBool(dryRunFlag)
-		foreceBuild, _ := cmd.Flags().GetBool(foreceBuild)
 		envFilePath, _ := cmd.Flags().GetString(envFilePathFlag)
+		foreceBuild, _ := cmd.Flags().GetBool(foreceBuild)
 		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
 		platform, _ := cmd.Flags().GetString(platformsFlag)
 
-		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, foreceBuild, baseImage)
+		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, foreceBuild, baseImage, &deploymentOption)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, deployError)
@@ -81,20 +85,19 @@ var deployCmd = &cobra.Command{
 
 func init() {
 	deployCmd.Flags().StringP(baseImageFlag, "b", "ghcr.io/agntcy/acp/wfsrv:v0.2.0-dev.1", "Base image to be used as the workflowserver for the agent")
-	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
-	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
-
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
+	deployCmd.Flags().StringP(deploymentOptionFlag, "o", "", "Deployment option to use from the manifest")
 	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
+	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
 	deployCmd.Flags().BoolP(foreceBuild, "f", false, "If set to true, the build will be forced even if the image already exists")
+	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
 	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
 	deployCmd.MarkFlagRequired(envFilePathFlag)
 	deployCmd.MarkFlagRequired(manifestPathFlag)
-
 }
 
-func runDeploy(ctx context.Context, manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, forceBuild bool, baseImage string) error {
+func runDeploy(ctx context.Context, manifestPath string, envFilePath string, platform string, dryRun bool, deleteBuildFolders bool, forceBuild bool, baseImage string, deploymentOption *string) error {
 	log := zerolog.Ctx(ctx)
 
 	envVarValues, err := manifest.LoadEnvVars(envFilePath)
@@ -103,7 +106,7 @@ func runDeploy(ctx context.Context, manifestPath string, envFilePath string, pla
 	}
 
 	agsb := manifest.NewAgentSpecBuilder()
-	err = agsb.BuildAgentSpec(ctx, manifestPath, "", nil, envVarValues)
+	err = agsb.BuildAgentSpec(ctx, manifestPath, "", deploymentOption, envVarValues)
 	if err != nil {
 		return err
 	}

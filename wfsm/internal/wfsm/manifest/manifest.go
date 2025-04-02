@@ -52,9 +52,6 @@ func (m manifestService) ValidateDeploymentOptions() error {
 	if len(deployment.DeploymentOptions) == 0 {
 		return errors.New("invalid agent manifest: no deployment option found in manifest")
 	}
-	if len(deployment.DeploymentOptions) > 1 {
-		return errors.New("invalid agent manifest: to many deployment options found in manifest")
-	}
 	return nil
 }
 
