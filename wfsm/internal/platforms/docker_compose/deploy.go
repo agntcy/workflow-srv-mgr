@@ -13,7 +13,6 @@ import (
 	"github.com/cisco-eti/wfsm/internal"
 	containerClient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
-	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
@@ -193,9 +192,7 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 	agentID := deploymentSpec.AgentID
 	apiKey := deploymentSpec.ApiKey
 
-	manifestPath := "/opt/storage/manifest.json"
 	envVars := deploymentSpec.EnvVars
-	envVars["AGENT_MANIFEST_PATH"] = manifestPath
 	envVars["API_HOST"] = APIHost
 	envVars["API_PORT"] = APIPort
 	envVars["API_KEY"] = apiKey
@@ -227,25 +224,12 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 
 	envVars["AGWS_STORAGE_FILE"] = path.Join("/opt/storage", fmt.Sprintf("agws_storage.pkl"))
 
-	manifestFileBuf, err := manifests.NewNullableAgentManifest(&deploymentSpec.Manifest).MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal agent manifest: %v", err)
-	}
-
-	if r.hostStorageFolder != "" {
-		err = os.WriteFile(path.Join(agDeploymentFolder, "manifest.json"), manifestFileBuf, util.OwnerCanReadWrite)
-		if err != nil {
-			return nil, fmt.Errorf("failed to write manifest to temporary workspace dir: %v", err)
-		}
-	}
-
 	sc := types.ServiceConfig{
 		Name: deploymentSpec.ServiceName,
 		Labels: map[string]string{
 			api.ProjectLabel: projectName,
 			api.OneoffLabel:  "False",
 			api.ServiceLabel: deploymentSpec.ServiceName,
-			ManifestCheckSum: util.CalculateCheckSum(manifestFileBuf),
 		},
 		//ContainerName: serviceName,
 		Image:       deploymentSpec.Image,

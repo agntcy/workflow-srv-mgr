@@ -12,9 +12,11 @@ import (
 	"path"
 
 	"github.com/cisco-eti/wfsm/assets"
+	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/builder/python/source"
 	containerclient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
+	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -33,7 +35,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
-func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, forceBuild bool, baseImage string) (string, error) {
+func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, inputSpec internal.AgentSpec, deleteBuildFolders bool, forceBuild bool, baseImage string) (string, error) {
 
 	log := zerolog.Ctx(ctx)
 	ctx = log.WithContext(ctx)
@@ -66,6 +68,14 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 			}
 		}()
 	}
+
+	//copy manifest file to workspace
+	manifestFileBuf, err := manifests.NewNullableAgentManifest(&inputSpec.Manifest).MarshalJSON()
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal agent manifest: %v", err)
+	}
+	manifestFile := path.Join(workspacePath, "manifest.json")
+	err = os.WriteFile(manifestFile, manifestFileBuf, util.OwnerCanReadWrite)
 
 	// calc. hash based on agent source files will be used as image tag
 	hashCode := calculateHash(agentSrcPath, baseImage)
