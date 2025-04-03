@@ -54,7 +54,7 @@ const deleteBuildFoldersFlag string = "deleteBuildFolders"
 const deploymentOptionFlag string = "deploymentOption"
 const dryRunFlag string = "dryRun"
 const envFilePathFlag string = "envFilePath"
-const foreceBuild string = "forceBuild"
+const forceBuild string = "forceBuild"
 const manifestPathFlag string = "manifestPath"
 const platformsFlag string = "platform"
 
@@ -70,11 +70,11 @@ var deployCmd = &cobra.Command{
 		deploymentOption, _ := cmd.Flags().GetString(deploymentOptionFlag)
 		dryRun, _ := cmd.Flags().GetBool(dryRunFlag)
 		envFilePath, _ := cmd.Flags().GetString(envFilePathFlag)
-		foreceBuild, _ := cmd.Flags().GetBool(foreceBuild)
+		forceBuild, _ := cmd.Flags().GetBool(forceBuild)
 		manifestPath, _ := cmd.Flags().GetString(manifestPathFlag)
 		platform, _ := cmd.Flags().GetString(platformsFlag)
 
-		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, foreceBuild, baseImage, &deploymentOption)
+		err := runDeploy(getContextWithLogger(cmd), manifestPath, envFilePath, platform, dryRun, deleteBuildFolders, forceBuild, baseImage, &deploymentOption)
 		if err != nil {
 			util.OutputMessage(deployFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, deployError)
@@ -84,12 +84,12 @@ var deployCmd = &cobra.Command{
 }
 
 func init() {
-	deployCmd.Flags().StringP(baseImageFlag, "b", "ghcr.io/agntcy/acp/wfsrv:v0.2.0-dev.1", "Base image to be used as the workflowserver for the agent")
+	deployCmd.Flags().StringP(baseImageFlag, "b", "ghcr.io/agntcy/acp/wfsrv:v0.2.2", "Base image to be used as the workflowserver for the agent")
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
 	deployCmd.Flags().StringP(deploymentOptionFlag, "o", "", "Deployment option to use from the manifest")
 	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")
 	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
-	deployCmd.Flags().BoolP(foreceBuild, "f", false, "If set to true, the build will be forced even if the image already exists")
+	deployCmd.Flags().BoolP(forceBuild, "f", false, "If set to true, the build will be forced even if the image already exists")
 	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
 	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
