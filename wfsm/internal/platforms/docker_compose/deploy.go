@@ -140,9 +140,10 @@ func (r *runner) Deploy(ctx context.Context,
 
 	log.Info().Msg("---------------------------------------------------------------------")
 	log.Info().Msgf("ACP agent deployment name: %s", mainAgentName)
-	log.Info().Msgf("ACP agent running in container: %s, listening for ACP request on: http://127.0.0.1:%d", mainAgentName, port)
+	log.Info().Msgf("ACP agent running in container: %s, listening for ACP requests on: http://127.0.0.1:%d", mainAgentName, port)
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
+	log.Info().Msgf("API Docs: http://127.0.0.1:%d/agents/%s/docs", port, mainAgentID)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
