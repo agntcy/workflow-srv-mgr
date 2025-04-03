@@ -77,9 +77,8 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	manifestFile := path.Join(workspacePath, "manifest.json")
 	err = os.WriteFile(manifestFile, manifestFileBuf, util.OwnerCanReadWrite)
 
-	//TODO add manifest hashcode to calculate hash
-	// calc. hash based on agent source files will be used as image tag
-	hashCode := calculateHash(agentSrcPath, baseImage)
+	// calc. hash based on agent source files and manifest file and use as image tag
+	hashCode := calculateHash(workspacePath, baseImage)
 	img = fmt.Sprintf("%s:%s", img, hashCode)
 
 	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
