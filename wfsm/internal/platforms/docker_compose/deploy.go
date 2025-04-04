@@ -189,16 +189,13 @@ func (r *runner) getMainAgentPublicPort(ctx context.Context, cli *dockerClient.C
 
 func (r *runner) createServiceConfig(projectName string, deploymentSpec internal.AgentDeploymentBuildSpec) (*types.ServiceConfig, error) {
 
-	apiKey := deploymentSpec.ApiKey
-
 	envVars := deploymentSpec.EnvVars
 
 	envVars["API_HOST"] = APIHost
 	envVars["API_PORT"] = APIPort
 
-	envVars["API_KEY"] = apiKey
-	envVars["AGENT_FRAMEWORK"] = deploymentSpec.Framework
-	envVars["AGENTS_REF"] = deploymentSpec.AgentRef
+	envVars["API_KEY"] = deploymentSpec.ApiKey
+	envVars["AGENT_ID"] = deploymentSpec.AgentID
 
 	agDeploymentFolder := path.Join(r.hostStorageFolder, deploymentSpec.DeploymentName)
 	// make sure the folder exists

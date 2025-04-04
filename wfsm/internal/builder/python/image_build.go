@@ -155,6 +155,9 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	if err := os.WriteFile(path.Join(workspacePath, "Dockerfile"), dockerFile, util.OwnerCanReadWrite); err != nil {
 		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
 	}
+	if err := os.WriteFile(path.Join(workspacePath, "start_agws.sh"), assets.StartAGWSScript, util.OwnerCanReadWrite); err != nil {
+		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
+	}
 
 	imageBuildContext, err := containerclient.CreateBuildContext(workspacePath)
 	if err != nil {
@@ -168,11 +171,25 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	}()
 
 	buildArgs := map[string]*string{
-		"AGENT_DIR":       &agentSourceDir,
-		"BASE_IMAGE":      &baseImage,
-		"AGENT_FRAMEWORK": &inputSpec.Framework,
-		"AGENTS_REF":      &inputSpec.AgentRef,
-		"API_KEY":         &inputSpec.ApiKey,
+		"AGENT_DIR":  &agentSourceDir,
+		"BASE_IMAGE": &baseImage,
+	}
+
+	srcDeployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].SourceCodeDeployment
+	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
+
+		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LangGraphConfig.FrameworkType
+		graph := srcDeployment.FrameworkConfig.LangGraphConfig.Graph
+		buildArgs["AGENT_OBJECT"] = &graph
+
+	} else if srcDeployment.FrameworkConfig.LlamaIndexConfig != nil {
+
+		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LangGraphConfig.FrameworkType
+		path := srcDeployment.FrameworkConfig.LlamaIndexConfig.Path
+		buildArgs["AGENT_OBJECT"] = &path
+
+	} else {
+		return fmt.Errorf("unsupported framework config")
 	}
 
 	buildResp, err := client.ImageBuild(ctx, imageBuildContext, types.ImageBuildOptions{

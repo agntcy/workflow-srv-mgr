@@ -21,8 +21,6 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 		"test-agent-A": {
 			AgentSpec: internal.AgentSpec{
 				AgentID:        "d8084dc6-52c4-4316-8460-8f43b64db17a",
-				AgentRef:       "{\"d8084dc6-52c4-4316-8460-8f43b64db17a\": \"agentA.graph\"}",
-				Framework:      "langgraph",
 				ApiKey:         "4a69e02d-b03a-47e4-99ab-f0782be35f62",
 				DeploymentName: "test-agent-A",
 				EnvVars: map[string]string{
@@ -50,8 +48,6 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 		"test-agent-B": {
 			AgentSpec: internal.AgentSpec{
 				AgentID:        "39c8d1ab-d155-440c-aa4c-7b2d244d1c09",
-				AgentRef:       "{\"39c8d1ab-d155-440c-aa4c-7b2d244d1c09\": \"agentB.graph\"}",
-				Framework:      "langgraph",
 				ApiKey:         "657425ba-fc18-4a6d-9144-14e6a79fdcf4",
 				DeploymentName: "test-agent-B",
 				EnvVars: map[string]string{

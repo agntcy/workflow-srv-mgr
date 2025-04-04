@@ -6,8 +6,7 @@ FROM $BASE_IMAGE
 
 ARG AGENT_DIR
 ARG AGENT_FRAMEWORK
-ARG AGENTS_REF
-ARG API_KEY
+ARG AGENT_OBJECT
 
 WORKDIR /opt/agent-workflow-server
 
@@ -17,10 +16,13 @@ RUN poetry run pip install /opt/agent_src
 COPY manifest.json /opt/spec/manifest.json
 ENV AGENT_MANIFEST_PATH=/opt/spec/manifest.json
 
+COPY start_agws.sh /opt/start_agws.sh
+RUN chmod +x /opt/start_agws.sh
+
 ENV AGWS_STORAGE_FILE=/opt/storage/agws_storage.pkl
 
 ENV AGENT_FRAMEWORK=$AGENT_FRAMEWORK
-ENV AGENTS_REF=$AGENTS_REF
-ENV API_KEY=$API_KEY
+ENV AGENT_OBJECT=$AGENT_OBJECT
 
-CMD ["poetry" ,"run", "server"]
+ENTRYPOINT ["/opt/start_agws.sh"]
+#CMD ["sh", "-c", "AGENTS_REF='{$AGENT_ID: $AGENT_OBJECT}'; poetry run server"]

@@ -15,8 +15,6 @@ type AgentSpec struct {
 	EnvVars                  map[string]string
 	AgentID                  string
 	ApiKey                   string
-	Framework                string
-	AgentRef                 string
 }
 
 type AgentDeploymentBuildSpec struct {
