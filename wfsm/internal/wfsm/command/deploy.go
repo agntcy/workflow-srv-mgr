@@ -22,8 +22,9 @@ import (
 
 var deployLongHelp = `
 This command takes two required flags: --manifestPath path/to/acpManifest
-                                       --envFilePath path/to/envConfigFile
+
 Optional flags:
+	--envFilePath path/to/envConfigFile 
 	--baseImage can be set to determine which base image is used as the workflowserver for the agent.
 	--deleteBuildFolders can be set to true or false to determine if the build folders should be deleted after deployment.
 	--deploymentOption can be set to determine which deployment option to use from the manifest. It defaults to the first deployment option.
@@ -93,7 +94,6 @@ func init() {
 	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
 	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
-	deployCmd.MarkFlagRequired(envFilePathFlag)
 	deployCmd.MarkFlagRequired(manifestPathFlag)
 }
 
