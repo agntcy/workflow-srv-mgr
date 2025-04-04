@@ -56,7 +56,7 @@ func (m manifestService) ValidateDeploymentOptions() error {
 }
 
 func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
-	if len(*option) == 0 {
+	if option == nil || len(*option) == 0 {
 		return 0, nil
 	}
 	for i, opt := range m.manifest.Deployment.DeploymentOptions {
