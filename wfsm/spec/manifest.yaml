@@ -234,11 +234,9 @@ components:
             referred. Can be omitted, in such case selection is not possible.            -
         image:
           title: Agent Docker image
-          description: Container image for the agent
+          description: Container image built for the agent containing the agent and Workflow Server.
           type: string
           format: uri
-        protocol:
-          $ref: '#/components/schemas/AgentConnectProtocol'
       required:
         - type
         - image

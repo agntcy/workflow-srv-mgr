@@ -24,20 +24,18 @@ type DockerDeployment struct {
 	Type string `json:"type"`
 	// Name this deployment option is referred to within this agent. This is needed to indicate which one is preferred when this manifest is referred. Can be omitted, in such case selection is not possible.            -
 	Name *string `json:"name,omitempty"`
-	// Container image for the agent
-	Image    string               `json:"image"`
-	Protocol AgentConnectProtocol `json:"protocol"`
+	// Container image built for the agent containing the agent and Workflow Server.
+	Image string `json:"image"`
 }
 
 // NewDockerDeployment instantiates a new DockerDeployment object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDockerDeployment(type_ string, image string, protocol AgentConnectProtocol) *DockerDeployment {
+func NewDockerDeployment(type_ string, image string) *DockerDeployment {
 	this := DockerDeployment{}
 	this.Type = type_
 	this.Image = image
-	this.Protocol = protocol
 	return &this
 }
 
@@ -129,30 +127,6 @@ func (o *DockerDeployment) SetImage(v string) {
 	o.Image = v
 }
 
-// GetProtocol returns the Protocol field value
-func (o *DockerDeployment) GetProtocol() AgentConnectProtocol {
-	if o == nil {
-		var ret AgentConnectProtocol
-		return ret
-	}
-
-	return o.Protocol
-}
-
-// GetProtocolOk returns a tuple with the Protocol field value
-// and a boolean to check if the value has been set.
-func (o *DockerDeployment) GetProtocolOk() (*AgentConnectProtocol, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Protocol, true
-}
-
-// SetProtocol sets field value
-func (o *DockerDeployment) SetProtocol(v AgentConnectProtocol) {
-	o.Protocol = v
-}
-
 func (o DockerDeployment) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -168,7 +142,6 @@ func (o DockerDeployment) ToMap() (map[string]interface{}, error) {
 		toSerialize["name"] = o.Name
 	}
 	toSerialize["image"] = o.Image
-	toSerialize["protocol"] = o.Protocol
 	return toSerialize, nil
 }
 
