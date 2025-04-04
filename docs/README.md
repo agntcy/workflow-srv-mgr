@@ -14,7 +14,7 @@ Download and unpack the executable binary from the [releases page](https://githu
 
 Alternatively you can execute the installer script by running the following command:
 ```bash
-curl -L https://raw.githubusercontent.com/agntcy/workflow-srv-mgr/refs/heads/install/install.sh | bash
+curl -L https://raw.githubusercontent.com/agntcy/workflow-srv-mgr/refs/heads/main/install.sh | bash
 ```
 The installer script will download the latest release and unpack it into the `bin` folder in the current directory.
 The output of the execution looks like this:
