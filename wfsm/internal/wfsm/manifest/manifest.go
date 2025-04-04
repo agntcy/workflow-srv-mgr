@@ -15,6 +15,7 @@ import (
 
 type ManifestService interface {
 	Validate() error
+	GetDeploymentOptionIdx(option *string) (int, error)
 	GetManifest() manifests.AgentManifest
 }
 
@@ -40,7 +41,6 @@ func (m manifestService) Validate() error {
 	if m.manifest.Metadata.Ref.Version == "" {
 		return errors.New("invalid agent manifest: no version found in manifest")
 	}
-	//TODO what elso to validate here?
 	return m.ValidateDeploymentOptions()
 }
 
@@ -53,6 +53,25 @@ func (m manifestService) ValidateDeploymentOptions() error {
 		return errors.New("invalid agent manifest: no deployment option found in manifest")
 	}
 	return nil
+}
+
+func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
+	if len(*option) == 0 {
+		return 0, nil
+	}
+	for i, opt := range m.manifest.Deployment.DeploymentOptions {
+		if opt.SourceCodeDeployment != nil &&
+			opt.SourceCodeDeployment.Name != nil &&
+			*opt.SourceCodeDeployment.Name == *option {
+			return i, nil
+		}
+		if opt.DockerDeployment != nil &&
+			opt.DockerDeployment.Name != nil &&
+			*opt.DockerDeployment.Name == *option {
+			return i, nil
+		}
+	}
+	return 0, fmt.Errorf("invalid agent manifest: deployment option %s not found", *option)
 }
 
 func loadManifest(filePath string) (manifests.AgentManifest, error) {

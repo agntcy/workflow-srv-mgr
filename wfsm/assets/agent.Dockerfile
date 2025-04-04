@@ -25,4 +25,3 @@ ENV AGENT_FRAMEWORK=$AGENT_FRAMEWORK
 ENV AGENT_OBJECT=$AGENT_OBJECT
 
 ENTRYPOINT ["/opt/start_agws.sh"]
-#CMD ["sh", "-c", "AGENTS_REF='{$AGENT_ID: $AGENT_OBJECT}'; poetry run server"]

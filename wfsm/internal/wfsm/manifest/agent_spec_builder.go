@@ -43,6 +43,11 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		return fmt.Errorf("manifest validation failed: %s", err)
 	}
 
+	selectedDeploymentOptionIdx, err := manifestSvc.GetDeploymentOptionIdx(selectedDeploymentOption)
+	if err != nil {
+		return err
+	}
+
 	manifest := manifestSvc.GetManifest()
 	if deploymentName == "" {
 		deploymentName = manifest.Metadata.Ref.Name
@@ -52,12 +57,6 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 	// check deployment name is unique among dependencies
 	if _, ok := a.AgentSpecs[deploymentName]; ok {
 		return fmt.Errorf("agent deployment name must be unique: %s", deploymentName)
-	}
-
-	selectedDeploymentOptionIdx := 0
-	if selectedDeploymentOption != nil {
-		// TODO validate invalid deployment option
-		selectedDeploymentOptionIdx = getSelectedDeploymentOptionIdx(manifest.Deployment.DeploymentOptions, *selectedDeploymentOption)
 	}
 
 	agentID := uuid.NewString()
@@ -156,22 +155,6 @@ func mergeDepEnvVarValues(dest []manifests.EnvVarValues, src []manifests.EnvVarV
 		dest = append(dest, *mergeEnvVarValues(&depEnv, depEnv, depEnv.GetName()))
 	}
 	return dest
-}
-
-func getSelectedDeploymentOptionIdx(options []manifests.AgentDeploymentDeploymentOptionsInner, option string) int {
-	for i, opt := range options {
-		if opt.SourceCodeDeployment != nil &&
-			opt.SourceCodeDeployment.Name != nil &&
-			*opt.SourceCodeDeployment.Name == option {
-			return i
-		}
-		if opt.DockerDeployment != nil &&
-			opt.DockerDeployment.Name != nil &&
-			*opt.DockerDeployment.Name == option {
-			return i
-		}
-	}
-	return 0
 }
 
 func LoadEnvVars(envFilePath string) (manifests.EnvVarValues, error) {
