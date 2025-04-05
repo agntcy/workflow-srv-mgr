@@ -2,10 +2,7 @@ name: test-agent-A
 services:
     test-agent-a-service:
         environment:
-            AGENT_FRAMEWORK: langgraph
-            AGENT_MANIFEST_PATH: /opt/storage/manifest.json
-            AGENTS_REF: '{"d8084dc6-52c4-4316-8460-8f43b64db17a": "agentA.graph"}'
-            AGWS_STORAGE_FILE: /opt/storage/agws_storage.pkl
+            AGENT_ID: "d8084dc6-52c4-4316-8460-8f43b64db17a"
             API_HOST: 0.0.0.0
             API_KEY: 4a69e02d-b03a-47e4-99ab-f0782be35f62
             API_PORT: "8000"
@@ -18,7 +15,6 @@ services:
             com.docker.compose.oneoff: "False"
             com.docker.compose.project: test-agent-A
             com.docker.compose.service: test-agent-a-service
-            org.agntcy.wfsm.manifest: 564b6d6e97132d6fcae6e051be4bb5e8e44b375634dbaf28e9af5721ff243d35
         ports:
             - host_ip: 0.0.0.0
               mode: ingress
@@ -31,10 +27,7 @@ services:
               type: bind
     test-agent-b-service:
         environment:
-            AGENT_FRAMEWORK: langgraph
-            AGENT_MANIFEST_PATH: /opt/storage/manifest.json
-            AGENTS_REF: '{"39c8d1ab-d155-440c-aa4c-7b2d244d1c09": "agentB.graph"}'
-            AGWS_STORAGE_FILE: /opt/storage/agws_storage.pkl
+            AGENT_ID: "39c8d1ab-d155-440c-aa4c-7b2d244d1c09"
             API_HOST: 0.0.0.0
             API_KEY: 657425ba-fc18-4a6d-9144-14e6a79fdcf4
             API_PORT: "8000"
@@ -44,7 +37,6 @@ services:
             com.docker.compose.oneoff: "False"
             com.docker.compose.project: test-agent-A
             com.docker.compose.service: test-agent-b-service
-            org.agntcy.wfsm.manifest: 03c11ba7287f0e661c950946cf9afa66e7b1418e147dabeba72fc38080b8beed
         volumes:
             - source: .wfsm/test-agent-B
               target: /opt/storage

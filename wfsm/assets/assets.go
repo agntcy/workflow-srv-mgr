@@ -8,5 +8,5 @@ import _ "embed"
 //go:embed agent.Dockerfile
 var AgentBuilderDockerfile []byte
 
-//go:embed workflowserver.Dockerfile
-var WorkflowServerDockerfile []byte
+//go:embed start_agws.sh
+var StartAGWSScript []byte

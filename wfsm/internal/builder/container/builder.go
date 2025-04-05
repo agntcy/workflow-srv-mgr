@@ -17,14 +17,10 @@ func NewContainerAgentBuilder() internal.AgentDeploymentBuilder {
 }
 
 func (b *cbuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
+	dockerDeployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].DockerDeployment
 	return internal.AgentDeploymentBuildSpec{
 		AgentSpec:   inputSpec,
-		Image:       getImageName(inputSpec),
+		Image:       dockerDeployment.Image,
 		ServiceName: inputSpec.DeploymentName,
 	}, nil
-}
-
-func getImageName(spec internal.AgentSpec) string {
-	dopts := spec.Manifest.Deployment.DeploymentOptions[spec.SelectedDeploymentOption]
-	return dopts.DockerDeployment.Image
 }
