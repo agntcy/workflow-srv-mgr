@@ -184,7 +184,7 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 
 	} else if srcDeployment.FrameworkConfig.LlamaIndexConfig != nil {
 
-		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LangGraphConfig.FrameworkType
+		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LlamaIndexConfig.FrameworkType
 		path := srcDeployment.FrameworkConfig.LlamaIndexConfig.Path
 		buildArgs["AGENT_OBJECT"] = &path
 
