@@ -86,7 +86,12 @@
           "framework_type": "langgraph",
           "graph": "mailcomposer.mailcomposer:graph"
         }
-      }
+      },
+      {
+        "type": "docker",
+        "name": "docker",
+        "image": "agntcy/wfsm-mailcomposer:<YOUR_TAG>"
+      }       
     ],
     "env_vars": [
       {

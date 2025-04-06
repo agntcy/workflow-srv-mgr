@@ -42,7 +42,7 @@ func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (in
 	}
 
 	imageName := strings.Join([]string{AgentImage, inputSpec.Manifest.Metadata.Ref.Name}, "-")
-	imgNameWithTag, err := EnsureContainerImage(ctx, imageName, agSrc, b.deleteBuildFolders, b.forceBuild, b.baseImage)
+	imgNameWithTag, err := EnsureContainerImage(ctx, imageName, agSrc, inputSpec, b.deleteBuildFolders, b.forceBuild, b.baseImage)
 	if err != nil {
 		return deploymentSpec, err
 	}

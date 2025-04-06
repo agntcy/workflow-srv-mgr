@@ -7,8 +7,6 @@ import (
 	"net"
 	"os/user"
 	"runtime"
-
-	"github.com/opencontainers/go-digest"
 )
 
 const OwnerCanReadWrite = 0777
@@ -40,8 +38,4 @@ func GetHomeDir() (string, error) {
 		return "", fmt.Errorf("failed to get current user: %w", err)
 	}
 	return usr.HomeDir, nil
-}
-
-func CalculateCheckSum(data []byte) string {
-	return digest.SHA256.FromBytes(data).Encoded()
 }

@@ -12,9 +12,11 @@ import (
 	"path"
 
 	"github.com/cisco-eti/wfsm/assets"
+	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/builder/python/source"
 	containerclient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
+	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -33,7 +35,7 @@ var containerImageBuildLock = util.NewStripedLock(100)
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
 // and returns its name.
-func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, deleteBuildFolders bool, forceBuild bool, baseImage string) (string, error) {
+func EnsureContainerImage(ctx context.Context, img string, src source.AgentSource, inputSpec internal.AgentSpec, deleteBuildFolders bool, forceBuild bool, baseImage string) (string, error) {
 
 	log := zerolog.Ctx(ctx)
 	ctx = log.WithContext(ctx)
@@ -67,8 +69,16 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 		}()
 	}
 
-	// calc. hash based on agent source files will be used as image tag
-	hashCode := calculateHash(agentSrcPath, baseImage)
+	//copy manifest file to workspace
+	manifestFileBuf, err := manifests.NewNullableAgentManifest(&inputSpec.Manifest).MarshalJSON()
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal agent manifest: %v", err)
+	}
+	manifestFile := path.Join(workspacePath, "manifest.json")
+	err = os.WriteFile(manifestFile, manifestFileBuf, util.OwnerCanReadWrite)
+
+	// calc. hash based on agent source files and manifest file and use as image tag
+	hashCode := calculateHash(workspacePath, baseImage)
 	img = fmt.Sprintf("%s:%s", img, hashCode)
 
 	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
@@ -107,7 +117,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	// build image
-	err = buildImage(ctx, client, img, workspacePath, agentSourceDir, assets.AgentBuilderDockerfile, deleteBuildFolders, baseImage)
+	err = buildImage(ctx, client, img, workspacePath, inputSpec, agentSourceDir, assets.AgentBuilderDockerfile, baseImage)
 	if err != nil {
 		return "", fmt.Errorf("failed to build image %s: %w", img, err)
 	}
@@ -138,11 +148,14 @@ func findImage(ctx context.Context, client *dockerclient.Client, img string) (bo
 	return false, nil
 }
 
-func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, agentSourceDir string, dockerFile []byte, deleteBuildFolders bool, baseImage string) error {
+func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, inputSpec internal.AgentSpec, agentSourceDir string, dockerFile []byte, baseImage string) error {
 	log := zerolog.Ctx(ctx)
 	log.Info().Str("image", img).Msg("building image")
 
 	if err := os.WriteFile(path.Join(workspacePath, "Dockerfile"), dockerFile, util.OwnerCanReadWrite); err != nil {
+		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
+	}
+	if err := os.WriteFile(path.Join(workspacePath, "start_agws.sh"), assets.StartAGWSScript, util.OwnerCanReadWrite); err != nil {
 		return fmt.Errorf("failed to write dockerfile to temporary workspace dir for building image: %w", err)
 	}
 
@@ -160,6 +173,23 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	buildArgs := map[string]*string{
 		"AGENT_DIR":  &agentSourceDir,
 		"BASE_IMAGE": &baseImage,
+	}
+
+	srcDeployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].SourceCodeDeployment
+	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
+
+		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LangGraphConfig.FrameworkType
+		graph := srcDeployment.FrameworkConfig.LangGraphConfig.Graph
+		buildArgs["AGENT_OBJECT"] = &graph
+
+	} else if srcDeployment.FrameworkConfig.LlamaIndexConfig != nil {
+
+		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LlamaIndexConfig.FrameworkType
+		path := srcDeployment.FrameworkConfig.LlamaIndexConfig.Path
+		buildArgs["AGENT_OBJECT"] = &path
+
+	} else {
+		return fmt.Errorf("unsupported framework config")
 	}
 
 	buildResp, err := client.ImageBuild(ctx, imageBuildContext, types.ImageBuildOptions{

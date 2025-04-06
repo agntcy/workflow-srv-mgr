@@ -43,6 +43,11 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		return fmt.Errorf("manifest validation failed: %s", err)
 	}
 
+	selectedDeploymentOptionIdx, err := manifestSvc.GetDeploymentOptionIdx(selectedDeploymentOption)
+	if err != nil {
+		return err
+	}
+
 	manifest := manifestSvc.GetManifest()
 	if deploymentName == "" {
 		deploymentName = manifest.Metadata.Ref.Name
@@ -54,18 +59,16 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		return fmt.Errorf("agent deployment name must be unique: %s", deploymentName)
 	}
 
-	selectedDeploymentOptionIdx := 0
-	if selectedDeploymentOption != nil {
-		selectedDeploymentOptionIdx = getSelectedDeploymentOptionIdx(manifest.Deployment.DeploymentOptions, *selectedDeploymentOption)
-	}
+	agentID := uuid.NewString()
+	apiKey := uuid.New().String()
 
 	agentSpec := internal.AgentSpec{
 		DeploymentName:           deploymentName,
 		Manifest:                 manifest,
 		SelectedDeploymentOption: selectedDeploymentOptionIdx,
 		EnvVars:                  envVarValues.Values,
-		AgentID:                  uuid.NewString(),
-		ApiKey:                   uuid.NewString(),
+		AgentID:                  agentID,
+		ApiKey:                   apiKey,
 	}
 	a.AgentSpecs[deploymentName] = agentSpec
 
@@ -152,22 +155,6 @@ func mergeDepEnvVarValues(dest []manifests.EnvVarValues, src []manifests.EnvVarV
 		dest = append(dest, *mergeEnvVarValues(&depEnv, depEnv, depEnv.GetName()))
 	}
 	return dest
-}
-
-func getSelectedDeploymentOptionIdx(options []manifests.AgentDeploymentDeploymentOptionsInner, option string) int {
-	for i, opt := range options {
-		if opt.SourceCodeDeployment != nil &&
-			opt.SourceCodeDeployment.Name != nil &&
-			*opt.SourceCodeDeployment.Name == option {
-			return i
-		}
-		if opt.DockerDeployment != nil &&
-			opt.DockerDeployment.Name != nil &&
-			*opt.DockerDeployment.Name == option {
-			return i
-		}
-	}
-	return 0
 }
 
 func LoadEnvVars(envFilePath string) (manifests.EnvVarValues, error) {
