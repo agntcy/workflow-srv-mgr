@@ -14,7 +14,9 @@ by wrapping the agent in a container and exposing it through a REST API.
 
 See [Getting Started Guide](docs/README.md#getting-started)
 
+
 ## Documentation
+See [Documentation](https://docs.agntcy.org/pages/agws/workflow_server_manager.html)
 
 ## Roadmap
 
