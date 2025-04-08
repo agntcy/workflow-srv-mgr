@@ -8,8 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
-
+	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 	"github.com/cisco-eti/wfsm/internal/util"
 )
 
@@ -26,7 +25,7 @@ Examples:
 `
 
 const listFail = "List Status: Failed - %s"
-const listError string = "get failed"
+const listError string = "list failed"
 
 // listCmd lists running agent container(s) in a deployment
 var listCmd = &cobra.Command{
