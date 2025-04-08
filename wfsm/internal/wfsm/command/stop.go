@@ -11,8 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
-
+	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 	"github.com/cisco-eti/wfsm/internal/util"
 )
 
@@ -31,7 +30,7 @@ Examples:
 const agentDeploymentNameFlag string = "agentDeploymentName"
 
 const stopFail = "Stop Status: Failed - %s"
-const stopError string = "get failed"
+const stopError string = "stop failed"
 
 // stopCmd stops the deployment of the agent(s)
 var stopCmd = &cobra.Command{

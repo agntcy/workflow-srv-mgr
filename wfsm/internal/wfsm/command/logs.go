@@ -11,8 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
-
+	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
 	"github.com/cisco-eti/wfsm/internal/util"
 )
 
@@ -29,7 +28,7 @@ Examples:
 `
 
 const logsFail = "Logs Status: Failed - %s"
-const logsError string = "get failed"
+const logsError string = "logs failed"
 
 // logsCmd show the logs of running deployment of the agent(s)
 var logsCmd = &cobra.Command{
