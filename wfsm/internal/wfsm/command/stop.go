@@ -52,8 +52,8 @@ var stopCmd = &cobra.Command{
 }
 
 func init() {
-	listCmd.Flags().StringP(agentDeploymentNameFlag, "n", "", "The name of the agent")
-	listCmd.Flags().StringP(platformsFlag, "p", "docker", "The deployment target platform")
+	stopCmd.Flags().StringP(agentDeploymentNameFlag, "n", "", "The name of the agent")
+	stopCmd.Flags().StringP(platformsFlag, "p", "docker", "The deployment target platform")
 	stopCmd.MarkFlagRequired(agentDeploymentNameFlag)
 }
 
