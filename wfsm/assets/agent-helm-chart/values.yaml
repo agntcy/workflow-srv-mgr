@@ -1,0 +1,21 @@
+agents:
+  - name: "mailcomposer"
+    image:
+        repository: "ghcr.io/image"
+        tag: "latest"
+    labels:
+      app: "mailcomposer"
+    env:
+      - name: "MAILCOMPOSER_CONFIG"
+        value: "/etc/mailcomposer/config.yaml"
+      - name: "MAILCOMPOSER_LOG_LEVEL"
+        value: "info"
+    secretEnvs:
+      - name: "API_KEY"
+        value: "xxx"
+    volumePath: "/otp/storage"
+    externalPort: 8000
+    internalPort: 8000
+        
+        
+

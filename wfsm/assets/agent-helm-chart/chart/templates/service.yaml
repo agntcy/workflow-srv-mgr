@@ -1,0 +1,2 @@
+# templates/service.yaml
+{{- include "generate.service" . -}}

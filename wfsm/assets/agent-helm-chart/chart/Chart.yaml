@@ -1,0 +1,11 @@
+apiVersion: v2
+name: agent-chart
+description: A Helm chart for deploying multiple agents with their services, configs, and secrets
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: smagyari_cisco
+keywords:
+  - agents
+  - microservices
