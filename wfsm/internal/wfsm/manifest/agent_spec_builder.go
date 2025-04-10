@@ -33,7 +33,7 @@ func NewAgentSpecBuilder() *AgentSpecBuilder {
 
 func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath string, deploymentName string, selectedDeploymentOption *string, envVarValues manifests.EnvVarValues) error {
 
-	manifestSvc, err := NewManifestService(manifestPath)
+	manifestSvc, err := NewManifestService(ctx, manifestPath)
 	if err != nil {
 		return err
 	}

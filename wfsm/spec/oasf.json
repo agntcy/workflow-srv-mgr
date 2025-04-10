@@ -1,0 +1,130 @@
+{
+    "$defs": {
+        "key_value_object": {
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                },
+                "value": {
+                    "title": "Value",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ],
+            "title": "Key Value Object",
+            "type": "object"
+        },
+        "locator": {
+            "additionalProperties": false,
+            "properties": {
+                "annotations": {
+                    "items": {
+                        "$ref": "#/$defs/key_value_object"
+                    },
+                    "title": "Annotations",
+                    "type": "array"
+                },
+                "digest": {
+                    "title": "Digest",
+                    "type": "string"
+                },
+                "size": {
+                    "title": "Size",
+                    "type": "integer"
+                },
+                "type": {
+                    "enum": [
+                        "binary",
+                        "unspecified",
+                        "helm-chart",
+                        "docker-image",
+                        "py-package",
+                        "source-code"
+                    ],
+                    "title": "Type",
+                    "type": "string"
+                },
+                "url": {
+                    "title": "URL",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "url"
+            ],
+            "title": "Agent Locator",
+            "type": "object"
+        }
+    },
+    "additionalProperties": false,
+    "properties": {
+        "annotations": {
+            "items": {
+                "$ref": "#/$defs/key_value_object"
+            },
+            "title": "Annotations",
+            "type": "array"
+        },
+        "authors": {
+            "items": {
+                "type": "string"
+            },
+            "title": "Authors",
+            "type": "array"
+        },
+        "created_at": {
+            "title": "Creation Time",
+            "type": "integer"
+        },
+        "digest": {
+            "title": "Agent ID",
+            "type": "string"
+        },
+        "extensions": {
+            "items": {
+                "type": "object"
+            },
+            "title": "Extensions",
+            "type": "array"
+        },
+        "locators": {
+            "items": {
+                "$ref": "#/$defs/locator"
+            },
+            "title": "Locators",
+            "type": "array"
+        },
+        "name": {
+            "title": "Agent Name",
+            "type": "string"
+        },
+        "skills": {
+            "items": {
+                "type": "object"
+            },
+            "title": "Skills",
+            "type": "array"
+        },
+        "version": {
+            "title": "Agent Version",
+            "type": "string"
+        }
+    },
+    "required": [
+        "authors",
+        "digest",
+        "extensions",
+        "locators",
+        "name",
+        "skills",
+        "version"
+    ],
+    "title": "Agent",
+    "type": "object"
+}
