@@ -200,7 +200,7 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 	agDeploymentFolder := path.Join(r.hostStorageFolder, deploymentSpec.DeploymentName)
 	// make sure the folder exists
 	if _, err := os.Stat(agDeploymentFolder); os.IsNotExist(err) {
-		if err := os.Mkdir(agDeploymentFolder, 0755); err != nil {
+		if err := os.MkdirAll(agDeploymentFolder, 0755); err != nil {
 			return nil, fmt.Errorf("failed to create deployment folder for agent: %v", err)
 		}
 	}
