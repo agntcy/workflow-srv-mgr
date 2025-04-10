@@ -9,10 +9,12 @@ import (
 	"os"
 	"path"
 
+	"github.com/agntcy/dir/api/hub/v1alpha1"
 	"github.com/cisco-eti/wfsm/internal/platforms"
 	"github.com/cisco-eti/wfsm/internal/wfsm/config"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/builder"
@@ -102,6 +104,23 @@ func init() {
 
 func runDeploy(ctx context.Context, manifestPath string, envFilePath string, agentConfigPath string, platform string, dryRun bool, deleteBuildFolders bool, forceBuild bool, baseImage string, deploymentOption *string) error {
 	log := zerolog.Ctx(ctx)
+
+	accessToken := "xxxx"
+	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("authorization", "Bearer "+accessToken))
+
+	hc, err := hubClient.New("xxxxx")
+	agentID := &v1alpha1.AgentIdentifier{
+		Id: &v1alpha1.AgentIdentifier_Digest{
+			Digest: "sha256:xxx",
+		},
+	}
+	dirManifest, err := hc.PullAgent(ctx, &v1alpha1.PullAgentRequest{
+		Id: agentID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to pull agent: %v", err)
+	}
+	log.Info().Msg(string(dirManifest))
 
 	envVarValues, err := manifest.LoadEnvVars(envFilePath)
 	if err != nil {
