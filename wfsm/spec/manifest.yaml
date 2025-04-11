@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Agent Manifest Definition
-  version: '0.1'
+  version: '0.2'
 paths: {}
 components:
   schemas:
@@ -159,11 +159,13 @@ components:
           oneOf:
             - $ref: '#/components/schemas/LangGraphConfig'
             - $ref: '#/components/schemas/LlamaIndexConfig'
+            - $ref: '#/components/schemas/AgentlessConfig'
           discriminator:
             propertyName: framework_type
             mapping:
               langgraph: '#/components/schemas/LangGraphConfig'
               llamaindex: '#/components/schemas/LlamaIndexConfig'
+              agentless: '#/components/schemas/AgentlessConfig'
       required:
         - type
         - url
@@ -196,6 +198,137 @@ components:
       required:
         - framework_type
         - path
+    AgentMessage:
+      title: Generic message
+      description: Input message to LLM service
+      type: object
+      properties:
+        role:
+          type: string
+          default: user
+          enum:
+            - user
+            - system
+            - assistant
+        content:
+          type: string
+      required:
+        - content
+    AgentlessModelSettings:
+      title: Agentless Model Settings
+      type: object
+      properties:
+        base_url:
+          type: str
+        api_version:
+          type: str
+        azure_endpoint:
+          type: str
+        azure_ad_token:
+          type: str
+        project:
+          type: str
+        organization:
+          type: str
+        region_name:
+          type: str
+        aws_access_key_id:
+          type: str
+        aws_secret_access_key:
+          type: str
+        aws_session_token:
+          type: str
+        aws_read_timeout:
+          type: number
+        aws_connect_timeout:
+          type: number
+        service_account_file:
+          type: str
+        project_id:
+          type: str
+        region:
+          type: str
+        model_publisher:
+          type: str
+    AgentlessModelParameters:
+      title: Agentless Model Settings
+      type: object
+      properties:
+        max_tokens:
+          title: Max Tokens
+          description: The maximum number of tokens to generate before stopping.
+          type: integer
+        temperature:
+          title: Temperature
+          description: Use `temperature` closer to `0.0` for analytical / multiple choice, and closer to a model's maximum `temperature` for creative and generative tasks.
+          type: number
+        top_p:
+          title: Top P
+          description: An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass.
+          type: number
+        parallel_tool_calls:
+          title: Parallel Tool Calls
+          description: Whether to allow parallel tool calls.
+          type: boolean
+        seed:
+          title: Seed
+          description: The random seed to use for the model, theoretically allowing for deterministic results.
+          type: integer
+        presence_penalty:
+          title: Presence Penalty
+          description: Penalize new tokens based on whether they have appeared in the text so far.
+          type: number
+        frequency_penalty:
+          title: Frequency Penalty
+          description: Penalize new tokens based on their existing frequency in the text so far.
+          type: number
+        logit_bias:
+          additionalProperties:
+            type: integer
+          title: Logit Bias
+          description: Modify the likelihood of specified tokens appearing in the completion.
+          type: object
+        timeout:
+          type: number
+          description: Override the client-level default timeout for a request, in seconds.
+        stop_sequences:
+          type: array
+          items:
+            type: str
+          description: Sequences that will cause the model to stop generating.
+    AgentlessConfig:
+      title: Agentless Config
+      description: Describes LLM configuration and prompts for agentless deployment
+      type: object
+      properties:
+        framework_type:
+          type: string
+          enum:
+            - agentless
+        default_model:
+          type: string
+          description: Specific model out of those configured to handle request used unless specified in request.
+        models:
+          type: object
+          description: Mapping of available model names to settings.
+          additionalProperties:
+            $ref: '#/components/schemas/AgentlessModelSettings'
+        default_model_parameters:
+          type: object
+          description: Default parameters for models specified in "models" property.
+          additionalProperties:
+            $ref: '#/components/schemas/AgentlessModelParameters'
+        message_templates:
+          type: array
+          default: []
+          description: Initial messages to send to model.
+          items:
+            $ref:  '#/components/schemas/AgentMessage'
+          maxItems: 4096
+      required:
+        - framework_type
+        - default_model
+        - models
     RemoteServiceDeployment:
       title: Remote Service
       description: Describes the network endpoint where the agent is available
