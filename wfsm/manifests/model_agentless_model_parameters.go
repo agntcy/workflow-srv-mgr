@@ -39,7 +39,7 @@ type AgentlessModelParameters struct {
 	LogitBias map[string]int32 `json:"logit_bias,omitempty"`
 	// Override the client-level default timeout for a request, in seconds.
 	Timeout       *float32 `json:"timeout,omitempty"`
-	StopSequences []Str    `json:"stop_sequences,omitempty"`
+	StopSequences []string `json:"stop_sequences,omitempty"`
 }
 
 // NewAgentlessModelParameters instantiates a new AgentlessModelParameters object
@@ -349,9 +349,9 @@ func (o *AgentlessModelParameters) SetTimeout(v float32) {
 }
 
 // GetStopSequences returns the StopSequences field value if set, zero value otherwise.
-func (o *AgentlessModelParameters) GetStopSequences() []Str {
+func (o *AgentlessModelParameters) GetStopSequences() []string {
 	if o == nil || IsNil(o.StopSequences) {
-		var ret []Str
+		var ret []string
 		return ret
 	}
 	return o.StopSequences
@@ -359,7 +359,7 @@ func (o *AgentlessModelParameters) GetStopSequences() []Str {
 
 // GetStopSequencesOk returns a tuple with the StopSequences field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelParameters) GetStopSequencesOk() ([]Str, bool) {
+func (o *AgentlessModelParameters) GetStopSequencesOk() ([]string, bool) {
 	if o == nil || IsNil(o.StopSequences) {
 		return nil, false
 	}
@@ -375,8 +375,8 @@ func (o *AgentlessModelParameters) HasStopSequences() bool {
 	return false
 }
 
-// SetStopSequences gets a reference to the given []Str and assigns it to the StopSequences field.
-func (o *AgentlessModelParameters) SetStopSequences(v []Str) {
+// SetStopSequences gets a reference to the given []string and assigns it to the StopSequences field.
+func (o *AgentlessModelParameters) SetStopSequences(v []string) {
 	o.StopSequences = v
 }
 

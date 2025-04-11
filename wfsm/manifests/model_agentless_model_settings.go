@@ -21,22 +21,22 @@ var _ MappedNullable = &AgentlessModelSettings{}
 
 // AgentlessModelSettings struct for AgentlessModelSettings
 type AgentlessModelSettings struct {
-	BaseUrl            *Str     `json:"base_url,omitempty"`
-	ApiVersion         *Str     `json:"api_version,omitempty"`
-	AzureEndpoint      *Str     `json:"azure_endpoint,omitempty"`
-	AzureAdToken       *Str     `json:"azure_ad_token,omitempty"`
-	Project            *Str     `json:"project,omitempty"`
-	Organization       *Str     `json:"organization,omitempty"`
-	RegionName         *Str     `json:"region_name,omitempty"`
-	AwsAccessKeyId     *Str     `json:"aws_access_key_id,omitempty"`
-	AwsSecretAccessKey *Str     `json:"aws_secret_access_key,omitempty"`
-	AwsSessionToken    *Str     `json:"aws_session_token,omitempty"`
+	BaseUrl            *string  `json:"base_url,omitempty"`
+	ApiVersion         *string  `json:"api_version,omitempty"`
+	AzureEndpoint      *string  `json:"azure_endpoint,omitempty"`
+	AzureAdToken       *string  `json:"azure_ad_token,omitempty"`
+	Project            *string  `json:"project,omitempty"`
+	Organization       *string  `json:"organization,omitempty"`
+	RegionName         *string  `json:"region_name,omitempty"`
+	AwsAccessKeyId     *string  `json:"aws_access_key_id,omitempty"`
+	AwsSecretAccessKey *string  `json:"aws_secret_access_key,omitempty"`
+	AwsSessionToken    *string  `json:"aws_session_token,omitempty"`
 	AwsReadTimeout     *float32 `json:"aws_read_timeout,omitempty"`
 	AwsConnectTimeout  *float32 `json:"aws_connect_timeout,omitempty"`
-	ServiceAccountFile *Str     `json:"service_account_file,omitempty"`
-	ProjectId          *Str     `json:"project_id,omitempty"`
-	Region             *Str     `json:"region,omitempty"`
-	ModelPublisher     *Str     `json:"model_publisher,omitempty"`
+	ServiceAccountFile *string  `json:"service_account_file,omitempty"`
+	ProjectId          *string  `json:"project_id,omitempty"`
+	Region             *string  `json:"region,omitempty"`
+	ModelPublisher     *string  `json:"model_publisher,omitempty"`
 }
 
 // NewAgentlessModelSettings instantiates a new AgentlessModelSettings object
@@ -57,9 +57,9 @@ func NewAgentlessModelSettingsWithDefaults() *AgentlessModelSettings {
 }
 
 // GetBaseUrl returns the BaseUrl field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetBaseUrl() Str {
+func (o *AgentlessModelSettings) GetBaseUrl() string {
 	if o == nil || IsNil(o.BaseUrl) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.BaseUrl
@@ -67,7 +67,7 @@ func (o *AgentlessModelSettings) GetBaseUrl() Str {
 
 // GetBaseUrlOk returns a tuple with the BaseUrl field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetBaseUrlOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetBaseUrlOk() (*string, bool) {
 	if o == nil || IsNil(o.BaseUrl) {
 		return nil, false
 	}
@@ -83,15 +83,15 @@ func (o *AgentlessModelSettings) HasBaseUrl() bool {
 	return false
 }
 
-// SetBaseUrl gets a reference to the given Str and assigns it to the BaseUrl field.
-func (o *AgentlessModelSettings) SetBaseUrl(v Str) {
+// SetBaseUrl gets a reference to the given string and assigns it to the BaseUrl field.
+func (o *AgentlessModelSettings) SetBaseUrl(v string) {
 	o.BaseUrl = &v
 }
 
 // GetApiVersion returns the ApiVersion field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetApiVersion() Str {
+func (o *AgentlessModelSettings) GetApiVersion() string {
 	if o == nil || IsNil(o.ApiVersion) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.ApiVersion
@@ -99,7 +99,7 @@ func (o *AgentlessModelSettings) GetApiVersion() Str {
 
 // GetApiVersionOk returns a tuple with the ApiVersion field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetApiVersionOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetApiVersionOk() (*string, bool) {
 	if o == nil || IsNil(o.ApiVersion) {
 		return nil, false
 	}
@@ -115,15 +115,15 @@ func (o *AgentlessModelSettings) HasApiVersion() bool {
 	return false
 }
 
-// SetApiVersion gets a reference to the given Str and assigns it to the ApiVersion field.
-func (o *AgentlessModelSettings) SetApiVersion(v Str) {
+// SetApiVersion gets a reference to the given string and assigns it to the ApiVersion field.
+func (o *AgentlessModelSettings) SetApiVersion(v string) {
 	o.ApiVersion = &v
 }
 
 // GetAzureEndpoint returns the AzureEndpoint field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetAzureEndpoint() Str {
+func (o *AgentlessModelSettings) GetAzureEndpoint() string {
 	if o == nil || IsNil(o.AzureEndpoint) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.AzureEndpoint
@@ -131,7 +131,7 @@ func (o *AgentlessModelSettings) GetAzureEndpoint() Str {
 
 // GetAzureEndpointOk returns a tuple with the AzureEndpoint field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetAzureEndpointOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetAzureEndpointOk() (*string, bool) {
 	if o == nil || IsNil(o.AzureEndpoint) {
 		return nil, false
 	}
@@ -147,15 +147,15 @@ func (o *AgentlessModelSettings) HasAzureEndpoint() bool {
 	return false
 }
 
-// SetAzureEndpoint gets a reference to the given Str and assigns it to the AzureEndpoint field.
-func (o *AgentlessModelSettings) SetAzureEndpoint(v Str) {
+// SetAzureEndpoint gets a reference to the given string and assigns it to the AzureEndpoint field.
+func (o *AgentlessModelSettings) SetAzureEndpoint(v string) {
 	o.AzureEndpoint = &v
 }
 
 // GetAzureAdToken returns the AzureAdToken field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetAzureAdToken() Str {
+func (o *AgentlessModelSettings) GetAzureAdToken() string {
 	if o == nil || IsNil(o.AzureAdToken) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.AzureAdToken
@@ -163,7 +163,7 @@ func (o *AgentlessModelSettings) GetAzureAdToken() Str {
 
 // GetAzureAdTokenOk returns a tuple with the AzureAdToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetAzureAdTokenOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetAzureAdTokenOk() (*string, bool) {
 	if o == nil || IsNil(o.AzureAdToken) {
 		return nil, false
 	}
@@ -179,15 +179,15 @@ func (o *AgentlessModelSettings) HasAzureAdToken() bool {
 	return false
 }
 
-// SetAzureAdToken gets a reference to the given Str and assigns it to the AzureAdToken field.
-func (o *AgentlessModelSettings) SetAzureAdToken(v Str) {
+// SetAzureAdToken gets a reference to the given string and assigns it to the AzureAdToken field.
+func (o *AgentlessModelSettings) SetAzureAdToken(v string) {
 	o.AzureAdToken = &v
 }
 
 // GetProject returns the Project field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetProject() Str {
+func (o *AgentlessModelSettings) GetProject() string {
 	if o == nil || IsNil(o.Project) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.Project
@@ -195,7 +195,7 @@ func (o *AgentlessModelSettings) GetProject() Str {
 
 // GetProjectOk returns a tuple with the Project field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetProjectOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetProjectOk() (*string, bool) {
 	if o == nil || IsNil(o.Project) {
 		return nil, false
 	}
@@ -211,15 +211,15 @@ func (o *AgentlessModelSettings) HasProject() bool {
 	return false
 }
 
-// SetProject gets a reference to the given Str and assigns it to the Project field.
-func (o *AgentlessModelSettings) SetProject(v Str) {
+// SetProject gets a reference to the given string and assigns it to the Project field.
+func (o *AgentlessModelSettings) SetProject(v string) {
 	o.Project = &v
 }
 
 // GetOrganization returns the Organization field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetOrganization() Str {
+func (o *AgentlessModelSettings) GetOrganization() string {
 	if o == nil || IsNil(o.Organization) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.Organization
@@ -227,7 +227,7 @@ func (o *AgentlessModelSettings) GetOrganization() Str {
 
 // GetOrganizationOk returns a tuple with the Organization field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetOrganizationOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetOrganizationOk() (*string, bool) {
 	if o == nil || IsNil(o.Organization) {
 		return nil, false
 	}
@@ -243,15 +243,15 @@ func (o *AgentlessModelSettings) HasOrganization() bool {
 	return false
 }
 
-// SetOrganization gets a reference to the given Str and assigns it to the Organization field.
-func (o *AgentlessModelSettings) SetOrganization(v Str) {
+// SetOrganization gets a reference to the given string and assigns it to the Organization field.
+func (o *AgentlessModelSettings) SetOrganization(v string) {
 	o.Organization = &v
 }
 
 // GetRegionName returns the RegionName field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetRegionName() Str {
+func (o *AgentlessModelSettings) GetRegionName() string {
 	if o == nil || IsNil(o.RegionName) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.RegionName
@@ -259,7 +259,7 @@ func (o *AgentlessModelSettings) GetRegionName() Str {
 
 // GetRegionNameOk returns a tuple with the RegionName field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetRegionNameOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetRegionNameOk() (*string, bool) {
 	if o == nil || IsNil(o.RegionName) {
 		return nil, false
 	}
@@ -275,15 +275,15 @@ func (o *AgentlessModelSettings) HasRegionName() bool {
 	return false
 }
 
-// SetRegionName gets a reference to the given Str and assigns it to the RegionName field.
-func (o *AgentlessModelSettings) SetRegionName(v Str) {
+// SetRegionName gets a reference to the given string and assigns it to the RegionName field.
+func (o *AgentlessModelSettings) SetRegionName(v string) {
 	o.RegionName = &v
 }
 
 // GetAwsAccessKeyId returns the AwsAccessKeyId field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetAwsAccessKeyId() Str {
+func (o *AgentlessModelSettings) GetAwsAccessKeyId() string {
 	if o == nil || IsNil(o.AwsAccessKeyId) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.AwsAccessKeyId
@@ -291,7 +291,7 @@ func (o *AgentlessModelSettings) GetAwsAccessKeyId() Str {
 
 // GetAwsAccessKeyIdOk returns a tuple with the AwsAccessKeyId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetAwsAccessKeyIdOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetAwsAccessKeyIdOk() (*string, bool) {
 	if o == nil || IsNil(o.AwsAccessKeyId) {
 		return nil, false
 	}
@@ -307,15 +307,15 @@ func (o *AgentlessModelSettings) HasAwsAccessKeyId() bool {
 	return false
 }
 
-// SetAwsAccessKeyId gets a reference to the given Str and assigns it to the AwsAccessKeyId field.
-func (o *AgentlessModelSettings) SetAwsAccessKeyId(v Str) {
+// SetAwsAccessKeyId gets a reference to the given string and assigns it to the AwsAccessKeyId field.
+func (o *AgentlessModelSettings) SetAwsAccessKeyId(v string) {
 	o.AwsAccessKeyId = &v
 }
 
 // GetAwsSecretAccessKey returns the AwsSecretAccessKey field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetAwsSecretAccessKey() Str {
+func (o *AgentlessModelSettings) GetAwsSecretAccessKey() string {
 	if o == nil || IsNil(o.AwsSecretAccessKey) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.AwsSecretAccessKey
@@ -323,7 +323,7 @@ func (o *AgentlessModelSettings) GetAwsSecretAccessKey() Str {
 
 // GetAwsSecretAccessKeyOk returns a tuple with the AwsSecretAccessKey field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetAwsSecretAccessKeyOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetAwsSecretAccessKeyOk() (*string, bool) {
 	if o == nil || IsNil(o.AwsSecretAccessKey) {
 		return nil, false
 	}
@@ -339,15 +339,15 @@ func (o *AgentlessModelSettings) HasAwsSecretAccessKey() bool {
 	return false
 }
 
-// SetAwsSecretAccessKey gets a reference to the given Str and assigns it to the AwsSecretAccessKey field.
-func (o *AgentlessModelSettings) SetAwsSecretAccessKey(v Str) {
+// SetAwsSecretAccessKey gets a reference to the given string and assigns it to the AwsSecretAccessKey field.
+func (o *AgentlessModelSettings) SetAwsSecretAccessKey(v string) {
 	o.AwsSecretAccessKey = &v
 }
 
 // GetAwsSessionToken returns the AwsSessionToken field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetAwsSessionToken() Str {
+func (o *AgentlessModelSettings) GetAwsSessionToken() string {
 	if o == nil || IsNil(o.AwsSessionToken) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.AwsSessionToken
@@ -355,7 +355,7 @@ func (o *AgentlessModelSettings) GetAwsSessionToken() Str {
 
 // GetAwsSessionTokenOk returns a tuple with the AwsSessionToken field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetAwsSessionTokenOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetAwsSessionTokenOk() (*string, bool) {
 	if o == nil || IsNil(o.AwsSessionToken) {
 		return nil, false
 	}
@@ -371,8 +371,8 @@ func (o *AgentlessModelSettings) HasAwsSessionToken() bool {
 	return false
 }
 
-// SetAwsSessionToken gets a reference to the given Str and assigns it to the AwsSessionToken field.
-func (o *AgentlessModelSettings) SetAwsSessionToken(v Str) {
+// SetAwsSessionToken gets a reference to the given string and assigns it to the AwsSessionToken field.
+func (o *AgentlessModelSettings) SetAwsSessionToken(v string) {
 	o.AwsSessionToken = &v
 }
 
@@ -441,9 +441,9 @@ func (o *AgentlessModelSettings) SetAwsConnectTimeout(v float32) {
 }
 
 // GetServiceAccountFile returns the ServiceAccountFile field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetServiceAccountFile() Str {
+func (o *AgentlessModelSettings) GetServiceAccountFile() string {
 	if o == nil || IsNil(o.ServiceAccountFile) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.ServiceAccountFile
@@ -451,7 +451,7 @@ func (o *AgentlessModelSettings) GetServiceAccountFile() Str {
 
 // GetServiceAccountFileOk returns a tuple with the ServiceAccountFile field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetServiceAccountFileOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetServiceAccountFileOk() (*string, bool) {
 	if o == nil || IsNil(o.ServiceAccountFile) {
 		return nil, false
 	}
@@ -467,15 +467,15 @@ func (o *AgentlessModelSettings) HasServiceAccountFile() bool {
 	return false
 }
 
-// SetServiceAccountFile gets a reference to the given Str and assigns it to the ServiceAccountFile field.
-func (o *AgentlessModelSettings) SetServiceAccountFile(v Str) {
+// SetServiceAccountFile gets a reference to the given string and assigns it to the ServiceAccountFile field.
+func (o *AgentlessModelSettings) SetServiceAccountFile(v string) {
 	o.ServiceAccountFile = &v
 }
 
 // GetProjectId returns the ProjectId field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetProjectId() Str {
+func (o *AgentlessModelSettings) GetProjectId() string {
 	if o == nil || IsNil(o.ProjectId) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.ProjectId
@@ -483,7 +483,7 @@ func (o *AgentlessModelSettings) GetProjectId() Str {
 
 // GetProjectIdOk returns a tuple with the ProjectId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetProjectIdOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetProjectIdOk() (*string, bool) {
 	if o == nil || IsNil(o.ProjectId) {
 		return nil, false
 	}
@@ -499,15 +499,15 @@ func (o *AgentlessModelSettings) HasProjectId() bool {
 	return false
 }
 
-// SetProjectId gets a reference to the given Str and assigns it to the ProjectId field.
-func (o *AgentlessModelSettings) SetProjectId(v Str) {
+// SetProjectId gets a reference to the given string and assigns it to the ProjectId field.
+func (o *AgentlessModelSettings) SetProjectId(v string) {
 	o.ProjectId = &v
 }
 
 // GetRegion returns the Region field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetRegion() Str {
+func (o *AgentlessModelSettings) GetRegion() string {
 	if o == nil || IsNil(o.Region) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.Region
@@ -515,7 +515,7 @@ func (o *AgentlessModelSettings) GetRegion() Str {
 
 // GetRegionOk returns a tuple with the Region field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetRegionOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetRegionOk() (*string, bool) {
 	if o == nil || IsNil(o.Region) {
 		return nil, false
 	}
@@ -531,15 +531,15 @@ func (o *AgentlessModelSettings) HasRegion() bool {
 	return false
 }
 
-// SetRegion gets a reference to the given Str and assigns it to the Region field.
-func (o *AgentlessModelSettings) SetRegion(v Str) {
+// SetRegion gets a reference to the given string and assigns it to the Region field.
+func (o *AgentlessModelSettings) SetRegion(v string) {
 	o.Region = &v
 }
 
 // GetModelPublisher returns the ModelPublisher field value if set, zero value otherwise.
-func (o *AgentlessModelSettings) GetModelPublisher() Str {
+func (o *AgentlessModelSettings) GetModelPublisher() string {
 	if o == nil || IsNil(o.ModelPublisher) {
-		var ret Str
+		var ret string
 		return ret
 	}
 	return *o.ModelPublisher
@@ -547,7 +547,7 @@ func (o *AgentlessModelSettings) GetModelPublisher() Str {
 
 // GetModelPublisherOk returns a tuple with the ModelPublisher field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentlessModelSettings) GetModelPublisherOk() (*Str, bool) {
+func (o *AgentlessModelSettings) GetModelPublisherOk() (*string, bool) {
 	if o == nil || IsNil(o.ModelPublisher) {
 		return nil, false
 	}
@@ -563,8 +563,8 @@ func (o *AgentlessModelSettings) HasModelPublisher() bool {
 	return false
 }
 
-// SetModelPublisher gets a reference to the given Str and assigns it to the ModelPublisher field.
-func (o *AgentlessModelSettings) SetModelPublisher(v Str) {
+// SetModelPublisher gets a reference to the given string and assigns it to the ModelPublisher field.
+func (o *AgentlessModelSettings) SetModelPublisher(v string) {
 	o.ModelPublisher = &v
 }
 

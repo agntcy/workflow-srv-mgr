@@ -219,37 +219,37 @@ components:
       type: object
       properties:
         base_url:
-          type: str
+          type: string
         api_version:
-          type: str
+          type: string
         azure_endpoint:
-          type: str
+          type: string
         azure_ad_token:
-          type: str
+          type: string
         project:
-          type: str
+          type: string
         organization:
-          type: str
+          type: string
         region_name:
-          type: str
+          type: string
         aws_access_key_id:
-          type: str
+          type: string
         aws_secret_access_key:
-          type: str
+          type: string
         aws_session_token:
-          type: str
+          type: string
         aws_read_timeout:
           type: number
         aws_connect_timeout:
           type: number
         service_account_file:
-          type: str
+          type: string
         project_id:
-          type: str
+          type: string
         region:
-          type: str
+          type: string
         model_publisher:
-          type: str
+          type: string
     AgentlessModelParameters:
       title: Agentless Model Settings
       type: object
@@ -294,7 +294,7 @@ components:
         stop_sequences:
           type: array
           items:
-            type: str
+            type: string
           description: Sequences that will cause the model to stop generating.
     AgentlessConfig:
       title: Agentless Config
