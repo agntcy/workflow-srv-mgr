@@ -17,7 +17,15 @@ metadata:
   name: {{ .name }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+    {{- range $key, $value := .service.labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  annotations:
+    {{- range $key, $value := .service.annotations }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
 spec:
+  type: {{ .service.type | default "ClusterIP" }}
   selector:
     app: {{ .name }}
   ports:
@@ -45,6 +53,7 @@ data:
 {{/* Generate secret */}}
 {{- define "generate.secret" -}}
 {{- range .Values.agents }}
+{{- if not .existingSecretName }}
 ---
 apiVersion: v1
 kind: Secret
@@ -55,6 +64,7 @@ data:
   {{- range .secretEnvs }}
   {{ .name }}: {{ .value | b64enc | quote }}
   {{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}
 
@@ -69,9 +79,16 @@ metadata:
   name: {{ .name }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+    {{- range $key, $value := .statefulset.labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  annotations:
+    {{- range $key, $value := .statefulset.annotations }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
 spec:
   serviceName: {{ .name }}
-  replicas: 1
+  replicas: {{ .statefulset.replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ .name }}
@@ -86,13 +103,26 @@ spec:
         envFrom:
         - configMapRef:
             name: {{ .name }}-config
+        {{- if .existingSecretName }}
+        - secretRef:
+            name: {{ .existingSecretName }}
+        {{- else }}
         - secretRef:
             name: {{ .name }}-secret
+        {{- end }}
         volumeMounts:
         - name: storage
           mountPath: {{ .volumePath }}
         ports:
         - containerPort: {{ .internalPort }}
+        resources:
+          {{- toYaml .statefulset.resources | nindent 10 }}
+      nodeSelector:
+        {{- toYaml .statefulset.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .statefulset.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .statefulset.tolerations | nindent 8 }}
   volumeClaimTemplates:
   - metadata:
       name: storage

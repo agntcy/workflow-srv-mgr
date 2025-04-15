@@ -1,17 +1,16 @@
-package deploy
+package k8s
 
 import (
 	"context"
+	"fmt"
 	"os"
 
-	"emperror.dev/errors"
-	"github.com/go-logr/logr"
+	"github.com/rs/zerolog"
+	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/registry"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -58,25 +57,15 @@ func (n NetworkConfig) Map() map[string]interface{} {
 
 // helmDeployer helm based deployer implementation
 type helmDeployer struct {
-	logger        logr.Logger
-	networkConfig NetworkConfig
-	ociConfig     edge.OCIConfig
 }
 
-type ConfigOpt func(*action.Configuration)
-
-func registryConfigOpt(in *registry.Client) ConfigOpt {
-	return func(config *action.Configuration) {
-		config.RegistryClient = in
-	}
+type HelmDeploymentService interface {
+	DeployChart(ctx context.Context, releaseName string, chartUrl string, namespace string, chartValuesYaml []byte) error
+	UnDeployChart(ctx context.Context, releaseName string, namespace string) error
 }
 
-func NewHelmDeployer(logger logr.Logger, networkConfig NetworkConfig, ociConfig edge.OCIConfig) AppDeploymentService {
-	return helmDeployer{
-		logger:        logger,
-		networkConfig: networkConfig,
-		ociConfig:     ociConfig,
-	}
+func NewHelmDeployer() HelmDeploymentService {
+	return helmDeployer{}
 }
 
 func (h helmDeployer) isUpgrade(cfg action.Configuration, releaseName string) bool {
@@ -88,143 +77,120 @@ func (h helmDeployer) isUpgrade(cfg action.Configuration, releaseName string) bo
 }
 
 // Loads Chart from remote repository by chartURL or legacy filesystem store
-func (h helmDeployer) PullChart(chartPathOpts *action.ChartPathOptions, deploySpec DeploymentParams) (*chart.Chart, error) {
+func (h helmDeployer) pullChart(chartPathOpts *action.ChartPathOptions, chartUrl string) (*chart.Chart, error) {
 	envSettings := cli.New()
-	chartPath, err := chartPathOpts.LocateChart(deploySpec.ChartURL, envSettings)
+	chartPath, err := chartPathOpts.LocateChart(chartUrl, envSettings)
 	if err != nil {
-		return nil, errors.WrapIf(err, "failed to locate chart")
+		return nil, fmt.Errorf("failed to locate chart: %w", err)
 	}
 	chartRequested, err := loader.Load(chartPath)
-	if err != nil {
-		return nil, err
-	}
-	chartRequested = h.deploymentEnhancer.EnhanceChart(chartRequested, deploySpec)
-
 	return chartRequested, err
 }
 
-func (h helmDeployer) DeployApp(ctx context.Context, deploySpec DeploymentParams) error {
-
-	// NewClient() defaults to using ~/.docker/config.json, but explictly state config path here for clarity
-	// Hint: credStore defaults to file - if testing on dev machine ensure JSON isn't forcing credsStore (e.g. on osx oci lib will try to use osx keychain)
-	regClient, _ := registry.NewClient(registry.ClientOptCredentialsFile(h.ociConfig.ConfigPath), registry.ClientOptDebug(true))
+func (h helmDeployer) DeployChart(ctx context.Context, releaseName string, chartUrl string, namespace string, chartValuesYaml []byte) error {
+	log := zerolog.Ctx(ctx)
+	log.Info().Str("chartURL", chartUrl).Msg("Deploying chart")
 
 	// Initialize the action configuration
-	helmActionConfiguration, err := h.getActionConfiguration(deploySpec.AppsNamespace, registryConfigOpt(regClient))
+	helmActionConfiguration, err := h.getActionConfiguration(namespace)
 	if err != nil {
-		return errors.WrapIf(err, "failed to initialize chart")
+		return fmt.Errorf("failed to initialize the action configuration: %w", err)
 	}
 
-	if h.isUpgrade(helmActionConfiguration, deploySpec.DeployID) {
+	if h.isUpgrade(helmActionConfiguration, releaseName) {
 		upgradeAction := action.NewUpgrade(&helmActionConfiguration)
-		upgradeAction.Namespace = deploySpec.AppsNamespace
+		upgradeAction.Namespace = namespace
 
-		// Setting Version is mandatory for OCI
-		upgradeAction.Version = deploySpec.ApplicationVersion
+		//TODO Setting Version is mandatory for OCI
+		//upgradeAction.Version = deploySpec.ApplicationVersion
 
-		chartRequested, err := h.PullChart(&upgradeAction.ChartPathOptions, deploySpec)
+		chartValues, err := h.convertValuesToMap(chartValuesYaml)
 		if err != nil {
-			return errors.WrapIf(err, "failed to load chart")
+			return err
 		}
 
-		chartValues, err := h.buildReleaseVars(deploySpec, chartRequested)
+		chartRequested, err := h.pullChart(&upgradeAction.ChartPathOptions, chartUrl)
 		if err != nil {
-			return errors.Wrap(err, "failed to prepare configuration values")
+			return fmt.Errorf("failed to load chart: %w", err)
 		}
 
-		release, err := upgradeAction.Run(deploySpec.DeployID, chartRequested, chartValues)
+		release, err := upgradeAction.Run(releaseName, chartRequested, chartValues)
 		if err != nil {
-			return errors.WrapIf(err, "failed to install chart")
+			return fmt.Errorf("failed to upgrade chart: %w", err)
 		}
-		h.logger.Info("chart successfully upgraded", "release name", release.Name)
+		log.Info().Str("release", release.Name).Msg("Chart successfully upgraded")
 	} else {
 		installAction := action.NewInstall(&helmActionConfiguration)
-		installAction.ReleaseName = deploySpec.DeployID
-		installAction.Namespace = deploySpec.AppsNamespace
+		installAction.ReleaseName = releaseName
+		installAction.Namespace = namespace
 		installAction.CreateNamespace = true
 
-		// Setting Version is mandatory for OCI
-		installAction.Version = deploySpec.ApplicationVersion
+		//TODO Setting Version is mandatory for OCI
+		//installAction.Version = deploySpec.ApplicationVersion
 
-		chartRequested, err := h.PullChart(&installAction.ChartPathOptions, deploySpec)
+		chartRequested, err := h.pullChart(&installAction.ChartPathOptions, chartUrl)
 		if err != nil {
-			return errors.WrapIf(err, "failed to load chart")
+			return fmt.Errorf("failed to load chart: %w", err)
 		}
 
-		chartValues, err := h.buildReleaseVars(deploySpec, chartRequested)
-		h.logger.Info("chart values", chartValues)
-
+		chartValues, err := h.convertValuesToMap(chartValuesYaml)
 		if err != nil {
-			return errors.Wrap(err, "failed to prepare configuration values")
+			return fmt.Errorf("failed to prepare configuration values: %w", err)
 		}
 
 		release, err := installAction.Run(chartRequested, chartValues)
 		if err != nil {
-			return errors.WrapIf(err, "failed to install chart")
+			return fmt.Errorf("failed to install chart: %w", err)
 		}
-		h.logger.Info("chart successfully deployed", "release name", release.Name)
+		log.Info().Str("release", release.Name).Msg("Chart successfully deployed")
 	}
 
 	return nil
 }
 
-// buildReleaseVars constructs GBear-specific payload for helm charts
-func (h helmDeployer) buildReleaseVars(deploySpec DeploymentParams, chart *chart.Chart) (map[string]interface{}, error) {
-	// TODO: there should be some generic way for ingress configuration
-	// TODO: other than relying on every app chart provides its own ingress template
-	chartValues := make(map[string]interface{})
-	chartValues["siteId"] = deploySpec.SiteID
-
-	chartValues["ingress"] = map[string]interface{}{
-		"enabled":      deploySpec.IngressURL != "" || deploySpec.IstioGateway != "",
-		"istioGateway": deploySpec.IstioGateway,
-		"servicePath":  deploySpec.ServicePath,
+func (h helmDeployer) convertValuesToMap(chartValuesYaml []byte) (map[string]interface{}, error) {
+	chartValuesMap := make(map[string]interface{})
+	if err := yaml.Unmarshal(chartValuesYaml, chartValuesMap); err != nil {
+		return nil, fmt.Errorf("failed to decode chart values: %w", err)
 	}
-
-	// TODO keeping a copy of config vars here for a while
-	chartValues["config"] = deploySpec.Config
-
-	chartValues["global"] = map[string]interface{}{
-		"config": deploySpec.Config,
-	}
-
-	chartValues["networkConfig"] = h.networkConfig.Map()
-
-	return chartValues, err
+	return chartValuesMap, nil
 }
 
 // UnDeployApp removes the application specified in the deployspec
-func (h helmDeployer) UnDeployApp(ctx context.Context, deploySpec DeploymentParams) error {
-	helmActionConfiguration, err := h.getActionConfiguration(deploySpec.AppsNamespace)
+func (h helmDeployer) UnDeployChart(ctx context.Context, releaseName string, namespace string) error {
+	log := zerolog.Ctx(ctx)
+	log.Info().Str("releaseName", releaseName).Msg("Uninstalling chart")
+
+	helmActionConfiguration, err := h.getActionConfiguration(namespace)
 	if err != nil {
-		return errors.WrapIf(err, "failed to uninstall chart")
+		return fmt.Errorf("failed to uninstall chart: %v", err)
 	}
 
-	_, uninstallErr := action.NewUninstall(&helmActionConfiguration).Run(deploySpec.DeployID)
+	_, uninstallErr := action.NewUninstall(&helmActionConfiguration).Run(releaseName)
 	if uninstallErr != nil {
-		if _, err := helmActionConfiguration.Releases.History(deploySpec.DeployID); err != nil {
-			h.logger.Info("unable to uninstall, release not found", "name", deploySpec.DeployID)
+		if _, err := helmActionConfiguration.Releases.History(releaseName); err != nil {
+			log.Info().Str("releaseName", releaseName).Msg("release not found")
 			return nil
 		}
-		return errors.WrapIfWithDetails(uninstallErr, "failed to uninstall chart", "app", deploySpec.AppName)
+		return fmt.Errorf("failed to uninstall chart: %v", uninstallErr)
 	}
 
 	return nil
 }
 
 // getActionConfiguration assembles an "in-cluster" action configuration to be used for helm operations
-func (h helmDeployer) getActionConfiguration(namespace string, options ...ConfigOpt) (action.Configuration, error) {
+func (h helmDeployer) getActionConfiguration(namespace string) (action.Configuration, error) {
 	config := action.Configuration{}
 	cfgFlags := genericclioptions.NewConfigFlags(true)
 	cfgFlags.Namespace = &namespace
 	err := config.Init(cfgFlags, namespace, "secret", func(format string, v ...interface{}) {})
 	if err != nil {
-		return action.Configuration{}, errors.WrapIf(err, "failed to initialize the action configuration")
+		return action.Configuration{}, fmt.Errorf("failed to initialize the action configuration: %w", err)
 	}
 
-	for _, o := range options {
-		o(&config)
-	}
+	//for _, o := range options {
+	//	o(&config)
+	//}
 
 	return config, nil
 }

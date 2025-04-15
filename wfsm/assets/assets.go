@@ -10,3 +10,6 @@ var AgentBuilderDockerfile []byte
 
 //go:embed start_agws.sh
 var StartAGWSScript []byte
+
+//go:embed agent-chart.tar.gz
+var AgentChart []byte

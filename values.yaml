@@ -1,0 +1,84 @@
+agents:
+  - name: "mailcomposer"
+    image:
+        repository: "ghcr.io/image"
+        tag: "latest"
+    labels:
+      app: "mailcomposer"
+    env:
+      - name: "MAILCOMPOSER_CONFIG"
+        value: "/etc/mailcomposer/config.yaml"
+      - name: "MAILCOMPOSER_LOG_LEVEL"
+        value: "info"
+    secretEnvs:
+      - name: "API_KEY"
+        value: "xxx"
+    #existingSecretName:  "mailcomposer-secret"
+    volumePath: "/otp/storage"
+    externalPort: 8000
+    internalPort: 8000
+    service:
+      type: "LoadBalancer"
+      labels:
+        app: "mailcomposer"
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    statefulset:
+      replicas: 1
+      labels:
+          app: "mailcomposer"
+      annotations:
+          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "200m"
+          memory: "256Mi"
+      nodeSelector:
+        node-role.kubernetes.io/worker: ""
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: "kubernetes.io/arch"
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
+      tolerations:
+        - key: "node-role.kubernetes.io/worker"
+          operator: Exists
+          effect: NoSchedule
+        - key: "node-role.kubernetes.io/worker"
+          operator: Exists
+          effect: NoExecute
+
+  - name: "emailreviewer"
+    image:
+      repository: "ghcr.io/emailreviewer"
+      tag: "latest"
+    labels:
+      app: "emailreviewer"
+    env:
+      - name: "TEST_AGENT_B_API_KEY"
+        value: "kjhkjhkjhkjh"
+    secretEnvs:
+      - name: "AZURE_OPENAPI_KEY"
+        value: "xxxxxxx"
+    #existingSecretName:  "mailcomposer-secret"
+    volumePath: "/otp/storage"
+    externalPort: 8001
+    internalPort: 8000
+    service:
+      type: "ClusterIP"
+      labels:
+        app: "emailreviewer"
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    statefulset:
+      replicas: 1
+      labels:
+        app: "emailreviewer"

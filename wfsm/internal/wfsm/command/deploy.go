@@ -9,12 +9,11 @@ import (
 	"os"
 	"path"
 
+	"github.com/cisco-eti/wfsm/internal/platforms"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal"
-	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
-
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/cisco-eti/wfsm/internal/wfsm/manifest"
@@ -127,14 +126,15 @@ func runDeploy(ctx context.Context, manifestPath string, envFilePath string, pla
 	if err != nil {
 		return err
 	}
-	runner := docker.NewDockerComposeRunner(hostStorageFolder)
+	runner := platforms.GetPlatformRunner(platform, hostStorageFolder)
 
 	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, 0, dryRun)
 	if err != nil {
 		return fmt.Errorf("failed to deploy agent: %v", err)
 	}
-	log.Debug().Msg(string(afs))
-
+	if dryRun {
+		log.Info().Msg(string(afs))
+	}
 	return nil
 }
 

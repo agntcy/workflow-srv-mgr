@@ -6,8 +6,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/util"
@@ -35,7 +33,7 @@ func (r *runner) Remove(ctx context.Context, deploymentName string) error {
 	}
 	defer dockerCli.Client().Close()
 
-	deploymentName = GetProjectName(deploymentName)
+	deploymentName = util.GetDockerComposeProjectName(deploymentName)
 	backend := compose.NewComposeService(dockerCli)
 	err = backend.Down(ctx, deploymentName, api.DownOptions{
 		//Project: project,
@@ -54,7 +52,7 @@ func (r *runner) Logs(ctx context.Context, deploymentName string, agentNames []s
 	}
 	defer dockerCli.Client().Close()
 
-	deploymentName = GetProjectName(deploymentName)
+	deploymentName = util.GetDockerComposeProjectName(deploymentName)
 	backend := compose.NewComposeService(dockerCli)
 	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
 	err = backend.Logs(ctx, deploymentName, logConsumer, api.LogOptions{
@@ -78,7 +76,7 @@ func (r *runner) List(ctx context.Context, deploymentName string) error {
 	}
 	defer dockerCli.Client().Close()
 
-	deploymentName = GetProjectName(deploymentName)
+	deploymentName = util.GetDockerComposeProjectName(deploymentName)
 	backend := compose.NewComposeService(dockerCli)
 	list, err := backend.Ps(ctx, deploymentName, api.PsOptions{All: true})
 	if err != nil {
@@ -89,10 +87,4 @@ func (r *runner) List(ctx context.Context, deploymentName string) error {
 	}
 
 	return nil
-}
-
-func GetProjectName(name string) string {
-	// replace all non-alphanumeric characters with _
-	re := regexp.MustCompile(`[^a-z0-9-_]+`)
-	return re.ReplaceAllString(strings.ToLower(name), "")
 }

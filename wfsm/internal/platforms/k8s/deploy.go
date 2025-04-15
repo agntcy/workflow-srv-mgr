@@ -7,22 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"regexp"
-	"strings"
 
+	"github.com/cisco-eti/wfsm/assets"
 	"github.com/cisco-eti/wfsm/internal"
-	containerClient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
-	"github.com/compose-spec/compose-go/v2/types"
-	"github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/flags"
-	"github.com/docker/compose/v2/cmd/formatter"
-	"github.com/docker/compose/v2/pkg/api"
-	dockerClient "github.com/docker/docker/client"
-
-	cmdcmp "github.com/docker/compose/v2/cmd/compose"
-	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/rs/zerolog"
+	"gopkg.in/yaml.v3"
 )
 
 const ManifestCheckSum = "org.agntcy.wfsm.manifest"
@@ -44,7 +34,7 @@ func (r *runner) Deploy(ctx context.Context,
 	for agName, deps := range dependencies {
 		agSpec := agentDeploymentSpecs[agName]
 		for _, depName := range deps {
-			depAgPrefix := calculateEnvVarPrefix(depName)
+			depAgPrefix := util.CalculateEnvVarPrefix(depName)
 			depSpec := agentDeploymentSpecs[depName]
 			agSpec.EnvVars[depAgPrefix+"API_KEY"] = fmt.Sprintf("{\"x-api-key\": \"%s\"}", depSpec.ApiKey)
 			agSpec.EnvVars[depAgPrefix+"ID"] = depSpec.AgentID
@@ -52,203 +42,142 @@ func (r *runner) Deploy(ctx context.Context,
 		}
 	}
 
-	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, fmt.Errorf("failed to create docker client: %v", err)
-	}
-	defer containerClient.Close(ctx, cli)
-
-	project := &types.Project{
-		Name: mainAgentName,
-	}
-	project.Services = make(map[string]types.ServiceConfig)
+	agentValueConfigs := make([]AgentValues, 0, len(agentDeploymentSpecs))
 
 	// only the main agent will be exposed to the outside world
 	mainAgentSpec := agentDeploymentSpecs[mainAgentName]
 
-	port := externalPort
-	if port == 0 {
-		port, err = r.getMainAgentPublicPort(ctx, cli, mainAgentName, mainAgentSpec)
-		if err != nil {
-			return nil, err
-		}
-	}
+	//port := externalPort
+	//if port == 0 {
+	//	port, err = r.getMainAgentPublicPort(ctx, cli, mainAgentName, mainAgentSpec)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 
 	mainAgentID := mainAgentSpec.AgentID
 	mainAgentAPiKey := mainAgentSpec.ApiKey
-	sc, err := r.createServiceConfig(mainAgentName, mainAgentSpec)
+	sc, err := r.createAgentValuesConfig(mainAgentName, mainAgentSpec)
+	sc.Service = Service{
+		Type: "LoadBalancer",
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service config: %v", err)
 	}
-	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, ServerPort))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse port config: %v", err)
-	}
-	sc.Ports = pc
-	project.Services[mainAgentSpec.ServiceName] = *sc
+	agentValueConfigs = append(agentValueConfigs, *sc)
 	delete(agentDeploymentSpecs, mainAgentName)
+
+	// Uncompress helm chart to r.hostStorageFolder
+	if err := util.UntarGzFile(assets.AgentChart, r.hostStorageFolder); err != nil {
+		return nil, fmt.Errorf("failed to uncompress tar.gz file: %v", err)
+	}
+	chartUrl := path.Join(r.hostStorageFolder, "agent")
+	log.Info().Msgf("Agent helm chart available at: %s", chartUrl)
 
 	// generate service configs for dependencies
 	for _, deploymentSpec := range agentDeploymentSpecs {
-		sc, err := r.createServiceConfig(mainAgentName, deploymentSpec)
+		sc, err := r.createAgentValuesConfig(mainAgentName, deploymentSpec)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create service config: %v", err)
 		}
-		project.Services[deploymentSpec.ServiceName] = *sc
+		agentValueConfigs = append(agentValueConfigs, *sc)
 	}
 
-	dockerCli, err := getDockerCLI(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize docker client: %v", err)
-	}
-	defer dockerCli.Client().Close()
-
-	composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", mainAgentName))
-	prjOpts := cmdcmp.ProjectOptions{
-		ConfigPaths: []string{
-			composeFilePath,
-		},
+	chartValues := ChartValues{
+		Agents: agentValueConfigs,
 	}
 
-	projectYaml, err := project.MarshalYAML()
+	// Marshal to YAML
+	yamlData, err := yaml.Marshal(chartValues)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal compose config: %v", err)
+		return nil, fmt.Errorf("failed to marshal chart values: %v", err)
 	}
 
-	err = os.WriteFile(composeFilePath, projectYaml, util.OwnerCanReadWrite)
+	// TOD remove Print YAML
+	fmt.Println(string(yamlData))
+
+	valuesFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("values-%s.yaml", mainAgentName))
+	err = os.WriteFile(valuesFilePath, yamlData, util.OwnerCanReadWrite)
 	if err != nil {
-		return nil, fmt.Errorf("failed to write compose config: %v", err)
+		return nil, fmt.Errorf("failed to write values file: %v", err)
 	}
-	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{
-		//deploymentSpec.ServiceName
-	})
-	log.Info().Msgf("compose file generated at: %s", composeFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create project: %v", err)
-	}
+
+	log.Info().Msgf("values file generated at: %s", valuesFilePath)
 
 	if dryRun {
-		return projectYaml, nil
+		return yamlData, nil
 	}
 
-	backend := compose.NewComposeService(dockerCli) //.(commands.Backend)
-	err = backend.Up(ctx, project, api.UpOptions{api.CreateOptions{RemoveOrphans: true}, api.StartOptions{}})
+	deployer := NewHelmDeployer()
+	err = deployer.DeployChart(ctx, mainAgentName, chartUrl, "default", yamlData)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to deploy chart: %v", err)
 	}
+
+	//TODO get load balancer IP
 
 	log.Info().Msg("---------------------------------------------------------------------")
-	log.Info().Msgf("ACP agent deployment name: %s", mainAgentName)
-	log.Info().Msgf("ACP agent running in container: %s, listening for ACP requests on: http://127.0.0.1:%d", mainAgentName, port)
+	log.Info().Msgf("ACP agent helm chart release name: %s", mainAgentName)
+	log.Info().Msgf("ACP agent running in container: %s, listening for ACP requests on: http://<loadbalancerAddress>:%d", mainAgentName, 8000)
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
-	log.Info().Msgf("API Docs: http://127.0.0.1:%d/agents/%s/docs", port, mainAgentID)
+	log.Info().Msgf("API Docs: http://<loadbalancerAddress>:%d/agents/%s/docs", 8000, mainAgentID)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
-
-	logConsumer := formatter.NewLogConsumer(ctx, os.Stdout, os.Stderr, true, true, true)
-	err = backend.Logs(ctx, project.Name, logConsumer, api.LogOptions{
-		Project:  project,
-		Services: []string{},
-		Tail:     "100",
-		Follow:   true,
-	})
-	if err != nil {
-		return nil, err
-	}
 
 	return nil, nil
 }
 
-func calculateEnvVarPrefix(agName string) string {
-	prefix := strings.ToUpper(agName)
-	// replace all non-alphanumeric characters with _
-	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
-	prefix = re.ReplaceAllString(prefix, "_")
-	return prefix + "_"
-}
-
-func (r *runner) getMainAgentPublicPort(ctx context.Context, cli *dockerClient.Client, mainAgentName string, mainAgentSpec internal.AgentDeploymentBuildSpec) (int, error) {
-	log := zerolog.Ctx(ctx)
-
-	containerName := strings.Join([]string{mainAgentName, mainAgentSpec.DeploymentName}, "-")
-	port, err := containerClient.IsContainerRunning(ctx, cli, mainAgentSpec.Image, containerName)
-	if err != nil {
-		return 0, fmt.Errorf("failed to check if agent is running: %v", err)
-	}
-	if port > 0 {
-		log.Info().Msg(fmt.Sprintf("agent is already using port: %d", port))
-	} else {
-		port, err = util.GetNextAvailablePort()
-		if err != nil {
-			return 0, fmt.Errorf("failed to get next available port: %v", err)
-		}
-		log.Debug().Msgf("agent will listen on port: %d", port)
-	}
-	return port, nil
-}
-
-func (r *runner) createServiceConfig(projectName string, deploymentSpec internal.AgentDeploymentBuildSpec) (*types.ServiceConfig, error) {
-
+func (r *runner) createAgentValuesConfig(projectName string, deploymentSpec internal.AgentDeploymentBuildSpec) (*AgentValues, error) {
 	envVars := deploymentSpec.EnvVars
 
 	envVars["API_HOST"] = APIHost
 	envVars["API_PORT"] = APIPort
-
-	envVars["API_KEY"] = deploymentSpec.ApiKey
 	envVars["AGENT_ID"] = deploymentSpec.AgentID
 
-	agDeploymentFolder := path.Join(r.hostStorageFolder, deploymentSpec.DeploymentName)
-	// make sure the folder exists
-	if _, err := os.Stat(agDeploymentFolder); os.IsNotExist(err) {
-		if err := os.Mkdir(agDeploymentFolder, 0755); err != nil {
-			return nil, fmt.Errorf("failed to create deployment folder for agent: %v", err)
-		}
-	}
+	secretEnvVars := make(map[string]string, 10)
+	secretEnvVars["API_KEY"] = deploymentSpec.ApiKey
 
-	sc := types.ServiceConfig{
-		Name: deploymentSpec.ServiceName,
-		Labels: map[string]string{
-			api.ProjectLabel: projectName,
-			api.OneoffLabel:  "False",
-			api.ServiceLabel: deploymentSpec.ServiceName,
+	imageRepo, tag := util.SplitImageName(deploymentSpec.Image)
+
+	agentValues := &AgentValues{
+		Name: util.NormalizeAgentName(deploymentSpec.ServiceName),
+		Image: Image{
+			Repository: imageRepo,
+			Tag:        tag,
 		},
-		//ContainerName: serviceName,
-		Image:       deploymentSpec.Image,
-		Environment: getEnvVars(envVars),
-		Volumes: []types.ServiceVolumeConfig{
-			{
-				Type:   "bind",
-				Source: agDeploymentFolder,
-				Target: "/opt/storage",
-			},
-		},
+		//Labels:             deploymentSpec.Labels,
+		Env:        convertEnvVars(envVars),
+		SecretEnvs: convertEnvVars(secretEnvVars),
+		VolumePath: "/opt/storage",
+		//TODO setup ports
+		ExternalPort: 8000, //ServerPort,
+		InternalPort: 8000, //APIPort,
+		//Service: Service{
+		//	Type:        deploymentSpec.ServiceType,
+		//	Labels:      deploymentSpec.ServiceLabels,
+		//	Annotations: deploymentSpec.ServiceAnnotations,
+		//},
+		//StatefulSet: StatefulSet{
+		//	Replicas:     deploymentSpec.Replicas,
+		//	Labels:       deploymentSpec.StatefulSetLabels,
+		//	Annotations:  deploymentSpec.StatefulSetAnnotations,
+		//	Resources:    deploymentSpec.Resources,
+		//	NodeSelector: deploymentSpec.NodeSelector,
+		//	Affinity:     deploymentSpec.Affinity,
+		//	Tolerations:  deploymentSpec.Tolerations,
+		//},
 	}
-	return &sc, nil
+
+	return agentValues, nil
 }
 
-func getDockerCLI(ctx context.Context) (*command.DockerCli, error) {
-	dockerCli, err := command.NewDockerCli(command.WithBaseContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create docker cli: %v", err)
+func convertEnvVars(envVars map[string]string) []EnvVar {
+	var result []EnvVar
+	for key, value := range envVars {
+		result = append(result, EnvVar{
+			Name:  key,
+			Value: value,
+		})
 	}
-	clientOptions := flags.ClientOptions{
-		LogLevel:  "debug",
-		TLS:       false,
-		TLSVerify: false,
-	}
-	err = dockerCli.Initialize(&clientOptions)
-	return dockerCli, err
-}
-
-func getStringPtr(s string) *string {
-	return &s
-}
-
-func getEnvVars(envvars map[string]string) map[string]*string {
-	ev := make(map[string]*string)
-	for k, v := range envvars {
-		// clone the v value to avoid reference issues
-		ev[k] = getStringPtr(strings.Clone(v))
-	}
-	return ev
+	return result
 }
