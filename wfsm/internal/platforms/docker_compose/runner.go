@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/cisco-eti/wfsm/internal"
+	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/docker/compose/v2/cmd/formatter"
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
@@ -28,7 +29,7 @@ func NewDockerComposeRunner(hostStorageFolder string) internal.AgentDeploymentRu
 }
 
 func (r *runner) Remove(ctx context.Context, deploymentName string) error {
-	dockerCli, err := getDockerCLI(ctx)
+	dockerCli, err := util.GetDockerCLI(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to initialize docker client: %v", err)
 	}
@@ -47,7 +48,7 @@ func (r *runner) Remove(ctx context.Context, deploymentName string) error {
 }
 
 func (r *runner) Logs(ctx context.Context, deploymentName string, agentNames []string) error {
-	dockerCli, err := getDockerCLI(ctx)
+	dockerCli, err := util.GetDockerCLI(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to initialize docker client: %v", err)
 	}
@@ -71,7 +72,7 @@ func (r *runner) Logs(ctx context.Context, deploymentName string, agentNames []s
 func (r *runner) List(ctx context.Context, deploymentName string) error {
 	log := zerolog.Ctx(ctx)
 
-	dockerCli, err := getDockerCLI(ctx)
+	dockerCli, err := util.GetDockerCLI(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to initialize docker client: %v", err)
 	}

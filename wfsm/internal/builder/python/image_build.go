@@ -81,15 +81,15 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	hashCode := calculateHash(workspacePath, baseImage)
 	img = fmt.Sprintf("%s:%s", img, hashCode)
 
-	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
+	dockerCli, err := util.GetDockerCLI(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to create runtime client: %w", err)
+		return "", fmt.Errorf("failed to initialize docker client: %v", err)
 	}
-	defer containerclient.Close(ctx, client)
+	defer dockerCli.Client().Close()
 
 	// check if image already exists unless forceBuild is set
 	if !forceBuild {
-		found, err := findImage(ctx, client, img)
+		found, err := findImage(ctx, dockerCli.Client(), img)
 		if err != nil {
 			return "", err
 		}
@@ -100,14 +100,14 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	// find base image and pull it if not found
-	found, err := findImage(ctx, client, baseImage)
+	found, err := findImage(ctx, dockerCli.Client(), baseImage)
 	if err != nil {
 		return "", err
 	}
 	if !found {
 		log.Info().Str("image", baseImage).Msg("base image not found on container runtime host")
 		// image not available locally, see if it can be pulled from registry
-		err = pullImage(ctx, client, baseImage)
+		err = pullImage(ctx, dockerCli.Client(), baseImage)
 		if err != nil {
 			if !errdefs.IsNotFound(err) {
 				return "", fmt.Errorf("base image not found %s: %w", baseImage, err)
@@ -117,7 +117,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	// build image
-	err = buildImage(ctx, client, img, workspacePath, inputSpec, agentSourceDir, assets.AgentBuilderDockerfile, baseImage)
+	err = buildImage(ctx, dockerCli.Client(), img, workspacePath, inputSpec, agentSourceDir, assets.AgentBuilderDockerfile, baseImage)
 	if err != nil {
 		return "", fmt.Errorf("failed to build image %s: %w", img, err)
 	}
@@ -125,7 +125,7 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	return img, nil
 }
 
-func findImage(ctx context.Context, client *dockerclient.Client, img string) (bool, error) {
+func findImage(ctx context.Context, client dockerclient.ImageAPIClient, img string) (bool, error) {
 	log := zerolog.Ctx(ctx)
 	imageList, err := client.ImageList(ctx, image.ListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
@@ -148,7 +148,7 @@ func findImage(ctx context.Context, client *dockerclient.Client, img string) (bo
 	return false, nil
 }
 
-func buildImage(ctx context.Context, client *dockerclient.Client, img string, workspacePath string, inputSpec internal.AgentSpec, agentSourceDir string, dockerFile []byte, baseImage string) error {
+func buildImage(ctx context.Context, client dockerclient.ImageAPIClient, img string, workspacePath string, inputSpec internal.AgentSpec, agentSourceDir string, dockerFile []byte, baseImage string) error {
 	log := zerolog.Ctx(ctx)
 	log.Info().Str("image", img).Msg("building image")
 
@@ -220,7 +220,7 @@ func buildImage(ctx context.Context, client *dockerclient.Client, img string, wo
 	return nil
 }
 
-func pullImage(ctx context.Context, client *dockerclient.Client, img string) error {
+func pullImage(ctx context.Context, client dockerclient.ImageAPIClient, img string) error {
 	log := zerolog.Ctx(ctx)
 	log.Info().Msgf("pulling image: %s", img)
 

@@ -14,8 +14,6 @@ import (
 	containerClient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/compose-spec/compose-go/v2/types"
-	"github.com/docker/cli/cli/command"
-	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v2/cmd/formatter"
 	"github.com/docker/compose/v2/pkg/api"
 	dockerClient "github.com/docker/docker/client"
@@ -52,11 +50,11 @@ func (r *runner) Deploy(ctx context.Context,
 		}
 	}
 
-	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
+	dockerCli, err := util.GetDockerCLI(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create docker client: %v", err)
+		return nil, fmt.Errorf("failed to initialize docker client: %v", err)
 	}
-	defer containerClient.Close(ctx, cli)
+	defer dockerCli.Client().Close()
 
 	project := &types.Project{
 		Name: mainAgentName,
@@ -68,7 +66,7 @@ func (r *runner) Deploy(ctx context.Context,
 
 	port := externalPort
 	if port == 0 {
-		port, err = r.getMainAgentPublicPort(ctx, cli, mainAgentName, mainAgentSpec)
+		port, err = r.getMainAgentPublicPort(ctx, dockerCli.Client(), mainAgentName, mainAgentSpec)
 		if err != nil {
 			return nil, err
 		}
@@ -96,12 +94,6 @@ func (r *runner) Deploy(ctx context.Context,
 		}
 		project.Services[deploymentSpec.ServiceName] = *sc
 	}
-
-	dockerCli, err := getDockerCLI(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize docker client: %v", err)
-	}
-	defer dockerCli.Client().Close()
 
 	composeFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("compose-%s.yaml", mainAgentName))
 	prjOpts := cmdcmp.ProjectOptions{
@@ -167,11 +159,11 @@ func calculateEnvVarPrefix(agName string) string {
 	return prefix + "_"
 }
 
-func (r *runner) getMainAgentPublicPort(ctx context.Context, cli *dockerClient.Client, mainAgentName string, mainAgentSpec internal.AgentDeploymentBuildSpec) (int, error) {
+func (r *runner) getMainAgentPublicPort(ctx context.Context, cntClient dockerClient.ContainerAPIClient, mainAgentName string, mainAgentSpec internal.AgentDeploymentBuildSpec) (int, error) {
 	log := zerolog.Ctx(ctx)
 
 	containerName := strings.Join([]string{mainAgentName, mainAgentSpec.DeploymentName}, "-")
-	port, err := containerClient.IsContainerRunning(ctx, cli, mainAgentSpec.Image, containerName)
+	port, err := containerClient.IsContainerRunning(ctx, cntClient, mainAgentSpec.Image, containerName)
 	if err != nil {
 		return 0, fmt.Errorf("failed to check if agent is running: %v", err)
 	}
@@ -224,20 +216,6 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 		},
 	}
 	return &sc, nil
-}
-
-func getDockerCLI(ctx context.Context) (*command.DockerCli, error) {
-	dockerCli, err := command.NewDockerCli(command.WithBaseContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create docker cli: %v", err)
-	}
-	clientOptions := flags.ClientOptions{
-		LogLevel:  "debug",
-		TLS:       false,
-		TLSVerify: false,
-	}
-	err = dockerCli.Initialize(&clientOptions)
-	return dockerCli, err
 }
 
 func getStringPtr(s string) *string {
