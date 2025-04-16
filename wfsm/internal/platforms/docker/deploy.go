@@ -22,7 +22,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const ManifestCheckSum = "org.agntcy.wfsm.manifest"
 const ServerPort = "8000/tcp"
 const APIHost = "0.0.0.0"
 const APIPort = "8000"

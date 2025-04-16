@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
@@ -13,47 +12,6 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
-
-type AppConfig = map[string]interface{}
-
-type DeploymentParams struct {
-	DeployID             string
-	SiteID               string
-	ApplicationId        string
-	ApplicationVersion   string
-	AppName              string
-	AppsNamespace        string
-	IngressURL           string
-	IngressHostname      string
-	IstioGateway         string
-	ServicePath          string
-	ChartURL             string
-	LogCollectionEnabled bool
-	Config               AppConfig
-}
-
-type NetworkConfig struct {
-	HTTPProxy  string
-	HTTPSProxy string
-	NoProxy    string
-}
-
-func NewNetworkConfigFromEnv() NetworkConfig {
-	// uppercase vars are not considered here because they are already canonicalized to lc
-	return NetworkConfig{
-		HTTPProxy:  os.Getenv("http_proxy"),
-		HTTPSProxy: os.Getenv("https_proxy"),
-		NoProxy:    os.Getenv("no_proxy"),
-	}
-}
-
-func (n NetworkConfig) Map() map[string]interface{} {
-	return map[string]interface{}{
-		"http_proxy":  n.HTTPProxy,
-		"https_proxy": n.HTTPSProxy,
-		"no_proxy":    n.NoProxy,
-	}
-}
 
 // helmDeployer helm based deployer implementation
 type helmDeployer struct {
@@ -101,9 +59,6 @@ func (h helmDeployer) DeployChart(ctx context.Context, releaseName string, chart
 		upgradeAction := action.NewUpgrade(&helmActionConfiguration)
 		upgradeAction.Namespace = namespace
 
-		//TODO Setting Version is mandatory for OCI
-		//upgradeAction.Version = deploySpec.ApplicationVersion
-
 		chartValues, err := h.convertValuesToMap(chartValuesYaml)
 		if err != nil {
 			return err
@@ -124,9 +79,6 @@ func (h helmDeployer) DeployChart(ctx context.Context, releaseName string, chart
 		installAction.ReleaseName = releaseName
 		installAction.Namespace = namespace
 		installAction.CreateNamespace = true
-
-		//TODO Setting Version is mandatory for OCI
-		//installAction.Version = deploySpec.ApplicationVersion
 
 		chartRequested, err := h.pullChart(&installAction.ChartPathOptions, chartUrl)
 		if err != nil {
@@ -156,7 +108,6 @@ func (h helmDeployer) convertValuesToMap(chartValuesYaml []byte) (map[string]int
 	return chartValuesMap, nil
 }
 
-// UnDeployApp removes the application specified in the deployspec
 func (h helmDeployer) UnDeployChart(ctx context.Context, releaseName string, namespace string) error {
 	log := zerolog.Ctx(ctx)
 	log.Info().Str("releaseName", releaseName).Msg("Uninstalling chart")
@@ -187,10 +138,5 @@ func (h helmDeployer) getActionConfiguration(namespace string) (action.Configura
 	if err != nil {
 		return action.Configuration{}, fmt.Errorf("failed to initialize the action configuration: %w", err)
 	}
-
-	//for _, o := range options {
-	//	o(&config)
-	//}
-
 	return config, nil
 }

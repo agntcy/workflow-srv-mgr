@@ -1,30 +1,12 @@
 package k8s
 
 import (
-	"os"
-
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
 
 func getK8sClient() (*kubernetes.Clientset, error) {
-	var config *rest.Config
-	var err error
-
-	if kubeconfig := os.Getenv("KUBECONFIG"); kubeconfig != "" {
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	} else {
-		config, err = rest.InClusterConfig()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return clientset, nil
+	factory := cmdutil.NewFactory(genericclioptions.NewConfigFlags(true))
+	return factory.KubernetesClientSet()
 }
