@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/cisco-eti/wfsm/internal/platforms"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
-	"github.com/cisco-eti/wfsm/internal/platforms/docker"
 	"github.com/cisco-eti/wfsm/internal/util"
 )
 
@@ -20,7 +20,7 @@ This command takes one required flag: --agentDeploymentName <agentDeploymentName
 Agent deployment name is the name of the agent in the manifest file.
                                    
 Optional flags:
-	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
+	--platform specify the platform to deploy the agent(s) to [docker, k8s].
 		
 Examples:
 - Stops all running agents in 'emailreviewer' agent deployment:
@@ -40,8 +40,9 @@ var stopCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		agentDeploymentName, _ := cmd.Flags().GetString(agentDeploymentNameFlag)
+		platform, _ := cmd.Flags().GetString(platformsFlag)
 
-		err := runStop(getContextWithLogger(cmd), agentDeploymentName)
+		err := runStop(getContextWithLogger(cmd), agentDeploymentName, platform)
 		if err != nil {
 			util.OutputMessage(stopFail, err.Error())
 			return fmt.Errorf(CmdErrorHelpText, stopError)
@@ -52,21 +53,21 @@ var stopCmd = &cobra.Command{
 
 func init() {
 	stopCmd.Flags().StringP(agentDeploymentNameFlag, "n", "", "The name of the agent")
-	stopCmd.Flags().StringP(platformsFlag, "p", "docker", "The deployment target platform")
 	stopCmd.MarkFlagRequired(agentDeploymentNameFlag)
 }
 
-func runStop(ctx context.Context, agentDeploymentName string) error {
+func runStop(ctx context.Context, agentDeploymentName string, platform string) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
 
 	// stop deployment of agent(s)
 
+	// run deployment of agent(s)
 	hostStorageFolder, err := getHostStorage()
 	if err != nil {
 		return err
 	}
-	runner := docker.NewDockerComposeRunner(hostStorageFolder)
+	runner := platforms.GetPlatformRunner(platform, hostStorageFolder)
 
 	err = runner.Remove(ctx, agentDeploymentName)
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 )
 
 const ConfigCheckSum = "org.agntcy.wfsm.config.checksum"
-const ServicePort = 8000
+const ServicePort = 9000
 const APIHost = "0.0.0.0"
 const APIPort = 8000
 
@@ -121,10 +121,10 @@ func (r *runner) Deploy(ctx context.Context,
 
 	log.Info().Msg("---------------------------------------------------------------------")
 	log.Info().Msgf("ACP agent helm chart release name: %s", releaseName)
-	log.Info().Msgf("ACP agent running in namespace: %s, listening for ACP requests on: http://%s:%d", namespace, lbip, APIPort)
+	log.Info().Msgf("ACP agent running in namespace: %s, listening for ACP requests on: http://%s:%d", namespace, lbip, ServicePort)
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
-	log.Info().Msgf("API Docs: http://%s:%d/agents/%s/docs", lbip, APIPort, mainAgentID)
+	log.Info().Msgf("API Docs: http://%s:%d/agents/%s/docs", lbip, ServicePort, mainAgentID)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	return nil, nil

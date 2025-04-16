@@ -29,7 +29,7 @@ Optional flags:
 	--deploymentOption can be set to determine which deployment option to use from the manifest. It defaults to the first deployment option.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--forceBuild can be set to true or false to determine if the build should be forced even if the image already exists.
-	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
+	--platform specify the platform to deploy the agent(s) to [docker, k8s].
 
 Env config file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
 Example:
@@ -56,7 +56,6 @@ const dryRunFlag string = "dryRun"
 const envFilePathFlag string = "envFilePath"
 const forceBuild string = "forceBuild"
 const manifestPathFlag string = "manifestPath"
-const platformsFlag string = "platform"
 
 // deployCmd represents the image build and run docker commands
 var deployCmd = &cobra.Command{
@@ -91,7 +90,6 @@ func init() {
 	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
 	deployCmd.Flags().BoolP(forceBuild, "f", false, "If set to true, the build will be forced even if the image already exists")
 	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
-	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
 	deployCmd.MarkFlagRequired(manifestPathFlag)
 }

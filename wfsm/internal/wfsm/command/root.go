@@ -30,6 +30,7 @@ const (
 	ReadTheDocsText   = "please take a look at the documentation."
 	CmdErrorHelpText  = "%s.\n\nFor additional help, " + ReadTheDocsText
 	verboseChecksFlag = "verbose"
+	platformsFlag     = "platform"
 )
 
 // NewRootCmd constructs a base command object
@@ -54,6 +55,7 @@ func newRootCmd(version string) *cobra.Command {
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.PersistentFlags().BoolP(verboseChecksFlag, "v", false, "Output verbose logs for the checks")
+	rootCmd.PersistentFlags().StringP(platformsFlag, "p", "docker", "The platform to deploy the agent(s): [docker, k8s]")
 
 	rootCmd.AddCommand(checkCmd)
 	rootCmd.AddCommand(deployCmd)
