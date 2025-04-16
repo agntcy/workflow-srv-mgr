@@ -13,12 +13,13 @@ import (
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const ManifestCheckSum = "org.agntcy.wfsm.manifest"
+const ConfigCheckSum = "org.agntcy.wfsm.config.checksum"
 const ServerPort = "8000/tcp"
 const APIHost = "0.0.0.0"
-const APIPort = "8000"
+const APIPort = 8000
 
 // Deploy if externalPort is 0, will try to find the port of already running container or find next available port
 func (r *runner) Deploy(ctx context.Context,
@@ -29,6 +30,9 @@ func (r *runner) Deploy(ctx context.Context,
 	dryRun bool) (internal.DeploymentArtifact, error) {
 
 	log := zerolog.Ctx(ctx)
+
+	//TODO make namespace configurable
+	namespace := "default"
 
 	// insert api keys, agent IDs and service names as host into the deployment specs
 	for agName, deps := range dependencies {
@@ -57,7 +61,7 @@ func (r *runner) Deploy(ctx context.Context,
 
 	mainAgentID := mainAgentSpec.AgentID
 	mainAgentAPiKey := mainAgentSpec.ApiKey
-	sc, err := r.createAgentValuesConfig(mainAgentName, mainAgentSpec)
+	sc, err := r.createAgentValuesConfig(mainAgentSpec)
 	sc.Service = Service{
 		Type: "LoadBalancer",
 	}
@@ -76,7 +80,7 @@ func (r *runner) Deploy(ctx context.Context,
 
 	// generate service configs for dependencies
 	for _, deploymentSpec := range agentDeploymentSpecs {
-		sc, err := r.createAgentValuesConfig(mainAgentName, deploymentSpec)
+		sc, err := r.createAgentValuesConfig(deploymentSpec)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create service config: %v", err)
 		}
@@ -109,33 +113,56 @@ func (r *runner) Deploy(ctx context.Context,
 	}
 
 	deployer := NewHelmDeployer()
-	err = deployer.DeployChart(ctx, mainAgentName, chartUrl, "default", yamlData)
+	err = deployer.DeployChart(ctx, mainAgentName, chartUrl, namespace, yamlData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deploy chart: %v", err)
 	}
 
-	//TODO get load balancer IP
+	lbip, err := getLoadBalancerIP(ctx, util.NormalizeAgentName(mainAgentName), namespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get load balancer address: %v", err)
+	}
 
 	log.Info().Msg("---------------------------------------------------------------------")
 	log.Info().Msgf("ACP agent helm chart release name: %s", mainAgentName)
-	log.Info().Msgf("ACP agent running in container: %s, listening for ACP requests on: http://<loadbalancerAddress>:%d", mainAgentName, 8000)
+	log.Info().Msgf("ACP agent running in namespace: %s, listening for ACP requests on: http://<loadbalancerAddress>:%d", namespace, 8000)
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
-	log.Info().Msgf("API Docs: http://<loadbalancerAddress>:%d/agents/%s/docs", 8000, mainAgentID)
+	log.Info().Msgf("API Docs: http://%s:%d/agents/%s/docs", lbip, APIPort, mainAgentID)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	return nil, nil
 }
 
-func (r *runner) createAgentValuesConfig(projectName string, deploymentSpec internal.AgentDeploymentBuildSpec) (*AgentValues, error) {
+func getLoadBalancerIP(ctx context.Context, serviceName string, namespace string) (string, error) {
+	addr := "n/a"
+	client, err := getK8sClient()
+	if err != nil {
+		return "", fmt.Errorf("failed to create kubernetes client: %v", err)
+	}
+	svc, err := client.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get service: %v", err)
+	}
+
+	if len(svc.Status.LoadBalancer.Ingress) > 0 {
+		ingress := svc.Status.LoadBalancer.Ingress[0]
+		addr = ingress.IP
+	}
+	return addr, nil
+}
+
+func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeploymentBuildSpec) (*AgentValues, error) {
 	envVars := deploymentSpec.EnvVars
 
 	envVars["API_HOST"] = APIHost
-	envVars["API_PORT"] = APIPort
+	envVars["API_PORT"] = string(APIPort)
 	envVars["AGENT_ID"] = deploymentSpec.AgentID
 
 	secretEnvVars := make(map[string]string, 10)
 	secretEnvVars["API_KEY"] = deploymentSpec.ApiKey
+
+	configHash := calculateConfigHash(envVars, secretEnvVars)
 
 	imageRepo, tag := util.SplitImageName(deploymentSpec.Image)
 
@@ -146,29 +173,34 @@ func (r *runner) createAgentValuesConfig(projectName string, deploymentSpec inte
 			Tag:        tag,
 		},
 		//Labels:             deploymentSpec.Labels,
-		Env:        convertEnvVars(envVars),
-		SecretEnvs: convertEnvVars(secretEnvVars),
-		VolumePath: "/opt/storage",
-		//TODO setup ports
-		ExternalPort: 8000, //ServerPort,
-		InternalPort: 8000, //APIPort,
+		Env:          convertEnvVars(envVars),
+		SecretEnvs:   convertEnvVars(secretEnvVars),
+		VolumePath:   "/opt/storage",
+		ExternalPort: APIPort, //ServerPort,
+		InternalPort: APIPort, //APIPort,
 		//Service: Service{
 		//	Type:        deploymentSpec.ServiceType,
 		//	Labels:      deploymentSpec.ServiceLabels,
 		//	Annotations: deploymentSpec.ServiceAnnotations,
 		//},
-		//StatefulSet: StatefulSet{
-		//	Replicas:     deploymentSpec.Replicas,
-		//	Labels:       deploymentSpec.StatefulSetLabels,
-		//	Annotations:  deploymentSpec.StatefulSetAnnotations,
-		//	Resources:    deploymentSpec.Resources,
-		//	NodeSelector: deploymentSpec.NodeSelector,
-		//	Affinity:     deploymentSpec.Affinity,
-		//	Tolerations:  deploymentSpec.Tolerations,
-		//},
+		StatefulSet: StatefulSet{
+			PodAnnotations: map[string]string{
+				ConfigCheckSum: configHash,
+			},
+		},
 	}
 
 	return agentValues, nil
+}
+
+func calculateConfigHash(vars ...map[string]string) string {
+	hash := ""
+	for _, m := range vars {
+		for key, value := range m {
+			hash += fmt.Sprintf("%s=%s;", key, value)
+		}
+	}
+	return util.GenerateHash(hash)
 }
 
 func convertEnvVars(envVars map[string]string) []EnvVar {

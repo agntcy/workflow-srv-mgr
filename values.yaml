@@ -1,84 +1,68 @@
 agents:
-  - name: "mailcomposer"
-    image:
-        repository: "ghcr.io/image"
-        tag: "latest"
-    labels:
-      app: "mailcomposer"
-    env:
-      - name: "MAILCOMPOSER_CONFIG"
-        value: "/etc/mailcomposer/config.yaml"
-      - name: "MAILCOMPOSER_LOG_LEVEL"
-        value: "info"
-    secretEnvs:
-      - name: "API_KEY"
-        value: "xxx"
-    #existingSecretName:  "mailcomposer-secret"
-    volumePath: "/otp/storage"
-    externalPort: 8000
-    internalPort: 8000
-    service:
-      type: "LoadBalancer"
-      labels:
-        app: "mailcomposer"
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    statefulset:
-      replicas: 1
-      labels:
-          app: "mailcomposer"
-      annotations:
-          service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "128Mi"
-        limits:
-          cpu: "200m"
-          memory: "256Mi"
-      nodeSelector:
-        node-role.kubernetes.io/worker: ""
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: "kubernetes.io/arch"
-                    operator: In
-                    values:
-                      - amd64
-                      - arm64
-      tolerations:
-        - key: "node-role.kubernetes.io/worker"
-          operator: Exists
-          effect: NoSchedule
-        - key: "node-role.kubernetes.io/worker"
-          operator: Exists
-          effect: NoExecute
-
-  - name: "emailreviewer"
-    image:
-      repository: "ghcr.io/emailreviewer"
-      tag: "latest"
-    labels:
-      app: "emailreviewer"
-    env:
-      - name: "TEST_AGENT_B_API_KEY"
-        value: "kjhkjhkjhkjh"
-    secretEnvs:
-      - name: "AZURE_OPENAPI_KEY"
-        value: "xxxxxxx"
-    #existingSecretName:  "mailcomposer-secret"
-    volumePath: "/otp/storage"
-    externalPort: 8001
-    internalPort: 8000
-    service:
-      type: "ClusterIP"
-      labels:
-        app: "emailreviewer"
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    statefulset:
-      replicas: 1
-      labels:
-        app: "emailreviewer"
+    - name: mailcomposer
+      image:
+        repository: agntcy/wfsm-mailcomposer
+        tag: 38d5c0f0b5b62f3b5a3854f9bb10244a69ee45d3ed9572ff3ca5393f6a15a481
+      env:
+        - name: EMAIL_REVIEWER_1_ENDPOINT
+          value: http://email_reviewer_1:8000
+        - name: EMAIL_REVIEWER_1_API_KEY
+          value: '{"x-api-key": "a5735c18-3571-4677-a068-33d8fe589f11"}'
+        - name: EMAIL_REVIEWER_1_ID
+          value: efec63d5-e199-4f12-b32e-576cbb01adbf
+        - name: API_HOST
+          value: 0.0.0.0
+        - name: API_PORT
+          value: "8000"
+        - name: AGENT_ID
+          value: 14f8df2c-27cd-4799-a856-8e2cfb463008
+        - name: AZURE_OPENAI_API_KEY
+          value: xxxxxxx
+        - name: AZURE_OPENAI_ENDPOINT
+          value: https://smith-project-agents.openai.azure.com
+        - name: OPENAI_API_VERSION
+          value: 2024-07-01-preview
+        - name: AZURE_OPENAI_MODEL
+          value: gpt-4o-mini
+      secretEnvs:
+        - name: API_KEY
+          value: fe137882-a291-4ed6-852f-8f6708750826
+      volumePath: /opt/storage
+      externalPort: 8000
+      internalPort: 8000
+      service:
+        type: LoadBalancer
+      statefulset:
+        podAnnotations:
+            org.agntcy.wfsm.config.checksum: 4abc5ed3b9a7a9b2e5b75d49af6c597380b646cd7112bd87c5503fca686dd9d7
+    - name: email-reviewer-1
+      image:
+        repository: agntcy/wfsm-org.agntcy.email_reviewer
+        tag: ad4c2289ce001d266959bff7de98cadea50599ac171fa3d84bb42e5a20e2800f
+      env:
+        - name: AZURE_OPENAI_API_KEY
+          value: xxxxxxx
+        - name: AZURE_OPENAI_ENDPOINT
+          value: https://smith-project-agents.openai.azure.com
+        - name: OPENAI_API_VERSION
+          value: 2024-07-01-preview
+        - name: API_HOST
+          value: 0.0.0.0
+        - name: API_PORT
+          value: "8000"
+        - name: AGENT_ID
+          value: efec63d5-e199-4f12-b32e-576cbb01adbf
+        - name: AZURE_OPENAI_MODEL
+          value: gpt-4o-mini
+        - name: TEST_ENV_VAR
+          value: some test value
+      secretEnvs:
+        - name: API_KEY
+          value: a5735c18-3571-4677-a068-33d8fe589f11
+      volumePath: /opt/storage
+      externalPort: 8000
+      internalPort: 8000
+      service: {}
+      statefulset:
+        podAnnotations:
+            org.agntcy.wfsm.config.checksum: 7970cb2236f58935ce7b9ec8e2ea21ed8c0eb1b6f9ed6315032df217f381a023

@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"net"
@@ -138,4 +139,10 @@ func SplitImageName(fullImageName string) (string, string) {
 		return parts[0], "latest"
 	}
 	return parts[0], parts[1]
+}
+
+func GenerateHash(input string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(input))
+	return fmt.Sprintf("%x", hasher.Sum(nil))
 }

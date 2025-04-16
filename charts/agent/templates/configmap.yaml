@@ -1,2 +1,0 @@
-# templates/configmap.yaml
-{{- include "generate.configmap" . -}}

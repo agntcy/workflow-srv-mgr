@@ -1,2 +1,0 @@
-# templates/statefulset.yaml
-{{- include "generate.statefulset" . -}}

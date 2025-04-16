@@ -35,13 +35,14 @@ type Service struct {
 }
 
 type StatefulSet struct {
-	Replicas     int               `yaml:"replicas,omitempty"`
-	Labels       map[string]string `yaml:"labels,omitempty"`
-	Annotations  map[string]string `yaml:"annotations,omitempty"`
-	Resources    Resources         `yaml:"resources,omitempty"`
-	NodeSelector map[string]string `yaml:"nodeSelector,omitempty"`
-	Affinity     Affinity          `yaml:"affinity,omitempty"`
-	Tolerations  []Toleration      `yaml:"tolerations,omitempty"`
+	Replicas       int               `yaml:"replicas,omitempty"`
+	Labels         map[string]string `yaml:"labels,omitempty"`
+	Annotations    map[string]string `yaml:"annotations,omitempty"`
+	PodAnnotations map[string]string `yaml:"podAnnotations,omitempty"`
+	Resources      Resources         `yaml:"resources,omitempty"`
+	NodeSelector   map[string]string `yaml:"nodeSelector,omitempty"`
+	Affinity       Affinity          `yaml:"affinity,omitempty"`
+	Tolerations    []Toleration      `yaml:"tolerations,omitempty"`
 }
 
 type Resources struct {

@@ -1,0 +1,12 @@
+# templates/configmap.yaml
+{{- range .Values.agents }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .name }}-config
+data:
+  {{- range .env }}
+  {{ .name }}: {{ .value | quote }}
+  {{- end }}
+{{- end }}
