@@ -8,6 +8,8 @@ import (
 	"net"
 	"os/user"
 	"runtime"
+	"slices"
+	"strings"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
@@ -56,4 +58,23 @@ func GetDockerCLI(ctx context.Context) (*command.DockerCli, error) {
 	}
 	err = dockerCli.Initialize(&clientOptions)
 	return dockerCli, err
+}
+
+func GetLatestTag(tags []string) (string, error) {
+	if tags == nil {
+		return "", fmt.Errorf("no tags found")
+	}
+	for _, tag := range slices.Backward(tags) {
+		if !IsDevImage(tag) {
+			return tag, nil
+		}
+	}
+	return "", fmt.Errorf("no valid tags found")
+}
+
+func IsDevImage(tag string) bool {
+	if strings.Contains(tag, "-dev") {
+		return true
+	}
+	return false
 }
