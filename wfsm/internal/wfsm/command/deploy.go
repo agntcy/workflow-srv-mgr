@@ -88,7 +88,7 @@ var deployCmd = &cobra.Command{
 }
 
 func init() {
-	deployCmd.Flags().StringP(baseImageFlag, "b", "ghcr.io/agntcy/acp/wfsrv:v0.2.2", "Base image to be used as the workflowserver for the agent")
+	deployCmd.Flags().StringP(baseImageFlag, "b", "", "Base image to be used as the workflowserver for the agent, repo is at ghcr.io/agntcy/acp/wfsrv")
 	deployCmd.Flags().BoolP(deleteBuildFoldersFlag, "d", true, "Delete build folders after deployment")
 	deployCmd.Flags().StringP(deploymentOptionFlag, "o", "", "Deployment option to use from the manifest")
 	deployCmd.Flags().BoolP(dryRunFlag, "r", false, "If set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console")

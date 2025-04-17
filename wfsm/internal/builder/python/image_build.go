@@ -20,6 +20,8 @@ import (
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/rs/zerolog"
 
 	"github.com/docker/docker/api/types/filters"
@@ -31,6 +33,9 @@ import (
 //
 //nolint:mnd
 var containerImageBuildLock = util.NewStripedLock(100)
+
+// WorkflowServerRepo is the repo name for the workflow server docker image
+const WorkflowServerRepo = "ghcr.io/agntcy/acp/wfsrv"
 
 // EnsureContainerImage - ensure container image is available. If the image exists, it returns the name of the
 // existing  image, otherwise it builds a new image with the necessary packages installed
@@ -99,6 +104,12 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 		log.Info().Str("image", img).Msg("image not found on runtime host")
 	}
 
+	baseImage, err = getBaseImage(baseImage, WorkflowServerRepo)
+	if err != nil {
+		return "", fmt.Errorf("failed to get base image: %v", err)
+	}
+	log.Info().Str("image", baseImage).Msg("base image to be used for building agent image")
+
 	// find base image and pull it if not found
 	found, err := findImage(ctx, dockerCli.Client(), baseImage)
 	if err != nil {
@@ -123,6 +134,28 @@ func EnsureContainerImage(ctx context.Context, img string, src source.AgentSourc
 	}
 
 	return img, nil
+}
+
+func getBaseImage(baseImage string, workflowServerRepo string) (string, error) {
+	if baseImage != "" {
+		return baseImage, nil
+	}
+
+	repo, err := name.NewRepository(workflowServerRepo)
+	if err != nil {
+		return "", fmt.Errorf("Failed to create repo: %v", err)
+	}
+
+	// default page size is 1000
+	tags, err := remote.List(repo)
+	if err != nil {
+		return "", fmt.Errorf("Failed to list tags: %v", err)
+	}
+	tag, err := util.GetLatestTag(tags)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get the most recent tag from the following tags: %v, %v", tags, err)
+	}
+	return fmt.Sprintf("%s:%s", workflowServerRepo, tag), nil
 }
 
 func findImage(ctx context.Context, client dockerclient.ImageAPIClient, img string) (bool, error) {

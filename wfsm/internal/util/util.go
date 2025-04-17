@@ -15,13 +15,16 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
+	"github.com/hashicorp/go-version"
 )
 
 const OwnerCanReadWrite = 0777
+const DevTagSuffix = "-dev"
 
 func CurrentArchToDockerPlatform() string {
 	if runtime.GOARCH == "amd64" {
@@ -138,4 +141,26 @@ func SplitImageName(fullImageName string) (string, string) {
 		return parts[0], "latest"
 	}
 	return parts[0], parts[1]
+}
+
+func GetLatestTag(tags []string) (string, error) {
+	var versions []*version.Version
+	for _, tag := range tags {
+		v, err := version.NewVersion(tag)
+		if v != nil && !IsDevTag(tag) && err == nil {
+			versions = append(versions, v)
+		}
+	}
+	if versions == nil {
+		return "", fmt.Errorf("no valid tags found")
+	}
+	sort.Sort(version.Collection(versions))
+	return versions[len(versions)-1].Original(), nil
+}
+
+func IsDevTag(tag string) bool {
+	if strings.Contains(tag, DevTagSuffix) {
+		return true
+	}
+	return false
 }
