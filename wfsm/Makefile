@@ -99,6 +99,11 @@ endif
 release-dev: bin/goreleaser # Publish an experimental release
 	GORELEASER_LDFLAGS="$(LDFLAGS)" bin/goreleaser release -f .goreleaser.dev.yml ${GORELEASERFLAGS}
 
+.PHONY: build-chart-asset
+build-chart-asset:
+	cd charts && \
+	tar -czvf ../assets/agent-chart.tar.gz agent
+
 .DEFAULT_GOAL := help
 
 # enable CGO for the project (instrument the build in the included makefile)

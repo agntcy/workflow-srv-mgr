@@ -1,0 +1,74 @@
+# templates/statefulset.yaml
+{{- range .Values.agents }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    {{- range $key, $value := .statefulset.labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  annotations:
+    {{- range $key, $value := .statefulset.annotations }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+spec:
+  serviceName: {{ .name }}
+  replicas: {{ .statefulset.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+      annotations:
+        {{- range $key, $value := .statefulset.podAnnotations }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          envFrom:
+            - configMapRef:
+                name: {{ .name }}-config
+        {{- if .existingSecretName }}
+            - secretRef:
+                name: {{ .existingSecretName }}
+        {{- else }}
+            - secretRef:
+                name: {{ .name }}-secret
+        {{- end }}
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .volumePath }}
+          ports:
+            - containerPort: {{ .internalPort }}
+          {{- if .statefulset.resources }}
+          resources:
+          {{- toYaml .statefulset.resources | nindent 10 }}
+          {{- end }}
+      {{- if .statefulset.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .statefulset.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .statefulset.affinity }}
+      affinity:
+        {{- toYaml .statefulset.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .statefulset.tolerations }}
+      tolerations:
+        {{- toYaml .statefulset.tolerations | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
+{{- end }}

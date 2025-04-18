@@ -9,12 +9,11 @@ import (
 	"os"
 	"path"
 
+	"github.com/cisco-eti/wfsm/internal/platforms"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-eti/wfsm/internal"
-	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
-
 	"github.com/cisco-eti/wfsm/internal/builder"
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/cisco-eti/wfsm/internal/wfsm/manifest"
@@ -30,7 +29,7 @@ Optional flags:
 	--deploymentOption can be set to determine which deployment option to use from the manifest. It defaults to the first deployment option.
 	--dryRun if set to true, the deployment will not be executed, instead deployment artifacts will be printed to the console.
 	--forceBuild can be set to true or false to determine if the build should be forced even if the image already exists.
-	--platform specify the platform to deploy the agent(s) to. Currently only 'docker' is supported.
+	--platform specify the platform to deploy the agent(s) to [docker, k8s].
 
 Env config file should be a yaml file in the format of 'EnvVarValues' (see manifest format).
 Example:
@@ -57,7 +56,6 @@ const dryRunFlag string = "dryRun"
 const envFilePathFlag string = "envFilePath"
 const forceBuild string = "forceBuild"
 const manifestPathFlag string = "manifestPath"
-const platformsFlag string = "platform"
 
 // deployCmd represents the image build and run docker commands
 var deployCmd = &cobra.Command{
@@ -92,7 +90,6 @@ func init() {
 	deployCmd.Flags().StringP(envFilePathFlag, "e", "", "Environment file for the application")
 	deployCmd.Flags().BoolP(forceBuild, "f", false, "If set to true, the build will be forced even if the image already exists")
 	deployCmd.Flags().StringP(manifestPathFlag, "m", "", "Manifest file for the application")
-	deployCmd.Flags().StringP(platformsFlag, "p", "docker", "Environment file for the application")
 
 	deployCmd.MarkFlagRequired(manifestPathFlag)
 }
@@ -127,14 +124,15 @@ func runDeploy(ctx context.Context, manifestPath string, envFilePath string, pla
 	if err != nil {
 		return err
 	}
-	runner := docker.NewDockerComposeRunner(hostStorageFolder)
+	runner := platforms.GetPlatformRunner(platform, hostStorageFolder)
 
 	afs, err := runner.Deploy(ctx, agsb.DeploymentName, agDeploymentSpecs, agsb.Dependencies, 0, dryRun)
 	if err != nil {
 		return fmt.Errorf("failed to deploy agent: %v", err)
 	}
-	log.Debug().Msg(string(afs))
-
+	if dryRun {
+		log.Info().Msg(string(afs))
+	}
 	return nil
 }
 
