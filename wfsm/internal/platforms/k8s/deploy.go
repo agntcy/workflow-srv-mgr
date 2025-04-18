@@ -15,11 +15,12 @@ import (
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const ConfigCheckSum = "org.agntcy.wfsm.config.checksum"
-const ServicePort = 9000
+const ServicePort = 8000
 const APIHost = "0.0.0.0"
 const APIPort = 8000
 
@@ -58,7 +59,7 @@ func (r *runner) Deploy(ctx context.Context,
 	mainAgentAPiKey := mainAgentSpec.ApiKey
 	sc, err := r.createAgentValuesConfig(mainAgentSpec, ServicePort)
 	sc.Service = Service{
-		Type: "LoadBalancer",
+		Type: "NodePort",
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service config: %v", err)
@@ -114,57 +115,96 @@ func (r *runner) Deploy(ctx context.Context,
 		return nil, fmt.Errorf("failed to deploy chart: %v", err)
 	}
 
-	lbip, err := getLoadBalancerIP(ctx, util.NormalizeAgentName(mainAgentName), namespace)
+	endpoint, err := getNodePortEndpoint(ctx, util.NormalizeAgentName(mainAgentName), namespace)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get load balancer address: %v", err)
+		log.Error().Msgf("failed to get load balancer address: %v", err)
 	}
 
 	log.Info().Msg("---------------------------------------------------------------------")
 	log.Info().Msgf("ACP agent helm chart release name: %s", releaseName)
-	log.Info().Msgf("ACP agent running in namespace: %s, listening for ACP requests on: http://%s:%d", namespace, lbip, ServicePort)
+	log.Info().Msgf("ACP agent running in namespace: %s, listening for ACP requests on: http://%s", namespace, endpoint)
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
-	log.Info().Msgf("API Docs: http://%s:%d/agents/%s/docs", lbip, ServicePort, mainAgentID)
+	log.Info().Msgf("API Docs: http://%s/agents/%s/docs", endpoint, mainAgentID)
+	log.Info().Msg("\nAllow some time for the agents to start, you can check the status with: kubectl get pods")
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	return nil, nil
 }
 
-func getLoadBalancerIP(ctx context.Context, serviceName string, namespace string) (string, error) {
+func getLoadBalancerEndpoint(ctx context.Context, serviceName string, namespace string, port int) (string, error) {
 	log := zerolog.Ctx(ctx)
-	addr := "n/a"
+	ip := "n/a"
 	client, err := getK8sClient()
 	if err != nil {
-		return "", fmt.Errorf("failed to create kubernetes client: %v", err)
+		return ip, fmt.Errorf("failed to create kubernetes client: %v", err)
 	}
 
 	timeout := time.After(60 * time.Second)
 	for {
 		svc, err := client.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
 		if err != nil {
-			return "", fmt.Errorf("failed to get service: %v", err)
+			return ip, fmt.Errorf("failed to get service: %v", err)
 		}
 
 		if len(svc.Status.LoadBalancer.Ingress) > 0 {
 			ingress := svc.Status.LoadBalancer.Ingress[0]
 			if ingress.IP != "" {
-				addr = ingress.IP
+				ip = ingress.IP
 				break
 			}
 		}
 
 		select {
 		case <-ctx.Done():
-			return "", fmt.Errorf("context canceled while waiting for load balancer IP")
+			return ip, fmt.Errorf("context canceled while waiting for load balancer IP")
 		case <-timeout:
-			return "", fmt.Errorf("timeout reached while waiting for load balancer IP")
+			return ip, fmt.Errorf("timeout reached while waiting for load balancer IP")
 		default:
 			log.Info().Msgf("waiting for load balancer IP")
 			time.Sleep(2 * time.Second)
 		}
 	}
 
-	return addr, nil
+	return fmt.Sprintf("%s:%d", ip, port), nil
+}
+
+func getNodePortEndpoint(ctx context.Context, serviceName string, namespace string) (string, error) {
+	//log := zerolog.Ctx(ctx)
+
+	ip := "n/a"
+	client, err := getK8sClient()
+	if err != nil {
+		return ip, fmt.Errorf("failed to create kubernetes client: %v", err)
+	}
+
+	svc, err := client.CoreV1().Services(namespace).Get(ctx, serviceName, metav1.GetOptions{})
+	if err != nil {
+		return ip, fmt.Errorf("failed to get service: %v", err)
+	}
+
+	var port int32
+	if len(svc.Spec.Ports) > 0 {
+		port = svc.Spec.Ports[0].NodePort
+	}
+
+	nodes, err := client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return ip, fmt.Errorf("failed to get nodes: %v", err)
+	}
+	for _, node := range nodes.Items {
+		for _, addr := range node.Status.Addresses {
+			if addr.Type == corev1.NodeExternalIP {
+				ip = addr.Address
+				break
+			}
+		}
+		if ip != "n/a" {
+			break
+		}
+	}
+
+	return fmt.Sprintf("%s:%d", ip, port), nil
 }
 
 func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeploymentBuildSpec, externalPort int) (*AgentValues, error) {
