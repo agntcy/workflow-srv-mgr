@@ -1,0 +1,75 @@
+agents:
+  - name: mailcomposer
+    image:
+      repository: agntcy/wfsm-mailcomposer
+      tag: latest
+    env:
+      - name: OPENAI_API_VERSION
+        value: 2024-07-01-preview
+      - name: AZURE_OPENAI_MODEL
+        value: gpt-4o-mini
+      - name: API_HOST
+        value: 0.0.0.0
+      - name: AZURE_OPENAI_API_KEY
+        value: xxxxxxx
+      - name: EMAIL_REVIEWER_1_API_KEY
+        value: '{"x-api-key": "76653017-d5b1-4f8f-b752-6392ee93dc8f"}'
+      - name: EMAIL_REVIEWER_1_ID
+        value: 7f1d1e05-64c1-4a13-ac78-f470a1fc2b5f
+      - name: EMAIL_REVIEWER_1_ENDPOINT
+        value: http://email-reviewer-1:8000
+      - name: API_PORT
+        value: "8000"
+      - name: AGENT_ID
+        value: 1141b40c-8278-495f-9d0a-680d64573bae
+      - name: AZURE_OPENAI_ENDPOINT
+        value: https://smith-project-agents.openai.azure.com
+    secretEnvs:
+      - name: API_KEY
+        value: aa15dbbe-e9c7-4d05-a750-464e7c8bfed1
+    volumePath: /opt/storage
+    externalPort: 8000
+    internalPort: 8000
+    service:
+      type: NodePort
+      labels:
+        app: mailcomposer
+    statefulset:
+      replicas: 1
+      podAnnotations:
+        org.agntcy.wfsm.config.checksum: 2e82f5d5e99be96107ae86289b1e360e93bebbcebe8ff43a054d53ef21234f08
+  - name: email-reviewer-1
+    image:
+      repository: agntcy/wfsm-email-reviewer
+      tag: latest
+    env:
+      - name: TEST_ENV_VAR
+        value: some test value
+      - name: API_HOST
+        value: 0.0.0.0
+      - name: API_PORT
+        value: "8000"
+      - name: AGENT_ID
+        value: 7f1d1e05-64c1-4a13-ac78-f470a1fc2b5f
+      - name: AZURE_OPENAI_API_KEY
+        value: xxxxxxx
+      - name: AZURE_OPENAI_ENDPOINT
+        value: https://smith-project-agents.openai.azure.com
+      - name: OPENAI_API_VERSION
+        value: 2024-07-01-preview
+      - name: AZURE_OPENAI_MODEL
+        value: gpt-4o-mini
+    secretEnvs:
+      - name: API_KEY
+        value: 76653017-d5b1-4f8f-b752-6392ee93dc8f
+    volumePath: /opt/storage
+    externalPort: 8000
+    internalPort: 8000
+    service:
+      type: ClusterIP
+      labels:
+        app: email_reviewer_1
+    statefulset:
+      replicas: 1
+      podAnnotations:
+        org.agntcy.wfsm.config.checksum: 02ac540b95abed9fca193cb2bce5a708742e2aabfc3f0540c1c10719eb6454da

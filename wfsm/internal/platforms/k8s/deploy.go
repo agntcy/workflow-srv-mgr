@@ -4,9 +4,11 @@ package k8s
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"time"
 
@@ -255,13 +257,24 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 }
 
 func calculateConfigHash(vars ...map[string]string) string {
-	hash := ""
+	hasher := sha256.New()
+
 	for _, m := range vars {
-		for key, value := range m {
-			hash += fmt.Sprintf("%s=%s;", key, value)
+		// Extract and sort the keys
+		keys := make([]string, 0, len(m))
+		for key := range m {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		// Concatenate sorted keys and their values
+		for _, key := range keys {
+			hasher.Write([]byte(fmt.Sprintf("%s=%s;", key, m[key])))
 		}
 	}
-	return util.GenerateHash(hash)
+
+	// Return the final hash as a hexadecimal string
+	return fmt.Sprintf("%x", hasher.Sum(nil))
 }
 
 func convertEnvVars(envVars map[string]string) []EnvVar {
