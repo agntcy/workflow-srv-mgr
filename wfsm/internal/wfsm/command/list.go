@@ -8,7 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	docker "github.com/cisco-eti/wfsm/internal/platforms/docker_compose"
+	"github.com/cisco-eti/wfsm/internal/platforms/docker"
+
 	"github.com/cisco-eti/wfsm/internal/util"
 )
 

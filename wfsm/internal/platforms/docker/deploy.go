@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/cisco-eti/wfsm/internal"
@@ -23,7 +22,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const ManifestCheckSum = "org.agntcy.wfsm.manifest"
 const ServerPort = "8000/tcp"
 const APIHost = "0.0.0.0"
 const APIPort = "8000"
@@ -42,7 +40,7 @@ func (r *runner) Deploy(ctx context.Context,
 	for agName, deps := range dependencies {
 		agSpec := agentDeploymentSpecs[agName]
 		for _, depName := range deps {
-			depAgPrefix := calculateEnvVarPrefix(depName)
+			depAgPrefix := util.CalculateEnvVarPrefix(depName)
 			depSpec := agentDeploymentSpecs[depName]
 			agSpec.EnvVars[depAgPrefix+"API_KEY"] = fmt.Sprintf("{\"x-api-key\": \"%s\"}", depSpec.ApiKey)
 			agSpec.EnvVars[depAgPrefix+"ID"] = depSpec.AgentID
@@ -149,14 +147,6 @@ func (r *runner) Deploy(ctx context.Context,
 	}
 
 	return nil, nil
-}
-
-func calculateEnvVarPrefix(agName string) string {
-	prefix := strings.ToUpper(agName)
-	// replace all non-alphanumeric characters with _
-	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
-	prefix = re.ReplaceAllString(prefix, "_")
-	return prefix + "_"
 }
 
 func (r *runner) getMainAgentPublicPort(ctx context.Context, cntClient dockerClient.ContainerAPIClient, mainAgentName string, mainAgentSpec internal.AgentDeploymentBuildSpec) (int, error) {

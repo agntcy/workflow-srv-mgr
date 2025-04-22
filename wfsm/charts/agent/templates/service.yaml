@@ -1,0 +1,26 @@
+# templates/service.yaml
+{{- range .Values.agents }}
+{{- if .externalPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    {{- range $key, $value := .service.labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  annotations:
+    {{- range $key, $value := .service.annotations }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+spec:
+  type: {{ .service.type | default "ClusterIP" }}
+  selector:
+    app: {{ .name }}
+  ports:
+    - port: {{ .externalPort }}
+      targetPort: {{ .internalPort }}
+{{- end }}
+{{- end }}
