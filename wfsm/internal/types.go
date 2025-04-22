@@ -8,6 +8,11 @@ import (
 	"github.com/cisco-eti/wfsm/manifests"
 )
 
+const (
+	KUBERNETES = "k8s"
+	DOCKER     = "docker"
+)
+
 type AgentSpec struct {
 	DeploymentName           string
 	Manifest                 manifests.AgentManifest
@@ -15,6 +20,63 @@ type AgentSpec struct {
 	EnvVars                  map[string]string
 	AgentID                  string
 	ApiKey                   string
+	Port                     int
+	K8sConfig                K8sConfig
+}
+type K8sConfig struct {
+	EnvVarsFromSecret string      `yaml:"envVarsFromSecret"`
+	StatefulSet       StatefulSet `yaml:"statefulset"`
+	Service           Service     `yaml:"service"`
+}
+
+type Service struct {
+	Type        string            `yaml:"type,omitempty"`
+	Labels      map[string]string `yaml:"labels,omitempty"`
+	Annotations map[string]string `yaml:"annotations,omitempty"`
+}
+
+type StatefulSet struct {
+	Replicas       int               `yaml:"replicas,omitempty"`
+	Labels         map[string]string `yaml:"labels,omitempty"`
+	Annotations    map[string]string `yaml:"annotations,omitempty"`
+	PodAnnotations map[string]string `yaml:"podAnnotations,omitempty"`
+	Resources      Resources         `yaml:"resources,omitempty"`
+	NodeSelector   map[string]string `yaml:"nodeSelector,omitempty"`
+	Affinity       Affinity          `yaml:"affinity,omitempty"`
+	Tolerations    []Toleration      `yaml:"tolerations,omitempty"`
+}
+
+type Resources struct {
+	Requests map[string]string `yaml:"requests,omitempty"`
+	Limits   map[string]string `yaml:"limits,omitempty"`
+}
+
+type Affinity struct {
+	NodeAffinity NodeAffinity `yaml:"nodeAffinity,omitempty"`
+}
+
+type NodeAffinity struct {
+	RequiredDuringSchedulingIgnoredDuringExecution RequiredDuringSchedulingIgnoredDuringExecution `yaml:"requiredDuringSchedulingIgnoredDuringExecution"`
+}
+
+type RequiredDuringSchedulingIgnoredDuringExecution struct {
+	NodeSelectorTerms []NodeSelectorTerm `yaml:"nodeSelectorTerms"`
+}
+
+type NodeSelectorTerm struct {
+	MatchExpressions []MatchExpression `yaml:"matchExpressions"`
+}
+
+type MatchExpression struct {
+	Key      string   `yaml:"key"`
+	Operator string   `yaml:"operator"`
+	Values   []string `yaml:"values"`
+}
+
+type Toleration struct {
+	Key      string `yaml:"key"`
+	Operator string `yaml:"operator"`
+	Effect   string `yaml:"effect"`
 }
 
 type AgentDeploymentBuildSpec struct {

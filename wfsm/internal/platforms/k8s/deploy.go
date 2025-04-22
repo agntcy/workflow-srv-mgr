@@ -58,9 +58,6 @@ func (r *runner) Deploy(ctx context.Context,
 	mainAgentID := mainAgentSpec.AgentID
 	mainAgentAPiKey := mainAgentSpec.ApiKey
 	sc, err := r.createAgentValuesConfig(mainAgentSpec, ServicePort)
-	sc.Service = Service{
-		Type: "NodePort",
-	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service config: %v", err)
 	}
@@ -93,7 +90,7 @@ func (r *runner) Deploy(ctx context.Context,
 		return nil, fmt.Errorf("failed to marshal chart values: %v", err)
 	}
 
-	// TOD remove Print YAML
+	// TODO remove print YAML
 	fmt.Println(string(yamlData))
 
 	valuesFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("values-%s.yaml", mainAgentName))
@@ -221,6 +218,14 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 
 	imageRepo, tag := util.SplitImageName(deploymentSpec.Image)
 
+	serviceConfig := deploymentSpec.K8sConfig.Service
+	stset := deploymentSpec.K8sConfig.StatefulSet
+	podAnnotations := stset.PodAnnotations
+	if podAnnotations == nil {
+		podAnnotations = make(map[string]string)
+	}
+	podAnnotations[ConfigCheckSum] = configHash
+
 	agentValues := &AgentValues{
 		Name: util.NormalizeAgentName(deploymentSpec.ServiceName),
 		Image: Image{
@@ -233,15 +238,16 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 		VolumePath:   "/opt/storage",
 		ExternalPort: externalPort, //ServerPort,
 		InternalPort: APIPort,      //APIPort,
-		//Service: Service{
-		//	Type:        deploymentSpec.ServiceType,
-		//	Labels:      deploymentSpec.ServiceLabels,
-		//	Annotations: deploymentSpec.ServiceAnnotations,
-		//},
-		StatefulSet: StatefulSet{
-			PodAnnotations: map[string]string{
-				ConfigCheckSum: configHash,
-			},
+		Service: internal.Service{
+			Type:        serviceConfig.Type,
+			Labels:      serviceConfig.Labels,
+			Annotations: serviceConfig.Annotations,
+		},
+		StatefulSet: internal.StatefulSet{
+			Replicas:       stset.Replicas,
+			Labels:         stset.Labels,
+			Annotations:    stset.Annotations,
+			PodAnnotations: podAnnotations,
 		},
 	}
 

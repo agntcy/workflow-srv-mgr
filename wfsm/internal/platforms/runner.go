@@ -10,9 +10,9 @@ import (
 
 func GetPlatformRunner(platform string, hostStorageFolder string) internal.AgentDeploymentRunner {
 	switch platform {
-	case "k8s":
+	case internal.KUBERNETES:
 		return k8s.NewK8sRunner(hostStorageFolder)
-	case "docker":
+	case internal.DOCKER:
 		return docker.NewDockerComposeRunner(hostStorageFolder)
 	}
 	return nil

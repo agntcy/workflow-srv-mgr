@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/cisco-eti/wfsm/internal"
-	"github.com/google/uuid"
+	"github.com/cisco-eti/wfsm/internal/wfsm/config"
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
 
@@ -59,16 +59,11 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		return fmt.Errorf("agent deployment name must be unique: %s", deploymentName)
 	}
 
-	agentID := uuid.NewString()
-	apiKey := uuid.New().String()
-
 	agentSpec := internal.AgentSpec{
 		DeploymentName:           deploymentName,
 		Manifest:                 manifest,
 		SelectedDeploymentOption: selectedDeploymentOptionIdx,
 		EnvVars:                  envVarValues.Values,
-		AgentID:                  agentID,
-		ApiKey:                   apiKey,
 	}
 	a.AgentSpecs[deploymentName] = agentSpec
 
@@ -97,6 +92,17 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		a.Dependencies[deploymentName] = depNames
 	}
 	return nil
+}
+
+func (a *AgentSpecBuilder) LoadFromConfig(agentConfig config.ConfigFile) {
+	for agentName, config := range agentConfig.Config {
+		agentSpec := a.AgentSpecs[agentName]
+		agentSpec.AgentID = config.ID
+		agentSpec.ApiKey = config.APIKey
+		agentSpec.Port = config.Port
+		agentSpec.K8sConfig = config.K8sConfig
+		a.AgentSpecs[agentName] = agentSpec
+	}
 }
 
 func validateEnvVarValues(ctx context.Context, inputSpec internal.AgentSpec) error {
