@@ -101,8 +101,7 @@ release-dev: bin/goreleaser # Publish an experimental release
 
 .PHONY: build-chart-asset
 build-chart-asset:
-	cd charts && \
-	tar -czvf ../assets/agent-chart.tar.gz agent
+	tar -czvf assets/agent-chart.tar.gz charts
 
 .DEFAULT_GOAL := help
 

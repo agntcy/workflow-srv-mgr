@@ -70,7 +70,7 @@ func (r *runner) Deploy(ctx context.Context,
 	if err := util.UntarGzFile(assets.AgentChart, r.hostStorageFolder); err != nil {
 		return nil, fmt.Errorf("failed to uncompress tar.gz file: %v", err)
 	}
-	chartUrl := path.Join(r.hostStorageFolder, "agent")
+	chartUrl := path.Join(r.hostStorageFolder, "charts", "agent")
 	log.Info().Msgf("Agent helm chart available at: %s", chartUrl)
 
 	// generate service configs for dependencies
@@ -91,9 +91,6 @@ func (r *runner) Deploy(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal chart values: %v", err)
 	}
-
-	// TODO remove print YAML
-	fmt.Println(string(yamlData))
 
 	valuesFilePath := path.Join(r.hostStorageFolder, fmt.Sprintf("values-%s.yaml", mainAgentName))
 	err = os.WriteFile(valuesFilePath, yamlData, util.OwnerCanReadWrite)
