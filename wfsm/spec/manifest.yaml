@@ -13,9 +13,9 @@ components:
       type: object
       properties:
         metadata:
-          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentMetadata'
+          $ref: './acp-spec/openapi.json#/components/schemas/AgentMetadata'
         specs:
-          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentACPSpec'
+          $ref: './acp-spec/openapi.json#/components/schemas/AgentACPSpec'
         deployment:
           $ref: '#/components/schemas/AgentDeployment'
       required:
