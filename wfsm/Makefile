@@ -9,6 +9,7 @@ export TEST_PKGS=
 GEN_DIR = manifests
 
 OPENAPI_DESCRIPTOR = spec/manifest.yaml
+OPENAPI_TEMPLATES = spec/templates
 
 OPENAPI_GENERATOR_VERSION = v7.0.1
 OPENAPI_GENERATOR = openapitools/openapi-generator-cli:v7.0.1
@@ -33,6 +34,7 @@ models: gen-dir ## generate server stubs from openapi
 		-g go \
 		-i /temp/${OPENAPI_DESCRIPTOR} \
 		-o /temp/${GEN_DIR} \
+		-t /temp/${OPENAPI_TEMPLATES} \
 		--additional-properties=packageName=manifests \
 		--additional-properties=sourceFolder=go \
 		--global-property=models \
