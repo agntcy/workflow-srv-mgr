@@ -1,5 +1,3 @@
-// Copyright AGNTCY Contributors (https://github.com/agntcy)
-// SPDX-License-Identifier: Apache-2.0
 /*
 Agent Manifest Definition
 
@@ -21,8 +19,8 @@ var _ MappedNullable = &StreamingModes{}
 
 // StreamingModes Supported streaming modes. If missing, streaming is not supported.  If no mode is supported attempts to stream output will result in an error.
 type StreamingModes struct {
-	// This is `true` if the agent supports result streaming. If `false` or missing, result streaming is not supported. Result streaming consists of a stream of objects of type `RunResult`, where each one sent over the stream fully replace the previous one.
-	Result *bool `json:"result,omitempty"`
+	// This is `true` if the agent supports values streaming. If `false` or missing, values streaming is not supported. Values streaming consists of a stream of objects of type `ValueRunResultUpdate`, where each one sent over the stream fully replace the previous one.
+	Values *bool `json:"values,omitempty"`
 	// This is `true` if the agent supports custom objects streaming. If `false` or missing, custom streaming is not supported. Custom Objects streaming consists of a stream of object whose schema is specified by the agent ACP descriptor under `specs.custom_streaming_update`.
 	Custom *bool `json:"custom,omitempty"`
 }
@@ -44,36 +42,36 @@ func NewStreamingModesWithDefaults() *StreamingModes {
 	return &this
 }
 
-// GetResult returns the Result field value if set, zero value otherwise.
-func (o *StreamingModes) GetResult() bool {
-	if o == nil || IsNil(o.Result) {
+// GetValues returns the Values field value if set, zero value otherwise.
+func (o *StreamingModes) GetValues() bool {
+	if o == nil || IsNil(o.Values) {
 		var ret bool
 		return ret
 	}
-	return *o.Result
+	return *o.Values
 }
 
-// GetResultOk returns a tuple with the Result field value if set, nil otherwise
+// GetValuesOk returns a tuple with the Values field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *StreamingModes) GetResultOk() (*bool, bool) {
-	if o == nil || IsNil(o.Result) {
+func (o *StreamingModes) GetValuesOk() (*bool, bool) {
+	if o == nil || IsNil(o.Values) {
 		return nil, false
 	}
-	return o.Result, true
+	return o.Values, true
 }
 
-// HasResult returns a boolean if a field has been set.
-func (o *StreamingModes) HasResult() bool {
-	if o != nil && !IsNil(o.Result) {
+// HasValues returns a boolean if a field has been set.
+func (o *StreamingModes) HasValues() bool {
+	if o != nil && !IsNil(o.Values) {
 		return true
 	}
 
 	return false
 }
 
-// SetResult gets a reference to the given bool and assigns it to the Result field.
-func (o *StreamingModes) SetResult(v bool) {
-	o.Result = &v
+// SetValues gets a reference to the given bool and assigns it to the Values field.
+func (o *StreamingModes) SetValues(v bool) {
+	o.Values = &v
 }
 
 // GetCustom returns the Custom field value if set, zero value otherwise.
@@ -118,8 +116,8 @@ func (o StreamingModes) MarshalJSON() ([]byte, error) {
 
 func (o StreamingModes) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Result) {
-		toSerialize["result"] = o.Result
+	if !IsNil(o.Values) {
+		toSerialize["values"] = o.Values
 	}
 	if !IsNil(o.Custom) {
 		toSerialize["custom"] = o.Custom

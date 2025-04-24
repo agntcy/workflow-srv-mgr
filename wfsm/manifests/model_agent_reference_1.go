@@ -14,40 +14,40 @@ import (
 	"encoding/json"
 )
 
-// checks if the AgentReference type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &AgentReference{}
+// checks if the AgentReference1 type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &AgentReference1{}
 
-// AgentReference Reference to an Agent Record in the Agent Directory, it includes name, version and a locator.
-type AgentReference struct {
+// AgentReference1 Reference to the agent in the agent directory. It includes the version and the locator.
+type AgentReference1 struct {
 	// Name of the agent that identifies the agent in its record
 	Name string `json:"name"`
 	// Version of the agent in its record. Should be formatted according to semantic versioning (https://semver.org)
 	Version string `json:"version"`
-	// URL of the record. Can be a network location, i.e. an entry in the Agent Directory or a file.
+	// URL of the record. Can be a network location or a file.
 	Url *string `json:"url,omitempty"`
 }
 
-// NewAgentReference instantiates a new AgentReference object
+// NewAgentReference1 instantiates a new AgentReference1 object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAgentReference(name string, version string) *AgentReference {
-	this := AgentReference{}
+func NewAgentReference1(name string, version string) *AgentReference1 {
+	this := AgentReference1{}
 	this.Name = name
 	this.Version = version
 	return &this
 }
 
-// NewAgentReferenceWithDefaults instantiates a new AgentReference object
+// NewAgentReference1WithDefaults instantiates a new AgentReference1 object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewAgentReferenceWithDefaults() *AgentReference {
-	this := AgentReference{}
+func NewAgentReference1WithDefaults() *AgentReference1 {
+	this := AgentReference1{}
 	return &this
 }
 
 // GetName returns the Name field value
-func (o *AgentReference) GetName() string {
+func (o *AgentReference1) GetName() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -58,7 +58,7 @@ func (o *AgentReference) GetName() string {
 
 // GetNameOk returns a tuple with the Name field value
 // and a boolean to check if the value has been set.
-func (o *AgentReference) GetNameOk() (*string, bool) {
+func (o *AgentReference1) GetNameOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -66,12 +66,12 @@ func (o *AgentReference) GetNameOk() (*string, bool) {
 }
 
 // SetName sets field value
-func (o *AgentReference) SetName(v string) {
+func (o *AgentReference1) SetName(v string) {
 	o.Name = v
 }
 
 // GetVersion returns the Version field value
-func (o *AgentReference) GetVersion() string {
+func (o *AgentReference1) GetVersion() string {
 	if o == nil {
 		var ret string
 		return ret
@@ -82,7 +82,7 @@ func (o *AgentReference) GetVersion() string {
 
 // GetVersionOk returns a tuple with the Version field value
 // and a boolean to check if the value has been set.
-func (o *AgentReference) GetVersionOk() (*string, bool) {
+func (o *AgentReference1) GetVersionOk() (*string, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -90,12 +90,12 @@ func (o *AgentReference) GetVersionOk() (*string, bool) {
 }
 
 // SetVersion sets field value
-func (o *AgentReference) SetVersion(v string) {
+func (o *AgentReference1) SetVersion(v string) {
 	o.Version = v
 }
 
 // GetUrl returns the Url field value if set, zero value otherwise.
-func (o *AgentReference) GetUrl() string {
+func (o *AgentReference1) GetUrl() string {
 	if o == nil || IsNil(o.Url) {
 		var ret string
 		return ret
@@ -105,7 +105,7 @@ func (o *AgentReference) GetUrl() string {
 
 // GetUrlOk returns a tuple with the Url field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentReference) GetUrlOk() (*string, bool) {
+func (o *AgentReference1) GetUrlOk() (*string, bool) {
 	if o == nil || IsNil(o.Url) {
 		return nil, false
 	}
@@ -113,7 +113,7 @@ func (o *AgentReference) GetUrlOk() (*string, bool) {
 }
 
 // HasUrl returns a boolean if a field has been set.
-func (o *AgentReference) HasUrl() bool {
+func (o *AgentReference1) HasUrl() bool {
 	if o != nil && !IsNil(o.Url) {
 		return true
 	}
@@ -122,11 +122,11 @@ func (o *AgentReference) HasUrl() bool {
 }
 
 // SetUrl gets a reference to the given string and assigns it to the Url field.
-func (o *AgentReference) SetUrl(v string) {
+func (o *AgentReference1) SetUrl(v string) {
 	o.Url = &v
 }
 
-func (o AgentReference) MarshalJSON() ([]byte, error) {
+func (o AgentReference1) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -134,7 +134,7 @@ func (o AgentReference) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o AgentReference) ToMap() (map[string]interface{}, error) {
+func (o AgentReference1) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["name"] = o.Name
 	toSerialize["version"] = o.Version
@@ -144,38 +144,38 @@ func (o AgentReference) ToMap() (map[string]interface{}, error) {
 	return toSerialize, nil
 }
 
-type NullableAgentReference struct {
-	value *AgentReference
+type NullableAgentReference1 struct {
+	value *AgentReference1
 	isSet bool
 }
 
-func (v NullableAgentReference) Get() *AgentReference {
+func (v NullableAgentReference1) Get() *AgentReference1 {
 	return v.value
 }
 
-func (v *NullableAgentReference) Set(val *AgentReference) {
+func (v *NullableAgentReference1) Set(val *AgentReference1) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableAgentReference) IsSet() bool {
+func (v NullableAgentReference1) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableAgentReference) Unset() {
+func (v *NullableAgentReference1) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableAgentReference(val *AgentReference) *NullableAgentReference {
-	return &NullableAgentReference{value: val, isSet: true}
+func NewNullableAgentReference1(val *AgentReference1) *NullableAgentReference1 {
+	return &NullableAgentReference1{value: val, isSet: true}
 }
 
-func (v NullableAgentReference) MarshalJSON() ([]byte, error) {
+func (v NullableAgentReference1) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableAgentReference) UnmarshalJSON(src []byte) error {
+func (v *NullableAgentReference1) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
