@@ -14,9 +14,9 @@ builds:
       - CXX=o64-clang++
 
     flags:
-        - -mod=readonly
+      - -mod=readonly
     ldflags:
-        - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+      - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
 
   - id: darwin-arm64
     main: ./cmd/main.go
@@ -32,9 +32,9 @@ builds:
       - CC=o64-clang
       - CXX=o64-clang++
     flags:
-        - -mod=readonly
+      - -mod=readonly
     ldflags:
-        - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+      - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
 
   - id: linux-armhf
     main: ./cmd/main.go
@@ -44,7 +44,7 @@ builds:
     goarch:
       - arm
     goarm:
-      - 7
+      - "7"
     env:
       - CGO_ENABLED=1
       - CC=arm-linux-gnueabihf-gcc
@@ -84,7 +84,7 @@ checksum:
   name_template: "wfsm_checksums.txt"
 
 changelog:
-  skip: true
+  disable: true
 
 nfpms:
   - vendor: Outshift by Cisco
