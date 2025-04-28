@@ -1,3 +1,4 @@
+version: 2
 builds:
   - id: darwin-amd64
     main: ./cmd/main.go
@@ -14,9 +15,9 @@ builds:
       - CXX=o64-clang++
 
     flags:
-        - -mod=readonly
+      - -mod=readonly
     ldflags:
-        - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+      - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
 
   - id: darwin-arm64
     main: ./cmd/main.go
@@ -31,11 +32,10 @@ builds:
       - PKG_CONFIG_PATH=/sysroot/macos/arm64/usr/local/lib/pkgconfig
       - CC=o64-clang
       - CXX=o64-clang++
-
     flags:
-        - -mod=readonly
+      - -mod=readonly
     ldflags:
-        - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+      - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
 
   - id: linux-armhf
     main: ./cmd/main.go
@@ -45,7 +45,7 @@ builds:
     goarch:
       - arm
     goarm:
-      - 7
+      - "7"
     env:
       - CGO_ENABLED=1
       - CC=arm-linux-gnueabihf-gcc
@@ -59,18 +59,33 @@ builds:
     ldflags:
       - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
 
+  - id: linux-amd64
+    main: ./cmd/main.go
+    binary: wfsm
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    flags:
+      - -mod=readonly
+    ldflags:
+      - "-s -w {{ .Env.GORELEASER_LDFLAGS }}"
+
 archives:
   - name_template: "wfsm{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     builds:
       - darwin-amd64
       - darwin-arm64
       - linux-armhf
+      - linux-amd64
 
 checksum:
   name_template: "wfsm_checksums.txt"
 
 changelog:
-  skip: true
+  disable: true
 
 nfpms:
   - vendor: Outshift by Cisco
