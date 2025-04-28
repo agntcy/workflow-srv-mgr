@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     container:
-      image: goreleaser/goreleaser-cross:v1.24.0
+      image: goreleaser/goreleaser-cross:v1.24.1
 
     env:
       GO_VERSION: 1.23.4
