@@ -34,7 +34,8 @@ func Test_manifestService_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.TODO()
-			m, err := NewManifestService(ctx, tt.fields.filePath)
+			manifestLoader, _ := LoaderFactory(tt.fields.filePath)
+			m, err := NewManifestService(ctx, manifestLoader)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewManifestService error = %v, wantErr %v", err, tt.wantErr)
 			}

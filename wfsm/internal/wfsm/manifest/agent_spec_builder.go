@@ -32,8 +32,11 @@ func NewAgentSpecBuilder() *AgentSpecBuilder {
 }
 
 func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath string, deploymentName string, selectedDeploymentOption *string, envVarValues manifests.EnvVarValues) error {
-
-	manifestSvc, err := NewManifestService(ctx, manifestPath)
+	manifestLoader, err := LoaderFactory(manifestPath)
+	if err != nil {
+		return fmt.Errorf("failed to create manifest loader: %s", err)
+	}
+	manifestSvc, err := NewManifestService(ctx, manifestLoader)
 	if err != nil {
 		return err
 	}
