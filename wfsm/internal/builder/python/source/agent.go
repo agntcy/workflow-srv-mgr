@@ -5,7 +5,7 @@ package source
 import (
 	"fmt"
 	"net/url"
-	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/cisco-eti/wfsm/manifests"
@@ -16,7 +16,7 @@ type AgentSource interface {
 	CopyToWorkspace(workspacePath string) error
 }
 
-func GetAgentSource(deployment *manifests.SourceCodeDeployment) (AgentSource, error) {
+func GetAgentSource(deployment *manifests.SourceCodeDeployment, manifestPath string) (AgentSource, error) {
 	parsedURL, err := url.Parse(deployment.Url)
 	if err != nil {
 		return nil, err
@@ -30,7 +30,8 @@ func GetAgentSource(deployment *manifests.SourceCodeDeployment) (AgentSource, er
 		}
 		if isLocalPath(deployment.Url) && !isZipOrTarball(deployment.Url) {
 			return &LocalSource{
-				LocalPath: deployment.Url,
+				ManifestPath: manifestPath,
+				LocalPath:    deployment.Url,
 			}, nil
 		}
 		return &GoGetSource{
@@ -45,8 +46,10 @@ func GetAgentSource(deployment *manifests.SourceCodeDeployment) (AgentSource, er
 			}, nil
 		}
 		if isLocalPath(deploymentUrl) {
+
 			return &LocalSource{
-				LocalPath: deploymentUrl,
+				ManifestPath: manifestPath,
+				LocalPath:    deploymentUrl,
 			}, nil
 		}
 
@@ -61,6 +64,7 @@ func isZipOrTarball(url string) bool {
 
 func isLocalPath(url string) bool {
 	// Implement logic to check if the URL is a local path
-	_, err := os.Stat(url)
-	return err == nil
+	//_, err := os.Stat(url)
+
+	return filepath.IsLocal(url) || filepath.IsAbs(url) || strings.HasPrefix(url, ".") || strings.HasPrefix(url, "..")
 }

@@ -45,7 +45,7 @@
         "ref": {
           "name": "agent_C",
           "version": "1.0.0",
-          "url": "test/manifest_2/agent_C_manifest.json"
+          "url": "agent_C_manifest.json"
         },
         "deployment_option": "src",
         "env_var_values": {

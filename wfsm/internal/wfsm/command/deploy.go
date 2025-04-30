@@ -9,10 +9,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/cisco-eti/wfsm/internal/platforms"
-	"github.com/cisco-eti/wfsm/internal/wfsm/config"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+
+	"github.com/cisco-eti/wfsm/internal/platforms"
+	"github.com/cisco-eti/wfsm/internal/wfsm/config"
 
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/builder"
