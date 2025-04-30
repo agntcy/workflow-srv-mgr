@@ -7,12 +7,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/rs/zerolog"
+	"gopkg.in/yaml.v3"
 
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/wfsm/config"
-	"github.com/rs/zerolog"
-	"gopkg.in/yaml.v3"
 
 	"github.com/cisco-eti/wfsm/manifests"
 )
@@ -67,6 +71,7 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		Manifest:                 manifest,
 		SelectedDeploymentOption: selectedDeploymentOptionIdx,
 		EnvVars:                  envVarValues.Values,
+		ManifestPath:             manifestPath,
 	}
 	a.AgentSpecs[deploymentName] = agentSpec
 
@@ -87,8 +92,12 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 				return fmt.Errorf("failed validating env vars for %s agent: %s", dependency.Name, err)
 			}
 
-			err = a.BuildAgentSpec(ctx, *dependency.Ref.Url, dependency.Name, dependency.DeploymentOption, *dependency.EnvVarValues)
-			if err != nil {
+			normalizedManifestPath, nErr := a.NormalizeDependencyRef(manifestPath, *dependency.Ref.Url)
+			if nErr != nil {
+				return fmt.Errorf("failed to normalize manifest path for dependent agent: %s", nErr)
+			}
+
+			if err = a.BuildAgentSpec(ctx, normalizedManifestPath, dependency.Name, dependency.DeploymentOption, *dependency.EnvVarValues); err != nil {
 				return fmt.Errorf("failed building spec for dependent agent: %s", err)
 			}
 		}
@@ -106,6 +115,33 @@ func (a *AgentSpecBuilder) LoadFromConfig(agentConfig config.ConfigFile) {
 		agentSpec.K8sConfig = config.K8sConfig
 		a.AgentSpecs[agentName] = agentSpec
 	}
+}
+
+// NormalizeDependencyRef normalizes the manifest path for the agent spec builder
+func (a *AgentSpecBuilder) NormalizeDependencyRef(manifestPath string, dependencyRefPath string) (string, error) {
+	parsedRef, err := url.Parse(dependencyRefPath)
+	if err != nil {
+		return "", err
+	}
+
+	if parsedRef.Scheme != "" && parsedRef.Scheme != "file" {
+		// the reference is not a local file path
+		return dependencyRefPath, nil
+	}
+
+	// the reference is a local file path, normalize it
+	rawDependencyPath := strings.TrimPrefix(dependencyRefPath, "file://")
+
+	if filepath.IsAbs(rawDependencyPath) {
+		// the reference is an absolute path
+		return rawDependencyPath, nil
+	}
+
+	// the reference is a relative path, resolve it relative to the manifest path
+	normalizedPath := filepath.Join(filepath.Dir(manifestPath), rawDependencyPath)
+
+	return filepath.Clean(normalizedPath), nil
+
 }
 
 func validateEnvVarValues(ctx context.Context, inputSpec internal.AgentSpec) error {

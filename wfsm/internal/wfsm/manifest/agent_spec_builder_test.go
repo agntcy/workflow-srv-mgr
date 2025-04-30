@@ -86,3 +86,104 @@ func TestAgentSpecBuilder_Deployment_Name_Non_Unique(t *testing.T) {
 	assert.Error(t, err, "BuildAgentSpec should return an error")
 	assert.Contains(t, err.Error(), "agent deployment name must be unique: agent_C_1")
 }
+
+func TestAgentSpecBuilder_NormalizeManifestPath(t *testing.T) {
+	type args struct {
+		manifestPath      string
+		dependencyRefPath string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "manifest file reference is empty",
+			args: args{
+				manifestPath:      "",
+				dependencyRefPath: "/hurricane.json",
+			},
+			want: "/hurricane.json",
+		},
+		{
+			name: "dependency file reference is absolute",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "/hurricane.json",
+			},
+			want: "/hurricane.json",
+		},
+		{
+			name: "dependency file reference is relative to the manifest reference",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "hurricane.json",
+			},
+			want: "/etwc/agent/hurricane.json",
+		},
+		{
+			name: "dependency file reference is relative to the manifest reference",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "./hurricane.json",
+			},
+			want: "/etwc/agent/hurricane.json",
+		},
+		{
+			name: "dependency file reference is relative to the manifest reference, up one level (./../)",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "./../hurricane.json",
+			},
+			want: "/etwc/hurricane.json",
+		},
+		{
+			name: "dependency file reference is relative to the manifest reference, up one level( ../)",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "../hurricane.json",
+			},
+			want: "/etwc/hurricane.json",
+		},
+		{
+			name: "dependency file reference is not local",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "http://example.com/hurricane.json",
+			},
+			want: "http://example.com/hurricane.json",
+		},
+		{
+			name: "dependency file reference has file:// scheme",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "file://./",
+			},
+			want: "/etwc/agent",
+		},
+		{
+			name: "dependency file reference has file:// scheme, + relative path",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "file://./hurricane.json",
+			},
+			want: "/etwc/agent/hurricane.json",
+		},
+		{
+			name: "dependency file reference has file:// scheme, + relative path, + up one level",
+			args: args{
+				manifestPath:      "/etwc/agent/agent_A_manifest.json",
+				dependencyRefPath: "file://./../hurricane.json",
+			},
+			want: "/etwc/hurricane.json",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := &AgentSpecBuilder{}
+			got, err := a.NormalizeDependencyRef(tt.args.manifestPath, tt.args.dependencyRefPath)
+			assert.NoError(t, err, "NormalizeDependencyRef should not return an error")
+			assert.Equalf(t, tt.want, got, "NormalizeDependencyRef(%v, %v)", tt.args.manifestPath, tt.args.dependencyRefPath)
+		})
+	}
+}

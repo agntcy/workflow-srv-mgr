@@ -36,7 +36,7 @@ func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (in
 	deploymentSpec := internal.AgentDeploymentBuildSpec{AgentSpec: inputSpec}
 
 	deployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption]
-	agSrc, err := source.GetAgentSource(deployment.SourceCodeDeployment)
+	agSrc, err := source.GetAgentSource(deployment.SourceCodeDeployment, inputSpec.ManifestPath)
 	if err != nil {
 		return deploymentSpec, fmt.Errorf("failed to get agent source: %v", err)
 	}

@@ -9,13 +9,14 @@ import (
 
 // LocalSource struct implementing AgentSource interface
 type LocalSource struct {
-	LocalPath string
+	LocalPath    string
+	ManifestPath string
 }
 
 // CopyToWorkspace copies all files from sourcePath to workspacePath
 func (ls *LocalSource) CopyToWorkspace(workspacePath string) error {
 	// Copy all files from sourcePath to workspacePath
-	return copyDir(ls.LocalPath, workspacePath)
+	return copyDir(ls.ResolveSourcePath(), workspacePath)
 }
 
 func copyDir(src string, dest string) error {
@@ -52,6 +53,22 @@ func copyDir(src string, dest string) error {
 	}
 
 	return nil
+}
+
+// ResolveSourcePath resolves the source path relative to the manifest path
+func (ls *LocalSource) ResolveSourcePath() string {
+	// if the manifest path is empty, return the local path (backwards compatibility)
+	if ls.ManifestPath == "" {
+		return ls.LocalPath
+	}
+
+	// the path is absolute, return it as is
+	if filepath.IsAbs(ls.LocalPath) {
+		return ls.LocalPath
+	}
+
+	combinedPath := filepath.Join(filepath.Dir(ls.ManifestPath), ls.LocalPath)
+	return filepath.Clean(combinedPath)
 }
 
 func copyFile(src string, dest string) error {

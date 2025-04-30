@@ -22,6 +22,7 @@ type AgentSpec struct {
 	ApiKey                   string
 	Port                     int
 	K8sConfig                K8sConfig
+	ManifestPath             string
 }
 type K8sConfig struct {
 	EnvVarsFromSecret string      `yaml:"envVarsFromSecret"`
