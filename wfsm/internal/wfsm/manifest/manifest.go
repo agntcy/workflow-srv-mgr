@@ -3,12 +3,9 @@
 package manifest
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
-	"io"
-	"log"
-	"os"
 
 	"github.com/cisco-eti/wfsm/manifests"
 )
@@ -19,18 +16,27 @@ type ManifestService interface {
 	GetManifest() manifests.AgentManifest
 }
 
-type manifestService struct {
-	manifest manifests.AgentManifest
+type ManifestLoader interface {
+	loadManifest(context.Context) (manifests.AgentManifest, error)
 }
 
-func NewManifestService(filePath string) (ManifestService, error) {
-	manifest, err := loadManifest(filePath)
+type manifestService struct {
+	manifestLoader ManifestLoader
+	manifest       manifests.AgentManifest
+}
+
+func NewManifestService(ctx context.Context, manifestLoader ManifestLoader) (ManifestService, error) {
+	manifest, err := manifestLoader.loadManifest(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load manifest: %s", err)
 	}
 	return &manifestService{
 		manifest: manifest,
 	}, nil
+}
+
+func (m manifestService) GetManifest() manifests.AgentManifest {
+	return m.manifest
 }
 
 func (m manifestService) Validate() error {
@@ -72,30 +78,4 @@ func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
 		}
 	}
 	return 0, fmt.Errorf("invalid agent manifest: deployment option %s not found", *option)
-}
-
-func loadManifest(filePath string) (manifests.AgentManifest, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalf("failed to open file: %s", err)
-	}
-	defer file.Close()
-
-	// Read the file into a byte slice
-	byteSlice, err := io.ReadAll(file)
-	if err != nil {
-		log.Fatalf("failed to read file: %s", err)
-	}
-
-	manifest := manifests.AgentManifest{}
-
-	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
-		return manifests.AgentManifest{}, err
-	}
-
-	return manifest, nil
-}
-
-func (m manifestService) GetManifest() manifests.AgentManifest {
-	return m.manifest
 }
