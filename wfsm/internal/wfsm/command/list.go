@@ -54,7 +54,7 @@ func init() {
 
 func runList(ctx context.Context, agentDeploymentName string) error {
 
-	hostStorageFolder, err := getHostStorage()
+	hostStorageFolder, err := getHostStorageFolder(agentDeploymentName)
 	if err != nil {
 		return err
 	}

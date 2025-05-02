@@ -79,7 +79,7 @@
     "env_vars": [
       {
         "desc": "Environment variable for agent A",
-        "name": "ENV_VAR_AGENT_A_1",
+        "name": "ENV_VAR_AGENT_A",
         "required": true,
         "defaultValue": "valueA"
       }

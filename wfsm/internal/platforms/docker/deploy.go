@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/cisco-eti/wfsm/internal"
@@ -22,16 +23,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const ServerPort = "8000/tcp"
 const APIHost = "0.0.0.0"
-const APIPort = "8000"
 
 // Deploy if externalPort is 0, will try to find the port of already running container or find next available port
 func (r *runner) Deploy(ctx context.Context,
 	mainAgentName string,
 	agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec,
 	dependencies map[string][]string,
-	externalPort int,
 	dryRun bool) (internal.DeploymentArtifact, error) {
 
 	log := zerolog.Ctx(ctx)
@@ -44,7 +42,7 @@ func (r *runner) Deploy(ctx context.Context,
 			depSpec := agentDeploymentSpecs[depName]
 			agSpec.EnvVars[depAgPrefix+"API_KEY"] = fmt.Sprintf("{\"x-api-key\": \"%s\"}", depSpec.ApiKey)
 			agSpec.EnvVars[depAgPrefix+"ID"] = depSpec.AgentID
-			agSpec.EnvVars[depAgPrefix+"ENDPOINT"] = fmt.Sprintf("http://%s:%s", depSpec.ServiceName, APIPort)
+			agSpec.EnvVars[depAgPrefix+"ENDPOINT"] = fmt.Sprintf("http://%s:%d", depSpec.ServiceName, internal.DEFAULT_API_PORT)
 		}
 	}
 
@@ -62,27 +60,16 @@ func (r *runner) Deploy(ctx context.Context,
 	// only the main agent will be exposed to the outside world
 	mainAgentSpec := agentDeploymentSpecs[mainAgentName]
 
-	port := externalPort
-	if port == 0 {
-		port, err = r.getMainAgentPublicPort(ctx, dockerCli.Client(), mainAgentName, mainAgentSpec)
-		if err != nil {
-			return nil, err
-		}
-	}
+	port := mainAgentSpec.Port
+	//if port == 0 {
+	//	port, err = r.getMainAgentPublicPort(ctx, dockerCli.Client(), mainAgentName, mainAgentSpec)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 
 	mainAgentID := mainAgentSpec.AgentID
 	mainAgentAPiKey := mainAgentSpec.ApiKey
-	sc, err := r.createServiceConfig(mainAgentName, mainAgentSpec)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create service config: %v", err)
-	}
-	pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v", port, ServerPort))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse port config: %v", err)
-	}
-	sc.Ports = pc
-	project.Services[mainAgentSpec.ServiceName] = *sc
-	delete(agentDeploymentSpecs, mainAgentName)
 
 	// generate service configs for dependencies
 	for _, deploymentSpec := range agentDeploymentSpecs {
@@ -112,11 +99,11 @@ func (r *runner) Deploy(ctx context.Context,
 	project, _, err = prjOpts.ToProject(ctx, dockerCli, []string{
 		//deploymentSpec.ServiceName
 	})
-	log.Info().Msgf("compose file generated at: %s", composeFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create project: %v", err)
 	}
-
+	log.Info().Msgf("Compose file generated at: %s", composeFilePath)
+	log.Info().Msgf("You can deploy the agent running `wfsm deploy` with `--dryRun=false` option or `docker compose -f %v up`", composeFilePath)
 	if dryRun {
 		return projectYaml, nil
 	}
@@ -174,7 +161,7 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 	envVars := deploymentSpec.EnvVars
 
 	envVars["API_HOST"] = APIHost
-	envVars["API_PORT"] = APIPort
+	envVars["API_PORT"] = strconv.Itoa(internal.DEFAULT_API_PORT)
 
 	envVars["API_KEY"] = deploymentSpec.ApiKey
 	envVars["AGENT_ID"] = deploymentSpec.AgentID
@@ -205,6 +192,15 @@ func (r *runner) createServiceConfig(projectName string, deploymentSpec internal
 			},
 		},
 	}
+
+	if deploymentSpec.Port > 0 {
+		pc, err := types.ParsePortConfig(fmt.Sprintf("0.0.0.0:%v:%v/tcp", deploymentSpec.Port, internal.DEFAULT_API_PORT))
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse port config: %v", err)
+		}
+		sc.Ports = pc
+	}
+
 	return &sc, nil
 }
 

@@ -73,6 +73,12 @@
         "name": "ENV_VAR_AGENT_B_1",
         "required": true,
         "defaultValue": "valueB"
+      },
+      {
+        "desc": "Environment variable for agent B",
+        "name": "ENV_VAR_AGENT_B_2",
+        "required": true,
+        "defaultValue": "valueB"
       }
     ]
   }

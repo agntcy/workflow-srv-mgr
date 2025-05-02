@@ -39,7 +39,7 @@
   "deployment": {
     "dependencies": [
       {
-        "name": "mailcomposer_deployed_1",
+        "name": "agentB_deployment",
         "ref": {
           "name": "agentB",
           "version": "1.0.0",

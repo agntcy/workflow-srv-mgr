@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	KUBERNETES = "k8s"
-	DOCKER     = "docker"
+	KUBERNETES       = "k8s"
+	DOCKER           = "docker"
+	DEFAULT_API_PORT = 8000
 )
 
 type AgentSpec struct {
@@ -94,7 +95,7 @@ type AgentDeploymentBuilder interface {
 }
 
 type AgentDeploymentRunner interface {
-	Deploy(ctx context.Context, deploymentName string, agentDeploymentSpecs map[string]AgentDeploymentBuildSpec, dependencies map[string][]string, externalPort int, dryRun bool) (DeploymentArtifact, error)
+	Deploy(ctx context.Context, deploymentName string, agentDeploymentSpecs map[string]AgentDeploymentBuildSpec, dependencies map[string][]string, dryRun bool) (DeploymentArtifact, error)
 	Remove(ctx context.Context, deploymentName string) error
 	Logs(ctx context.Context, deploymentName string, agentNames []string) error
 	List(ctx context.Context, deploymentName string) error

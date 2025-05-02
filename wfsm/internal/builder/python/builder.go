@@ -33,6 +33,7 @@ func NewPythonAgentBuilder(baseImage string, deleteBuildFolders bool, forceBuild
 func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
 	log := zerolog.Ctx(ctx)
 
+	log.Info().Msgf("building image for agent: %s", inputSpec.DeploymentName)
 	deploymentSpec := internal.AgentDeploymentBuildSpec{AgentSpec: inputSpec}
 
 	deployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption]
