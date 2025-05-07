@@ -1,0 +1,4 @@
+# applies to all agents decaling these env vars in their manifest
+AZURE_OPENAI_API_KEY="xxxxxxx"
+AZURE_OPENAI_ENDPOINT="https://smith-project-agents.openai.azure.com"
+OPENAI_API_VERSION="2024-07-01-preview"    

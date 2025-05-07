@@ -1,0 +1,14 @@
+# applies to all agents decaling these env vars in their manifest
+AZURE_OPENAI_API_KEY="xxxxxxx"
+AZURE_OPENAI_ENDPOINT="https://smith-project-agents.openai.azure.com"
+OPENAI_API_VERSION="2024-07-01-preview"
+
+# only apllies to mailcomposer agent
+MAILCOMPOSER_AZURE_OPENAI_API_KEY="xxxxxxx"
+MAILCOMPOSER_AZURE_OPENAI_ENDPOINT="https://smith-project-agents.openai.azure.com"
+MAILCOMPOSER_OPENAI_API_VERSION="2024-07-01-preview"
+
+# only apllies to email_reviewer_1 agent
+EMAIL_REVIEWER_1_AZURE_OPENAI_API_KEY="xxxxxxx"
+EMAIL_REVIEWER_1_AZURE_OPENAI_ENDPOINT="https://smith-project-agents.openai.azure.com"
+EMAIL_REVIEWER_1_OPENAI_API_VERSION="2024-07-01-preview"      
