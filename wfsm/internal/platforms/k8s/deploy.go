@@ -241,6 +241,7 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 		},
 		StatefulSet: internal.StatefulSet{
 			Replicas:       stset.Replicas,
+			Resources:      stset.Resources,
 			Labels:         stset.Labels,
 			Annotations:    stset.Annotations,
 			PodAnnotations: podAnnotations,
