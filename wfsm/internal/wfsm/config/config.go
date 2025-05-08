@@ -157,7 +157,7 @@ func MergeConfigs(agentConfig, userConfig ConfigFile, platform string) ConfigFil
 				}
 			}
 			if platform == internal.KUBERNETES {
-				mergeK8sConfigs(userValue, agentValue)
+				agentValue = mergeK8sConfigs(agentValue, userValue)
 			}
 			agentConfig.Config[key] = agentValue
 		} else {
@@ -168,7 +168,7 @@ func MergeConfigs(agentConfig, userConfig ConfigFile, platform string) ConfigFil
 	return agentConfig
 }
 
-func mergeK8sConfigs(userValue AgentConfig, agentValue AgentConfig) {
+func mergeK8sConfigs(agentValue AgentConfig, userValue AgentConfig) AgentConfig {
 	if userValue.K8sConfig.EnvVarsFromSecret != "" {
 		agentValue.K8sConfig.EnvVarsFromSecret = userValue.K8sConfig.EnvVarsFromSecret
 	}
@@ -204,4 +204,5 @@ func mergeK8sConfigs(userValue AgentConfig, agentValue AgentConfig) {
 	if userValue.K8sConfig.Service.Type != "" {
 		agentValue.K8sConfig.Service.Type = userValue.K8sConfig.Service.Type
 	}
+	return agentValue
 }
