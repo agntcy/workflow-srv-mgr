@@ -87,9 +87,9 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 	}
 	a.AgentSpecs[deploymentName] = agentSpec
 
-	if len(manifest.Deployment.Dependencies) > 0 {
-		depNames := make([]string, 0, len(manifest.Deployment.Dependencies))
-		for _, dependency := range manifest.Deployment.Dependencies {
+	if len(manifest.Deployment.AgentDeps) > 0 {
+		depNames := make([]string, 0, len(manifest.Deployment.AgentDeps))
+		for _, dependency := range manifest.Deployment.AgentDeps {
 			depNames = append(depNames, dependency.Name)
 
 			if dependency.Ref.Url == nil {
@@ -261,12 +261,12 @@ func mergeEnvVarValues(dest *manifests.EnvVarValues, src manifests.EnvVarValues,
 		dest = &manifests.EnvVarValues{}
 	}
 
-	for _, depEnv := range src.Dependencies {
+	for _, depEnv := range src.EnvDeps {
 		if depEnv.GetName() == dependencyName {
 			// merge env var values for dependencyName
 			dest.Values = util.MergeMaps(dest.Values, depEnv.Values)
 			// merge env vars of dependencies of dependencyName
-			dest.Dependencies = mergeDepEnvVarValues(dest.Dependencies, depEnv.Dependencies)
+			dest.EnvDeps = mergeDepEnvVarValues(dest.EnvDeps, depEnv.EnvDeps)
 		}
 	}
 	return dest
