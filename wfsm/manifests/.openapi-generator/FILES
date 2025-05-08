@@ -10,7 +10,6 @@ model_agent_deployment_deployment_options_inner.go
 model_agent_manifest.go
 model_agent_metadata.go
 model_agent_reference.go
-model_agent_reference_1.go
 model_docker_deployment.go
 model_env_var.go
 model_env_var_values.go

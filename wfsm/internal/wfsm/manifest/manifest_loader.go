@@ -22,6 +22,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const AgentExtensionName = "oasf.agntcy.org/feature/runtime/manifest"
+
 type fileManifestLoader struct {
 	filePath string
 }
@@ -92,14 +94,11 @@ func (f *fileManifestLoader) loadManifest(ctx context.Context) (manifests.AgentM
 	if err != nil {
 		log.Fatalf("failed to read file: %s", err)
 	}
-
-	manifest := manifests.AgentManifest{}
-
-	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
-		return manifests.AgentManifest{}, err
+	agentManifest, err := processOASFManifest(byteSlice)
+	if err != nil {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to process OASF manifest: %s", err)
 	}
-
-	return manifest, nil
+	return agentManifest, nil
 }
 
 func (l *hubManifestLoader) loadManifest(ctx context.Context) (manifests.AgentManifest, error) {
@@ -166,39 +165,43 @@ func (l *httpManifestLoader) loadManifest(ctx context.Context) (manifests.AgentM
 	if err != nil {
 		return manifests.AgentManifest{}, fmt.Errorf("failed to read response body: %s", err)
 	}
-	manifest := manifests.AgentManifest{}
-	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
-		return manifests.AgentManifest{}, err
+	manifest, err := processOASFManifest(byteSlice)
+	if err != nil {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to process OASF manifest: %s", err)
 	}
 	return manifest, nil
 }
 
-func processOASFManifest(directoryManifestRaw []byte) (manifests.AgentManifest, error) {
-	var directoryManifest map[string]interface{}
-	err := json.Unmarshal(directoryManifestRaw, &directoryManifest)
+func processOASFManifest(OASFManifestRaw []byte) (manifests.AgentManifest, error) {
+	var OASFManifest map[string]interface{}
+	err := json.Unmarshal(OASFManifestRaw, &OASFManifest)
 	if err != nil {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to unmarshal directory manifest: %s", err)
+		return manifests.AgentManifest{}, fmt.Errorf("failed to unmarshal OASF manifest: %s", err)
+	}
+	name, ok := OASFManifest["name"].(string)
+	if !ok {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to get name from OASF manifest: %s", err)
+	}
+	version, ok := OASFManifest["version"].(string)
+	if !ok {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to get version from OASF manifest: %s", err)
 	}
 
-	extensions, ok := directoryManifest["extensions"].([]interface{})
+	extensions, ok := OASFManifest["extensions"].([]interface{})
 	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get extensions from directory manifest: %s", err)
+		return manifests.AgentManifest{}, fmt.Errorf("failed to get extensions from OASF manifest: %s", err)
 	}
-	// currently the first one is used
-	firstExtension, ok := extensions[0].(map[string]interface{})
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get the first extension from manifest: %s", err)
+	if len(extensions) == 0 {
+		return manifests.AgentManifest{}, fmt.Errorf("no extensions found in OASF manifest: %s", err)
 	}
-	name, ok := firstExtension["name"].(string)
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get name from directroy manifest: %s", err)
+
+	extension, err := getAgentExtension(extensions)
+	if err != nil {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to get agent extension from OASF manifest: %s", err)
 	}
-	version, ok := firstExtension["version"].(string)
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get version from directroy manifest: %s", err)
-	}
+
 	var agentManifest manifests.AgentManifest
-	byteManifest, err := json.Marshal(firstExtension["data"])
+	byteManifest, err := json.Marshal(extension["data"])
 	if err != nil {
 		return manifests.AgentManifest{}, fmt.Errorf("failed to marshal agent manifest: %s", err)
 	}
@@ -210,4 +213,21 @@ func processOASFManifest(directoryManifestRaw []byte) (manifests.AgentManifest, 
 	agentManifest.Metadata.Ref.Version = version
 
 	return agentManifest, nil
+}
+
+func getAgentExtension(extensions []interface{}) (map[string]interface{}, error) {
+	for _, extension := range extensions {
+		extensionMap, ok := extension.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("failed to convert extension to map")
+		}
+		name, ok := extensionMap["name"].(string)
+		if !ok {
+			continue
+		}
+		if name == AgentExtensionName {
+			return extensionMap, nil
+		}
+	}
+	return nil, fmt.Errorf("no agent extension found in manifest")
 }

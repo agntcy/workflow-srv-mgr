@@ -23,7 +23,7 @@ var _ MappedNullable = &AgentDeployment{}
 type AgentDeployment struct {
 	DeploymentOptions []AgentDeploymentDeploymentOptionsInner `json:"deployment_options"`
 	EnvVars           []EnvVar                                `json:"env_vars,omitempty"`
-	Dependencies      []AgentDependency                       `json:"dependencies,omitempty"`
+	AgentDeps         []AgentDependency                       `json:"agent_deps,omitempty"`
 }
 
 // NewAgentDeployment instantiates a new AgentDeployment object
@@ -100,36 +100,36 @@ func (o *AgentDeployment) SetEnvVars(v []EnvVar) {
 	o.EnvVars = v
 }
 
-// GetDependencies returns the Dependencies field value if set, zero value otherwise.
-func (o *AgentDeployment) GetDependencies() []AgentDependency {
-	if o == nil || IsNil(o.Dependencies) {
+// GetAgentDeps returns the AgentDeps field value if set, zero value otherwise.
+func (o *AgentDeployment) GetAgentDeps() []AgentDependency {
+	if o == nil || IsNil(o.AgentDeps) {
 		var ret []AgentDependency
 		return ret
 	}
-	return o.Dependencies
+	return o.AgentDeps
 }
 
-// GetDependenciesOk returns a tuple with the Dependencies field value if set, nil otherwise
+// GetAgentDepsOk returns a tuple with the AgentDeps field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentDeployment) GetDependenciesOk() ([]AgentDependency, bool) {
-	if o == nil || IsNil(o.Dependencies) {
+func (o *AgentDeployment) GetAgentDepsOk() ([]AgentDependency, bool) {
+	if o == nil || IsNil(o.AgentDeps) {
 		return nil, false
 	}
-	return o.Dependencies, true
+	return o.AgentDeps, true
 }
 
-// HasDependencies returns a boolean if a field has been set.
-func (o *AgentDeployment) HasDependencies() bool {
-	if o != nil && !IsNil(o.Dependencies) {
+// HasAgentDeps returns a boolean if a field has been set.
+func (o *AgentDeployment) HasAgentDeps() bool {
+	if o != nil && !IsNil(o.AgentDeps) {
 		return true
 	}
 
 	return false
 }
 
-// SetDependencies gets a reference to the given []AgentDependency and assigns it to the Dependencies field.
-func (o *AgentDeployment) SetDependencies(v []AgentDependency) {
-	o.Dependencies = v
+// SetAgentDeps gets a reference to the given []AgentDependency and assigns it to the AgentDeps field.
+func (o *AgentDeployment) SetAgentDeps(v []AgentDependency) {
+	o.AgentDeps = v
 }
 
 func (o AgentDeployment) MarshalJSON() ([]byte, error) {
@@ -146,8 +146,8 @@ func (o AgentDeployment) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.EnvVars) {
 		toSerialize["env_vars"] = o.EnvVars
 	}
-	if !IsNil(o.Dependencies) {
-		toSerialize["dependencies"] = o.Dependencies
+	if !IsNil(o.AgentDeps) {
+		toSerialize["agent_deps"] = o.AgentDeps
 	}
 	return toSerialize, nil
 }

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Agent Manifest Definition
-  version: '0.1'
+  version: "0.1"
 paths: {}
 components:
   schemas:
@@ -13,11 +13,11 @@ components:
       type: object
       properties:
         metadata:
-          $ref: './acp-spec/openapi.json#/components/schemas/AgentMetadata'
+          $ref: "./acp-spec/openapi.json#/components/schemas/AgentMetadata"
         specs:
-          $ref: './acp-spec/openapi.json#/components/schemas/AgentACPSpec'
+          $ref: "./acp-spec/openapi.json#/components/schemas/AgentACPSpec"
         deployment:
-          $ref: '#/components/schemas/AgentDeployment'
+          $ref: "#/components/schemas/AgentDeployment"
       required:
         - metadata
         - specs
@@ -32,22 +32,22 @@ components:
           description: >-
             List of possible methods to instantiate or consume the agent.  Any
             of the available option could be used.
-            
+
             Every option could be associated with a unique name within this
             agent. If present, when another manifest refers to this manifest, it
             can also select the preferred deployment option.
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/SourceCodeDeployment'
-              - $ref: '#/components/schemas/RemoteServiceDeployment'
-              - $ref: '#/components/schemas/DockerDeployment'
+              - $ref: "#/components/schemas/SourceCodeDeployment"
+              - $ref: "#/components/schemas/RemoteServiceDeployment"
+              - $ref: "#/components/schemas/DockerDeployment"
             discriminator:
               propertyName: type
               mapping:
-                source_code: '#/components/schemas/SourceCodeDeployment'
-                remote_service: '#/components/schemas/RemoteServiceDeployment'
-                docker: '#/components/schemas/DockerDeployment'
+                source_code: "#/components/schemas/SourceCodeDeployment"
+                remote_service: "#/components/schemas/RemoteServiceDeployment"
+                docker: "#/components/schemas/DockerDeployment"
         env_vars:
           title: Environment Variables
           description: >-
@@ -55,13 +55,13 @@ components:
             before it can be used.
           type: array
           items:
-            $ref: '#/components/schemas/EnvVar'                 
-        dependencies:
+            $ref: "#/components/schemas/EnvVar"
+        agent_deps:
           title: Agent Dependencies
           description: List of all other agents this agent depends on
           type: array
           items:
-            $ref: '#/components/schemas/AgentDependency'
+            $ref: "#/components/schemas/AgentDependency"
       required:
         - deployment_options
     AgentDependency:
@@ -79,16 +79,16 @@ components:
           description: >-
             Reference to the agent in the agent directory. It includes the
             version and the locator.
-          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentRef'
+          $ref: "./acp-spec/openapi.json#/components/schemas/AgentRef"
         deployment_option:
           description: >-
-            Selected deployment option for this agent. 
+            Selected deployment option for this agent.
           title: Deployment Option
           type: string
         env_var_values:
           title: Environment Variable Values
           description: Environment variable values to be set for this agent.
-          $ref: '#/components/schemas/EnvVarValues'
+          $ref: "#/components/schemas/EnvVarValues"
       required:
         - name
         - ref
@@ -101,14 +101,14 @@ components:
         name:
           type: string
           description: name of the agent dependency these environment variables are for
-        values: 
+        values:
           type: object
           additionalProperties:
             type: string
-        dependencies:
+        env_deps:
           type: array
           items:
-            $ref: '#/components/schemas/EnvVarValues'
+            $ref: "#/components/schemas/EnvVarValues"
     EnvVar:
       title: Environment Variable
       description: Describes an environment variable
@@ -157,13 +157,13 @@ components:
           format: uri
         framework_config:
           oneOf:
-            - $ref: '#/components/schemas/LangGraphConfig'
-            - $ref: '#/components/schemas/LlamaIndexConfig'
+            - $ref: "#/components/schemas/LangGraphConfig"
+            - $ref: "#/components/schemas/LlamaIndexConfig"
           discriminator:
             propertyName: framework_type
             mapping:
-              langgraph: '#/components/schemas/LangGraphConfig'
-              llamaindex: '#/components/schemas/LlamaIndexConfig'
+              langgraph: "#/components/schemas/LangGraphConfig"
+              llamaindex: "#/components/schemas/LlamaIndexConfig"
       required:
         - type
         - url
@@ -213,7 +213,7 @@ components:
             is needed to indicate which one is preferred when this manifest is
             referred. Can be omitted, in such case selection is not possible.            -
         protocol:
-          $ref: '#/components/schemas/AgentConnectProtocol'
+          $ref: "#/components/schemas/AgentConnectProtocol"
       required:
         - type
         - protocol
@@ -263,7 +263,7 @@ components:
             with matching name and version should be used.
           format: uuid
         authentication:
-          $ref: '#/components/schemas/SecurityScheme'
+          $ref: "#/components/schemas/SecurityScheme"
       required:
         - type
         - url
