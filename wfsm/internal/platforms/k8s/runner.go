@@ -24,7 +24,7 @@ func NewK8sRunner(hostStorageFolder string) internal.AgentDeploymentRunner {
 func (r *runner) Remove(ctx context.Context, deploymentName string) error {
 	deployer := NewHelmDeployer()
 	releaseName := util.NormalizeAgentName(deploymentName)
-	namespace := "default"
+	namespace := getK8sNamespace()
 	err := deployer.UnDeployChart(ctx, releaseName, namespace)
 	if err != nil {
 		return fmt.Errorf("failed to undeploy chart: %v", err)

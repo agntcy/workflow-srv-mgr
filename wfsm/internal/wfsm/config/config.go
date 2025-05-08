@@ -1,12 +1,16 @@
 package config
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,27 +44,54 @@ func WriteConfig(path string, config ConfigFile) error {
 }
 
 // GenerateDefaultConfig generates a ConfigFile with default values for the given agent names.
-func GenerateDefaultConfig(agentSpecs map[string]internal.AgentSpec, platform string, mainAgent string) (ConfigFile, error) {
+func GenerateDefaultConfig(agentSpecs map[string]internal.AgentSpec, platform string, mainAgent string, envFile map[string]string) (ConfigFile, error) {
 	config := make(map[string]AgentConfig, len(agentSpecs))
 
 	for name, _ := range agentSpecs {
 
 		agentConfig := AgentConfig{
-			APIKey: uuid.NewString(),
-			ID:     uuid.NewString(),
+			EnvVars: map[string]string{},
+		}
+
+		id := getEnvVarValue(name, "ID", envFile)
+		if id == "" {
+			id = uuid.NewString()
+		}
+		agentConfig.ID = id
+
+		apiKey := getEnvVarValue(name, "API_KEY", envFile)
+		if apiKey == "" {
+			apiKey = uuid.NewString()
+		}
+		agentConfig.APIKey = apiKey
+
+		// Get default port from env var if any
+		portStr := getEnvVarValue(name, "PORT", envFile)
+		if portStr != "" {
+			portI, err := strconv.Atoi(portStr)
+			if err != nil {
+				return ConfigFile{}, errors.New("invalid port specified in environment variable: PORT")
+			}
+			agentConfig.Port = portI
 		}
 
 		switch platform {
 		case internal.DOCKER:
 			if name == mainAgent {
-				port, err := util.GetNextAvailablePort()
-				if err != nil {
-					return ConfigFile{}, fmt.Errorf("failed to get next available port: %v", err)
+				// if no port is specified get next available
+				if agentConfig.Port == 0 {
+					freePort, err := util.GetNextAvailablePort()
+					if err != nil {
+						return ConfigFile{}, fmt.Errorf("failed to get next available port: %v", err)
+					}
+					agentConfig.Port = freePort
 				}
-				agentConfig.Port = port
 			}
 		case internal.KUBERNETES:
-			agentConfig.K8sConfig = internal.K8sConfig{
+			if agentConfig.Port == 0 {
+				agentConfig.Port = internal.DEFAULT_API_PORT
+			}
+			agentConfig.K8sConfig = &internal.K8sConfig{
 				StatefulSet: internal.StatefulSet{
 					Replicas: 1,
 				},
@@ -78,9 +109,7 @@ func GenerateDefaultConfig(agentSpecs map[string]internal.AgentSpec, platform st
 			}
 
 		}
-
 		config[name] = agentConfig
-
 	}
 
 	return ConfigFile{
@@ -88,7 +117,28 @@ func GenerateDefaultConfig(agentSpecs map[string]internal.AgentSpec, platform st
 	}, nil
 }
 
-func MergeConfigs(agentConfig, userConfig ConfigFile) ConfigFile {
+func getEnvVarValue(agentName string, envVarName string, envFile map[string]string) string {
+	agentPrefix := util.CalculateEnvVarPrefix(agentName)
+	if value, ok := envFile[agentPrefix+envVarName]; ok {
+		return value
+	}
+	if value := os.Getenv(agentPrefix + envVarName); value != "" {
+		return value
+	}
+	return ""
+}
+
+func PrintConfig(ctx context.Context, file ConfigFile) error {
+	data, err := yaml.Marshal(file)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %v", err)
+	}
+	log := zerolog.Ctx(ctx)
+	log.Info().Msgf("CONFIG: \n%s", (string(data)))
+	return nil
+}
+
+func MergeConfigs(agentConfig, userConfig ConfigFile, platform string) ConfigFile {
 	for key, userValue := range userConfig.Config {
 		if agentValue, exists := agentConfig.Config[key]; exists {
 			// Override existing fields in agentConfig with userConfig values
@@ -98,26 +148,16 @@ func MergeConfigs(agentConfig, userConfig ConfigFile) ConfigFile {
 			if userValue.APIKey != "" {
 				agentValue.APIKey = userValue.APIKey
 			}
+			if userValue.ID != "" {
+				agentValue.ID = userValue.ID
+			}
 			if len(userValue.EnvVars) > 0 {
 				for envKey, envValue := range userValue.EnvVars {
 					agentValue.EnvVars[envKey] = envValue
 				}
 			}
-			// Merge K8sConfig
-			for labelKey, labelValue := range userValue.K8sConfig.StatefulSet.Labels {
-				agentValue.K8sConfig.StatefulSet.Labels[labelKey] = labelValue
-			}
-			for annotationKey, annotationValue := range userValue.K8sConfig.StatefulSet.Annotations {
-				agentValue.K8sConfig.StatefulSet.Annotations[annotationKey] = annotationValue
-			}
-			for serviceLabelKey, serviceLabelValue := range userValue.K8sConfig.Service.Labels {
-				agentValue.K8sConfig.Service.Labels[serviceLabelKey] = serviceLabelValue
-			}
-			for serviceAnnotationKey, serviceAnnotationValue := range userValue.K8sConfig.Service.Annotations {
-				agentValue.K8sConfig.Service.Annotations[serviceAnnotationKey] = serviceAnnotationValue
-			}
-			if userValue.K8sConfig.Service.Type != "" {
-				agentValue.K8sConfig.Service.Type = userValue.K8sConfig.Service.Type
+			if platform == internal.KUBERNETES {
+				agentValue = mergeK8sConfigs(agentValue, userValue)
 			}
 			agentConfig.Config[key] = agentValue
 		} else {
@@ -126,4 +166,34 @@ func MergeConfigs(agentConfig, userConfig ConfigFile) ConfigFile {
 		}
 	}
 	return agentConfig
+}
+
+func mergeK8sConfigs(agentValue AgentConfig, userValue AgentConfig) AgentConfig {
+	if userValue.K8sConfig.EnvVarsFromSecret != "" {
+		agentValue.K8sConfig.EnvVarsFromSecret = userValue.K8sConfig.EnvVarsFromSecret
+	}
+	// Merge K8sConfig.StatefulSet
+	agentValue.K8sConfig.StatefulSet.Labels = util.MergeMaps(agentValue.K8sConfig.StatefulSet.Labels, userValue.K8sConfig.StatefulSet.Labels)
+	agentValue.K8sConfig.StatefulSet.Annotations = util.MergeMaps(agentValue.K8sConfig.StatefulSet.Annotations, userValue.K8sConfig.StatefulSet.Annotations)
+	agentValue.K8sConfig.StatefulSet.PodAnnotations = util.MergeMaps(agentValue.K8sConfig.StatefulSet.PodAnnotations, userValue.K8sConfig.StatefulSet.PodAnnotations)
+
+	if userValue.K8sConfig.StatefulSet.Replicas != 0 {
+		agentValue.K8sConfig.StatefulSet.Replicas = userValue.K8sConfig.StatefulSet.Replicas
+	}
+	if userValue.K8sConfig.StatefulSet.NodeSelector != nil {
+		agentValue.K8sConfig.StatefulSet.NodeSelector = userValue.K8sConfig.StatefulSet.NodeSelector
+	}
+	if userValue.K8sConfig.StatefulSet.Tolerations != nil {
+		agentValue.K8sConfig.StatefulSet.Tolerations = userValue.K8sConfig.StatefulSet.Tolerations
+	}
+	agentValue.K8sConfig.StatefulSet.Affinity = userValue.K8sConfig.StatefulSet.Affinity
+	agentValue.K8sConfig.StatefulSet.Resources = userValue.K8sConfig.StatefulSet.Resources
+
+	// Merge K8sConfig.Service
+	agentValue.K8sConfig.Service.Labels = util.MergeMaps(agentValue.K8sConfig.Service.Labels, userValue.K8sConfig.Service.Labels)
+	agentValue.K8sConfig.Service.Annotations = util.MergeMaps(agentValue.K8sConfig.Service.Annotations, userValue.K8sConfig.Service.Annotations)
+	if userValue.K8sConfig.Service.Type != "" {
+		agentValue.K8sConfig.Service.Type = userValue.K8sConfig.Service.Type
+	}
+	return agentValue
 }

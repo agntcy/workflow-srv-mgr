@@ -7,9 +7,9 @@ type ConfigFile struct {
 }
 
 type AgentConfig struct {
-	Port      int                `yaml:"port"`
-	APIKey    string             `yaml:"apiKey"`
-	ID        string             `yaml:"id"`
-	EnvVars   map[string]string  `yaml:"envVars"`
-	K8sConfig internal.K8sConfig `yaml:"k8s"`
+	Port      int                 `yaml:"port"`
+	APIKey    string              `yaml:"apiKey"`
+	ID        string              `yaml:"id"`
+	EnvVars   map[string]string   `yaml:"envVars"`
+	K8sConfig *internal.K8sConfig `yaml:"k8s,omitempty"`
 }

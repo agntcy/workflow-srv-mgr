@@ -164,3 +164,13 @@ func IsDevTag(tag string) bool {
 	}
 	return false
 }
+
+func MergeMaps(dest map[string]string, src map[string]string) map[string]string {
+	if dest == nil {
+		dest = make(map[string]string)
+	}
+	for key, value := range src {
+		dest[key] = value
+	}
+	return dest
+}

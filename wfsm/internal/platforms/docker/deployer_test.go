@@ -20,6 +20,7 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 	agentDeploymentSpecs := map[string]internal.AgentDeploymentBuildSpec{
 		"test-agent-A": {
 			AgentSpec: internal.AgentSpec{
+				Port:           62173,
 				AgentID:        "d8084dc6-52c4-4316-8460-8f43b64db17a",
 				ApiKey:         "4a69e02d-b03a-47e4-99ab-f0782be35f62",
 				DeploymentName: "test-agent-A",
@@ -93,7 +94,7 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 	}
 
 	// Call the Deploy function with dryRun = true
-	artifact, err := r.Deploy(ctx, "test-agent-A", agentDeploymentSpecs, dependencies, 62173, true)
+	artifact, err := r.Deploy(ctx, "test-agent-A", agentDeploymentSpecs, dependencies, true)
 
 	// Validate the results
 	assert.NoError(t, err, "Deploy should not return an error")

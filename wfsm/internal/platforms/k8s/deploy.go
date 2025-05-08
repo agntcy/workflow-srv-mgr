@@ -22,22 +22,17 @@ import (
 )
 
 const ConfigCheckSum = "org.agntcy.wfsm.config.checksum"
-const ServicePort = 8000
 const APIHost = "0.0.0.0"
-const APIPort = 8000
 
-// Deploy if externalPort is 0, will try to find the port of already running container or find next available port
+// Deploy generates a Docker compose file from the agent deployment specs and deploys it if dryRun = false
 func (r *runner) Deploy(ctx context.Context,
 	mainAgentName string,
 	agentDeploymentSpecs map[string]internal.AgentDeploymentBuildSpec,
 	dependencies map[string][]string,
-	externalPort int,
 	dryRun bool) (internal.DeploymentArtifact, error) {
 
 	log := zerolog.Ctx(ctx)
-
-	//TODO make namespace configurable
-	namespace := "default"
+	namespace := getK8sNamespace()
 
 	// insert api keys, agent IDs and service names as host into the deployment specs
 	for agName, deps := range dependencies {
@@ -48,7 +43,7 @@ func (r *runner) Deploy(ctx context.Context,
 			agSpec.EnvVars[depAgPrefix+"API_KEY"] = fmt.Sprintf("{\"x-api-key\": \"%s\"}", depSpec.ApiKey)
 			agSpec.EnvVars[depAgPrefix+"ID"] = depSpec.AgentID
 			// service name is the same as the deployment name but should be normalized to k8s standard
-			agSpec.EnvVars[depAgPrefix+"ENDPOINT"] = fmt.Sprintf("http://%s:%d", util.NormalizeAgentName(depSpec.ServiceName), APIPort)
+			agSpec.EnvVars[depAgPrefix+"ENDPOINT"] = fmt.Sprintf("http://%s:%d", util.NormalizeAgentName(depSpec.ServiceName), depSpec.Port)
 		}
 	}
 
@@ -59,7 +54,7 @@ func (r *runner) Deploy(ctx context.Context,
 
 	mainAgentID := mainAgentSpec.AgentID
 	mainAgentAPiKey := mainAgentSpec.ApiKey
-	sc, err := r.createAgentValuesConfig(mainAgentSpec, ServicePort)
+	sc, err := r.createAgentValuesConfig(mainAgentSpec)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create service config: %v", err)
 	}
@@ -75,7 +70,7 @@ func (r *runner) Deploy(ctx context.Context,
 
 	// generate service configs for dependencies
 	for _, deploymentSpec := range agentDeploymentSpecs {
-		sc, err := r.createAgentValuesConfig(deploymentSpec, ServicePort)
+		sc, err := r.createAgentValuesConfig(deploymentSpec)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create service config: %v", err)
 		}
@@ -98,14 +93,16 @@ func (r *runner) Deploy(ctx context.Context,
 		return nil, fmt.Errorf("failed to write values file: %v", err)
 	}
 
+	releaseName := util.NormalizeAgentName(mainAgentName)
+
 	log.Info().Msgf("values file generated at: %s", valuesFilePath)
+	log.Info().Msgf("You can deploy the agent running `wfsm deploy` with --dryRun=false` option or `helm install -n %s %s %s --values %s`", namespace, releaseName, chartUrl, valuesFilePath)
 
 	if dryRun {
 		return yamlData, nil
 	}
 
 	deployer := NewHelmDeployer()
-	releaseName := util.NormalizeAgentName(mainAgentName)
 	err = deployer.DeployChart(ctx, releaseName, chartUrl, namespace, yamlData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deploy chart: %v", err)
@@ -122,7 +119,7 @@ func (r *runner) Deploy(ctx context.Context,
 	log.Info().Msgf("Agent ID: %s", mainAgentID)
 	log.Info().Msgf("API Key: %s", mainAgentAPiKey)
 	log.Info().Msgf("API Docs: http://%s/agents/%s/docs", endpoint, mainAgentID)
-	log.Info().Msg("\nAllow some time for the agents to start, you can check the status with: kubectl get pods")
+	log.Info().Msgf("\nAllow some time for the agents to start, you can check the status with: kubectl get pods -n %s", namespace)
 	log.Info().Msg("---------------------------------------------------------------------\n\n\n")
 
 	return nil, nil
@@ -203,11 +200,11 @@ func getNodePortEndpoint(ctx context.Context, serviceName string, namespace stri
 	return fmt.Sprintf("%s:%d", ip, port), nil
 }
 
-func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeploymentBuildSpec, externalPort int) (*AgentValues, error) {
+func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeploymentBuildSpec) (*AgentValues, error) {
 	envVars := deploymentSpec.EnvVars
 
 	envVars["API_HOST"] = APIHost
-	envVars["API_PORT"] = strconv.Itoa(APIPort)
+	envVars["API_PORT"] = strconv.Itoa(internal.DEFAULT_API_PORT)
 	envVars["AGENT_ID"] = deploymentSpec.AgentID
 
 	secretEnvVars := make(map[string]string, 10)
@@ -235,8 +232,8 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 		Env:          convertEnvVars(envVars),
 		SecretEnvs:   convertEnvVars(secretEnvVars),
 		VolumePath:   "/opt/storage",
-		ExternalPort: externalPort, //ServerPort,
-		InternalPort: APIPort,      //APIPort,
+		ExternalPort: deploymentSpec.Port,
+		InternalPort: internal.DEFAULT_API_PORT,
 		Service: internal.Service{
 			Type:        serviceConfig.Type,
 			Labels:      serviceConfig.Labels,
@@ -244,9 +241,13 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 		},
 		StatefulSet: internal.StatefulSet{
 			Replicas:       stset.Replicas,
+			Resources:      stset.Resources,
 			Labels:         stset.Labels,
 			Annotations:    stset.Annotations,
 			PodAnnotations: podAnnotations,
+			NodeSelector:   stset.NodeSelector,
+			Affinity:       stset.Affinity,
+			Tolerations:    stset.Tolerations,
 		},
 	}
 
@@ -283,4 +284,12 @@ func convertEnvVars(envVars map[string]string) []EnvVar {
 		})
 	}
 	return result
+}
+
+func getK8sNamespace() string {
+	namespace := "default"
+	if ns := os.Getenv("WFSM_K8S_NAMESPACE"); ns != "" {
+		namespace = ns
+	}
+	return namespace
 }

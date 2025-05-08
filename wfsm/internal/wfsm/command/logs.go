@@ -58,7 +58,7 @@ func runLogs(ctx context.Context, agentDeploymentName string) error {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Logger()
 	zerolog.DefaultContextLogger = &logger
 
-	hostStorageFolder, err := getHostStorage()
+	hostStorageFolder, err := getHostStorageFolder(agentDeploymentName)
 	if err != nil {
 		return err
 	}

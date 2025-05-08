@@ -21,11 +21,13 @@ func calculateHash(path string, baseImage string) string {
 			return err
 		}
 
-		// If it's a file, get its last modified time
+		// If it's a file, get its size
 		if !info.IsDir() {
-			modTime := info.Size()
-			// Convert the modification time to bytes and add it to the hash
-			binary.Write(hasher, binary.LittleEndian, modTime)
+			fileSize := info.Size()
+			// covert int64 to byte[]
+			fileSizeBytes := make([]byte, 8)
+			binary.LittleEndian.PutUint64(fileSizeBytes, uint64(fileSize))
+			hasher.Write(fileSizeBytes)
 		}
 
 		return nil
@@ -36,7 +38,7 @@ func calculateHash(path string, baseImage string) string {
 		return ""
 	}
 
-	binary.Write(hasher, binary.LittleEndian, baseImage)
+	hasher.Write([]byte(baseImage))
 
 	// Get the final hash sum
 	hashSum := hasher.Sum(nil)

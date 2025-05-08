@@ -19,6 +19,7 @@ func TestDeploy_DryRun_GeneratesExpectedOutput(t *testing.T) {
 			AgentSpec: internal.AgentSpec{
 				AgentID: "1141b40c-8278-495f-9d0a-680d64573bae",
 				ApiKey:  "aa15dbbe-e9c7-4d05-a750-464e7c8bfed1",
+				Port:    internal.DEFAULT_API_PORT,
 				EnvVars: map[string]string{
 					"AZURE_OPENAI_API_KEY":  "xxxxxxx",
 					"AZURE_OPENAI_ENDPOINT": "https://smith-project-agents.openai.azure.com",
@@ -44,6 +45,7 @@ func TestDeploy_DryRun_GeneratesExpectedOutput(t *testing.T) {
 			AgentSpec: internal.AgentSpec{
 				AgentID: "7f1d1e05-64c1-4a13-ac78-f470a1fc2b5f",
 				ApiKey:  "76653017-d5b1-4f8f-b752-6392ee93dc8f",
+				Port:    internal.DEFAULT_API_PORT,
 				EnvVars: map[string]string{
 					"AZURE_OPENAI_API_KEY":  "xxxxxxx",
 					"AZURE_OPENAI_ENDPOINT": "https://smith-project-agents.openai.azure.com",
@@ -73,7 +75,7 @@ func TestDeploy_DryRun_GeneratesExpectedOutput(t *testing.T) {
 	dryRun := true
 
 	// Act
-	output, err := runner.Deploy(context.Background(), mainAgentName, agentDeploymentSpecs, dependencies, 0, dryRun)
+	output, err := runner.Deploy(context.Background(), mainAgentName, agentDeploymentSpecs, dependencies, dryRun)
 
 	// Assert
 	assert.NoError(t, err)

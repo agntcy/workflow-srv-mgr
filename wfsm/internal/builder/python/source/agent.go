@@ -23,7 +23,7 @@ func GetAgentSource(deployment *manifests.SourceCodeDeployment, manifestPath str
 	}
 	switch parsedURL.Scheme {
 	case "http", "https", "":
-		if parsedURL.Host == "github.com" {
+		if parsedURL.Host == "github.com" || strings.HasPrefix(deployment.Url, "github.com") {
 			return &GoGetSource{
 				URL: "git::" + deployment.Url,
 			}, nil

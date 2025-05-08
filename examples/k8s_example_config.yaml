@@ -1,0 +1,65 @@
+config:
+  mailcomposer:
+    apiKey: 42787d0d-b5c2-4f80-ad59-1b7bb97e7ca7
+    id: 20a82791-0179-4b52-8fe1-4f7dbf688bb4
+    envVars:
+      "AZURE_OPENAI_API_KEY": "from_config"
+    envVarsFromSecret: "your_secret_name"
+    k8s:
+      service:
+        type: NodePort
+        labels:
+          app: email_reviewer_1    
+      statefulset:
+        replicas: 1
+        labels:
+          app: mailcomposer
+        annotations:
+          app: mailcomposer
+        podAnnotations:
+          app: mailcomposer
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "250m"
+            memory: "128Mi"    
+        nodeSelector:
+          disktype: ssd
+          region: us-west-1
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/e2e-az-name
+                      operator: In
+                      values:
+                        - e2e-az1
+                        - e2e-az2
+        tolerations:
+          - key: "key1"
+            operator: "Equal"
+            value: "value1"
+            effect: "NoSchedule"
+          - key: "key2"
+            operator: "Exists"
+            effect: "NoExecute"                
+            service:
+              type: NodePort
+              labels:
+                app: mailcomposer
+              annotations:
+                app: mailcomposer
+
+  email_reviewer_1:
+    apiKey: ef570bea-1c99-4ff6-8bb1-ac2cf789183f
+    id: 7f6b6820-6142-4a0e-976e-c1197a9d9b2c
+    envVars:
+      "AZURE_OPENAI_API_KEY": "from_config"
+    k8s:      
+      service:
+        type: ClusterIP
+        labels:
+          app: email_reviewer_1

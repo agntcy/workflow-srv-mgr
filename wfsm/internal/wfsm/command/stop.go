@@ -63,7 +63,7 @@ func runStop(ctx context.Context, agentDeploymentName string, platform string) e
 	// stop deployment of agent(s)
 
 	// run deployment of agent(s)
-	hostStorageFolder, err := getHostStorage()
+	hostStorageFolder, err := getHostStorageFolder(agentDeploymentName)
 	if err != nil {
 		return err
 	}
