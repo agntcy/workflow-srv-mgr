@@ -22,9 +22,9 @@ var _ MappedNullable = &EnvVarValues{}
 // EnvVarValues Describes the values of the environment variables for a specific agent and it's dependencies
 type EnvVarValues struct {
 	// name of the agent dependency these environment variables are for
-	Name         *string           `json:"name,omitempty"`
-	Values       map[string]string `json:"values,omitempty"`
-	Dependencies []EnvVarValues    `json:"dependencies,omitempty"`
+	Name    *string           `json:"name,omitempty"`
+	Values  map[string]string `json:"values,omitempty"`
+	EnvDeps []EnvVarValues    `json:"env_deps,omitempty"`
 }
 
 // NewEnvVarValues instantiates a new EnvVarValues object
@@ -109,36 +109,36 @@ func (o *EnvVarValues) SetValues(v map[string]string) {
 	o.Values = v
 }
 
-// GetDependencies returns the Dependencies field value if set, zero value otherwise.
-func (o *EnvVarValues) GetDependencies() []EnvVarValues {
-	if o == nil || IsNil(o.Dependencies) {
+// GetEnvDeps returns the EnvDeps field value if set, zero value otherwise.
+func (o *EnvVarValues) GetEnvDeps() []EnvVarValues {
+	if o == nil || IsNil(o.EnvDeps) {
 		var ret []EnvVarValues
 		return ret
 	}
-	return o.Dependencies
+	return o.EnvDeps
 }
 
-// GetDependenciesOk returns a tuple with the Dependencies field value if set, nil otherwise
+// GetEnvDepsOk returns a tuple with the EnvDeps field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *EnvVarValues) GetDependenciesOk() ([]EnvVarValues, bool) {
-	if o == nil || IsNil(o.Dependencies) {
+func (o *EnvVarValues) GetEnvDepsOk() ([]EnvVarValues, bool) {
+	if o == nil || IsNil(o.EnvDeps) {
 		return nil, false
 	}
-	return o.Dependencies, true
+	return o.EnvDeps, true
 }
 
-// HasDependencies returns a boolean if a field has been set.
-func (o *EnvVarValues) HasDependencies() bool {
-	if o != nil && !IsNil(o.Dependencies) {
+// HasEnvDeps returns a boolean if a field has been set.
+func (o *EnvVarValues) HasEnvDeps() bool {
+	if o != nil && !IsNil(o.EnvDeps) {
 		return true
 	}
 
 	return false
 }
 
-// SetDependencies gets a reference to the given []EnvVarValues and assigns it to the Dependencies field.
-func (o *EnvVarValues) SetDependencies(v []EnvVarValues) {
-	o.Dependencies = v
+// SetEnvDeps gets a reference to the given []EnvVarValues and assigns it to the EnvDeps field.
+func (o *EnvVarValues) SetEnvDeps(v []EnvVarValues) {
+	o.EnvDeps = v
 }
 
 func (o EnvVarValues) MarshalJSON() ([]byte, error) {
@@ -157,8 +157,8 @@ func (o EnvVarValues) ToMap() (map[string]interface{}, error) {
 	if o.Values != nil {
 		toSerialize["values"] = o.Values
 	}
-	if !IsNil(o.Dependencies) {
-		toSerialize["dependencies"] = o.Dependencies
+	if !IsNil(o.EnvDeps) {
+		toSerialize["env_deps"] = o.EnvDeps
 	}
 	return toSerialize, nil
 }

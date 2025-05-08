@@ -22,8 +22,8 @@ var _ MappedNullable = &AgentDependency{}
 // AgentDependency Reference to an Agent Record in the Agent Directory, it includes name, version and a locator.
 type AgentDependency struct {
 	// Name of the agent dependency
-	Name string          `json:"name"`
-	Ref  AgentReference1 `json:"ref"`
+	Name string         `json:"name"`
+	Ref  AgentReference `json:"ref"`
 	// Selected deployment option for this agent.
 	DeploymentOption *string `json:"deployment_option,omitempty"`
 	// Environment variable values to be set for this agent.
@@ -34,7 +34,7 @@ type AgentDependency struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAgentDependency(name string, ref AgentReference1) *AgentDependency {
+func NewAgentDependency(name string, ref AgentReference) *AgentDependency {
 	this := AgentDependency{}
 	this.Name = name
 	this.Ref = ref
@@ -74,9 +74,9 @@ func (o *AgentDependency) SetName(v string) {
 }
 
 // GetRef returns the Ref field value
-func (o *AgentDependency) GetRef() AgentReference1 {
+func (o *AgentDependency) GetRef() AgentReference {
 	if o == nil {
-		var ret AgentReference1
+		var ret AgentReference
 		return ret
 	}
 
@@ -85,7 +85,7 @@ func (o *AgentDependency) GetRef() AgentReference1 {
 
 // GetRefOk returns a tuple with the Ref field value
 // and a boolean to check if the value has been set.
-func (o *AgentDependency) GetRefOk() (*AgentReference1, bool) {
+func (o *AgentDependency) GetRefOk() (*AgentReference, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -93,7 +93,7 @@ func (o *AgentDependency) GetRefOk() (*AgentReference1, bool) {
 }
 
 // SetRef sets field value
-func (o *AgentDependency) SetRef(v AgentReference1) {
+func (o *AgentDependency) SetRef(v AgentReference) {
 	o.Ref = v
 }
 
