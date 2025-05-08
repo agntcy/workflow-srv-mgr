@@ -12,11 +12,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/rs/zerolog"
+
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/util"
 	"github.com/cisco-eti/wfsm/internal/wfsm/config"
 	"github.com/cisco-eti/wfsm/manifests"
-	"github.com/rs/zerolog"
 )
 
 type AgentSpecBuilder struct {
@@ -71,6 +72,10 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 		envVarValues = &manifests.EnvVarValues{
 			Values: make(map[string]string),
 		}
+	}
+
+	if envVarValues.Values == nil {
+		envVarValues.Values = make(map[string]string)
 	}
 
 	agentSpec := internal.AgentSpec{
