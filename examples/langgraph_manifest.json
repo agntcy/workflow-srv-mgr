@@ -1,121 +1,230 @@
 {
-  "metadata": {
-    "ref": {
-      "name": "mailcomposer",
-      "version": "0.0.1"
-    },
-    "description": "Offer a chat interface to compose an email for a marketing campaign. Final output is the email that could be used for the campaign"
-  },
-  "specs": {
-    "input": {
-      "type": "object",
-      "properties": {
-        "messages": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
+  "authors": [
+    "Cisco Systems"
+  ],
+  "extensions": [
+    {
+      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "data": {
+        "deployment": {
+          "dependencies": [],
+          "deployment_options": [
+            {
+              "type": "source_code",
+              "name": "src",
+              "url": "github.com/agntcy/agentic-apps.git//mailcomposer",
+              "framework_config": {
+                "framework_type": "langgraph",
+                "graph": "mailcomposer.mailcomposer:graph"
+              }
+            },
+            {
+              "type": "docker",
+              "name": "docker",
+              "image": "agntcy/wfsm-mailcomposer:<YOUR_TAG>"
+            }
+          ],
+          "env_vars": [
+            {
+              "desc": "Environment variable for agentA",
+              "name": "AZURE_OPENAI_MODEL",
+              "required": true,
+              "defaultValue": "gpt-4o-mini"
+            },
+            {
+              "desc": "Azure OpenAI API Key",
+              "name": "AZURE_OPENAI_API_KEY",
+              "required": true
+            },
+            {
+              "desc": "Azure OpenAI Endpoint",
+              "name": "AZURE_OPENAI_ENDPOINT",
+              "required": true
+            },
+            {
+              "desc": "OpenAI API Version",
+              "name": "OPENAI_API_VERSION",
+              "required": true,
+              "defaultValue": "2024-07-01-preview"
+            }
+          ]
+        },
+        "specs": {
+          "capabilities": {
+            "threads": false,
+            "interrupts": false,
+            "callbacks": false
+          },
+          "input": {
+            "$defs": {
+              "Message": {
+                "properties": {
+                  "type": {
+                    "$ref": "#/$defs/Type",
+                    "description": "indicates the originator of the message, a human or an assistant"
+                  },
+                  "content": {
+                    "description": "the content of the message",
+                    "title": "Content",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "content"
+                ],
+                "title": "Message",
+                "type": "object"
+              },
+              "Type": {
                 "enum": [
                   "human",
-                  "assistant"
-                ]
-              },
-              "content": {
+                  "assistant",
+                  "ai"
+                ],
+                "title": "Type",
                 "type": "string"
               }
-            }
-          }
-        },
-        "is_completed": {
-          "type": "boolean"
-        }
-      }
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "messages": {
-          "type": "array",
-          "items": {
-            "type": "object",
+            },
             "properties": {
-              "type": {
-                "type": "string",
+              "messages": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "$ref": "#/$defs/Message"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Messages"
+              },
+              "is_completed": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Is Completed"
+              }
+            },
+            "title": "AgentState",
+            "type": "object"
+          },
+          "output": {
+            "$defs": {
+              "Message": {
+                "properties": {
+                  "type": {
+                    "$ref": "#/$defs/Type",
+                    "description": "indicates the originator of the message, a human or an assistant"
+                  },
+                  "content": {
+                    "description": "the content of the message",
+                    "title": "Content",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "content"
+                ],
+                "title": "Message",
+                "type": "object"
+              },
+              "Type": {
                 "enum": [
                   "human",
-                  "assistant"
-                ]
+                  "assistant",
+                  "ai"
+                ],
+                "title": "Type",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "messages": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "$ref": "#/$defs/Message"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Messages"
+              },
+              "is_completed": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Is Completed"
               },
               "final_email": {
-                "type": "string"
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Final email produced by the mail composer, in html format",
+                "title": "Final Email"
               }
-            }
+            },
+            "title": "OutputState",
+            "type": "object"
+          },
+          "config": {
+            "properties": {
+              "test": {
+                "title": "Test",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "test"
+            ],
+            "title": "ConfigSchema",
+            "type": "object"
           }
-        },
-        "is_completed": {
-          "type": "boolean"
-        }
-      }
-    },
-    "config": {
-      "type": "object",
-      "description": "The configuration of the agent",
-      "properties": {
-        "test": {
-          "type": "boolean"
-        }
-      }
-    },
-    "capabilities": {
-      "threads": false,
-      "interrupts": false,
-      "callbacks": false
-    },
-    "interrupts": []
-  },
-  "deployment": {
-    "dependencies": [],
-    "deployment_options": [
-      {
-        "type": "source_code",
-        "name": "src",
-        "url": "github.com/cisco-eti/agent-connect-protocol.git//examples/agents/mailcomposer",
-        "framework_config": {
-          "framework_type": "langgraph",
-          "graph": "mailcomposer.mailcomposer:graph"
         }
       },
-      {
-        "type": "docker",
-        "name": "docker",
-        "image": "agntcy/wfsm-mailcomposer:<YOUR_TAG>"
-      }       
-    ],
-    "env_vars": [
-      {
-        "desc": "Environment variable for agentA",
-        "name": "AZURE_OPENAI_MODEL",
-        "required": true,
-        "defaultValue": "gpt-4o-mini"        
+      "version": "v0.2.2"
+    }
+  ],
+  "locators": [
+    {
+      "source": {
+        "url": "github.com/agntcy/agentic-apps.git//mailcomposer"
       },
-      {
-        "desc": "Azure OpenAI API Key",
-        "name": "AZURE_OPENAI_API_KEY",
-        "required": true
-      },
-      {
-        "desc": "Azure OpenAI Endpoint",
-        "name": "AZURE_OPENAI_ENDPOINT",
-        "required": true      
-      },
-      {
-        "desc": "OpenAI API Version",
-        "name": "OPENAI_API_VERSION",
-        "required": true,
-        "defaultValue": "2024-07-01-preview"
-      } 
-    ]    
-  }
+      "type": "package-source-code"
+    }
+  ],
+  "name": "org.agntcy.mailcomposer",
+  "skills": [
+    {
+      "class_uid": "10201"
+    }
+  ],
+  "version": "0.0.1"
 }
