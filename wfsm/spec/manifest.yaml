@@ -79,14 +79,13 @@ components:
           description: >-
             Reference to the agent in the agent directory. It includes the
             version and the locator.
-          $ref: './acp-spec/openapi.yaml#/components/schemas/AgentRef'
+          $ref: './acp-spec/openapi.json#/components/schemas/AgentRef'
         deployment_option:
           description: >-
             Selected deployment option for this agent. 
           title: Deployment Option
           type: string
         env_var_values:
-          title: Environment Variable Values
           description: Environment variable values to be set for this agent.
           $ref: '#/components/schemas/EnvVarValues'
       required:
@@ -193,6 +192,10 @@ components:
             - llamaindex
         path:
           type: string
+        interrupts:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/InterruptConfig'
       required:
         - framework_type
         - path
@@ -267,6 +270,18 @@ components:
       required:
         - type
         - url
+    InterruptConfig:
+      type: object
+      properties:
+        interrupt_ref:
+          type: string
+          example: my_app.interrupts:InterruptEvent
+        resume_ref:
+          type: string
+          example: my_app.interrupts:ResponseEvent
+      required:
+        - interrupt_ref
+        - resume_ref
     SecurityScheme:
       type: object
       description: >-
