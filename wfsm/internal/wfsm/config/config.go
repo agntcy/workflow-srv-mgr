@@ -91,7 +91,7 @@ func GenerateDefaultConfig(agentSpecs map[string]internal.AgentSpec, platform st
 			if agentConfig.Port == 0 {
 				agentConfig.Port = internal.DEFAULT_API_PORT
 			}
-			agentConfig.K8sConfig = internal.K8sConfig{
+			agentConfig.K8sConfig = &internal.K8sConfig{
 				StatefulSet: internal.StatefulSet{
 					Replicas: 1,
 				},
@@ -173,15 +173,10 @@ func mergeK8sConfigs(agentValue AgentConfig, userValue AgentConfig) AgentConfig 
 		agentValue.K8sConfig.EnvVarsFromSecret = userValue.K8sConfig.EnvVarsFromSecret
 	}
 	// Merge K8sConfig.StatefulSet
-	for labelKey, labelValue := range userValue.K8sConfig.StatefulSet.Labels {
-		agentValue.K8sConfig.StatefulSet.Labels[labelKey] = labelValue
-	}
-	for annotationKey, annotationValue := range userValue.K8sConfig.StatefulSet.Annotations {
-		agentValue.K8sConfig.StatefulSet.Annotations[annotationKey] = annotationValue
-	}
-	for podAnnotationKey, podAnnotationValue := range userValue.K8sConfig.StatefulSet.PodAnnotations {
-		agentValue.K8sConfig.StatefulSet.PodAnnotations[podAnnotationKey] = podAnnotationValue
-	}
+	agentValue.K8sConfig.StatefulSet.Labels = util.MergeMaps(agentValue.K8sConfig.StatefulSet.Labels, userValue.K8sConfig.StatefulSet.Labels)
+	agentValue.K8sConfig.StatefulSet.Annotations = util.MergeMaps(agentValue.K8sConfig.StatefulSet.Annotations, userValue.K8sConfig.StatefulSet.Annotations)
+	agentValue.K8sConfig.StatefulSet.PodAnnotations = util.MergeMaps(agentValue.K8sConfig.StatefulSet.PodAnnotations, userValue.K8sConfig.StatefulSet.PodAnnotations)
+
 	if userValue.K8sConfig.StatefulSet.Replicas != 0 {
 		agentValue.K8sConfig.StatefulSet.Replicas = userValue.K8sConfig.StatefulSet.Replicas
 	}
@@ -195,12 +190,8 @@ func mergeK8sConfigs(agentValue AgentConfig, userValue AgentConfig) AgentConfig 
 	agentValue.K8sConfig.StatefulSet.Resources = userValue.K8sConfig.StatefulSet.Resources
 
 	// Merge K8sConfig.Service
-	for serviceLabelKey, serviceLabelValue := range userValue.K8sConfig.Service.Labels {
-		agentValue.K8sConfig.Service.Labels[serviceLabelKey] = serviceLabelValue
-	}
-	for serviceAnnotationKey, serviceAnnotationValue := range userValue.K8sConfig.Service.Annotations {
-		agentValue.K8sConfig.Service.Annotations[serviceAnnotationKey] = serviceAnnotationValue
-	}
+	agentValue.K8sConfig.Service.Labels = util.MergeMaps(agentValue.K8sConfig.Service.Labels, userValue.K8sConfig.Service.Labels)
+	agentValue.K8sConfig.Service.Annotations = util.MergeMaps(agentValue.K8sConfig.Service.Annotations, userValue.K8sConfig.Service.Annotations)
 	if userValue.K8sConfig.Service.Type != "" {
 		agentValue.K8sConfig.Service.Type = userValue.K8sConfig.Service.Type
 	}

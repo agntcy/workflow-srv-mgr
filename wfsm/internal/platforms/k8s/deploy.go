@@ -244,6 +244,9 @@ func (r *runner) createAgentValuesConfig(deploymentSpec internal.AgentDeployment
 			Labels:         stset.Labels,
 			Annotations:    stset.Annotations,
 			PodAnnotations: podAnnotations,
+			NodeSelector:   stset.NodeSelector,
+			Affinity:       stset.Affinity,
+			Tolerations:    stset.Tolerations,
 		},
 	}
 

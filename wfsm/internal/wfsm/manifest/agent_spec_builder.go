@@ -141,7 +141,9 @@ func (a *AgentSpecBuilder) LoadFromConfig(ctx context.Context, configFile config
 		agentSpec.AgentID = agentConfig.ID
 		agentSpec.ApiKey = agentConfig.APIKey
 		agentSpec.Port = agentConfig.Port
-		agentSpec.K8sConfig = agentConfig.K8sConfig
+		if agentConfig.K8sConfig != nil {
+			agentSpec.K8sConfig = *agentConfig.K8sConfig
+		}
 
 		// configure env vars in order or precedence
 		localEnvVars := getLocalEnvs()
@@ -156,7 +158,7 @@ func (a *AgentSpecBuilder) LoadFromConfig(ctx context.Context, configFile config
 		setPrefixedEnvVars(agentSpec, envFile)
 
 		// set env vars from config
-		agentSpec.EnvVars = mergeMaps(agentSpec.EnvVars, agentConfig.EnvVars)
+		agentSpec.EnvVars = util.MergeMaps(agentSpec.EnvVars, agentConfig.EnvVars)
 
 		setDefaultsForEnvVars(ctx, agentSpec)
 
@@ -249,16 +251,6 @@ func validateAgentEnvVars(ctx context.Context, inputSpec internal.AgentSpec) err
 	return nil
 }
 
-func mergeMaps(dest map[string]string, src map[string]string) map[string]string {
-	if dest == nil {
-		dest = make(map[string]string)
-	}
-	for key, value := range src {
-		dest[key] = value
-	}
-	return dest
-}
-
 func mergeEnvVarValues(dest *manifests.EnvVarValues, src manifests.EnvVarValues, dependencyName string) *manifests.EnvVarValues {
 	if dest == nil {
 		dest = &manifests.EnvVarValues{}
@@ -267,7 +259,7 @@ func mergeEnvVarValues(dest *manifests.EnvVarValues, src manifests.EnvVarValues,
 	for _, depEnv := range src.Dependencies {
 		if depEnv.GetName() == dependencyName {
 			// merge env var values for dependencyName
-			dest.Values = mergeMaps(dest.Values, depEnv.Values)
+			dest.Values = util.MergeMaps(dest.Values, depEnv.Values)
 			// merge env vars of dependencies of dependencyName
 			dest.Dependencies = mergeDepEnvVarValues(dest.Dependencies, depEnv.Dependencies)
 		}
