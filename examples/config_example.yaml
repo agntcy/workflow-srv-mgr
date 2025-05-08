@@ -1,0 +1,13 @@
+config:
+  mailcomposer:
+    port: 59999
+    apiKey: 42787d0d-b5c2-4f80-ad59-1b7bb97e7ca7
+    id: 20a82791-0179-4b52-8fe1-4f7dbf688bb4
+    envVars:
+      "AZURE_OPENAI_API_KEY": "from_config"
+  email_reviewer_1:
+    apiKey: ef570bea-1c99-4ff6-8bb1-ac2cf789183f
+    id: 7f6b6820-6142-4a0e-976e-c1197a9d9b2c
+    envVars:
+      "AZURE_OPENAI_API_KEY": "from_config"    
+
