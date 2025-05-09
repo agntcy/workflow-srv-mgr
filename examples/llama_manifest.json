@@ -116,7 +116,7 @@
               "name": "AZURE_OPENAI_ENDPOINT"
             }
           ],
-          "dependencies": []
+          "agent_deps": []
         }
       },
       "version": "v0.2.2"
