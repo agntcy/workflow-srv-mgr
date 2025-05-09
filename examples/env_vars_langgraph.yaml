@@ -1,0 +1,4 @@
+values:
+  AZURE_OPENAI_API_KEY: xxxxxxx
+  AZURE_OPENAI_ENDPOINT: url
+  OPENAI_API_VERSION: 2024-07-01-preview
