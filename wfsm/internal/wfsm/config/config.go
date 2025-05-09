@@ -169,6 +169,9 @@ func MergeConfigs(agentConfig, userConfig ConfigFile, platform string) ConfigFil
 }
 
 func mergeK8sConfigs(agentValue AgentConfig, userValue AgentConfig) AgentConfig {
+	if userValue.K8sConfig == nil {
+		userValue.K8sConfig = &internal.K8sConfig{}
+	}
 	if userValue.K8sConfig.EnvVarsFromSecret != "" {
 		agentValue.K8sConfig.EnvVarsFromSecret = userValue.K8sConfig.EnvVarsFromSecret
 	}
