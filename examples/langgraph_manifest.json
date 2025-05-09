@@ -7,7 +7,7 @@
       "name": "oasf.agntcy.org/feature/runtime/manifest",
       "data": {
         "deployment": {
-          "dependencies": [],
+          "agent_deps": [],
           "deployment_options": [
             {
               "type": "source_code",
