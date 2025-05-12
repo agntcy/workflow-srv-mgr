@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-: ${WFSM_TAG:="0.1.2"}
+: ${WFSM_TAG:="v0.2.1"}
 : ${WFSM_ARCH:=$(arch)}
 : ${WFSM_OS:=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')}
 : ${WFSM_TARGET:=${HOME}/.wfsm/bin}
 
-WFSM_ARCHIVE_URL="https://github.com/agntcy/workflow-srv-mgr/releases/download/v${WFSM_TAG}/wfsm${WFSM_TAG}_${WFSM_OS}_${WFSM_ARCH}.tar.gz"
+WFSM_ARCHIVE_URL="https://github.com/agntcy/workflow-srv-mgr/releases/download/${WFSM_TAG}/wfsm${WFSM_TAG:1}_${WFSM_OS}_${WFSM_ARCH}.tar.gz"
 
 echo "Installing the Workflow Server Manager tool:"
 echo ""
 echo "OS:" "$WFSM_OS"
 echo "ARCH:" "$WFSM_ARCH"
-echo "AG:" "$WFSM_TAG"
+echo "TAG:" "$WFSM_TAG"
 echo "TARGET:" "$WFSM_TARGET"
 echo "ARCHIVE_URL:" "$WFSM_ARCHIVE_URL"
 echo ""
