@@ -8,7 +8,7 @@ export TEST_PKGS=
 
 GEN_DIR = manifests
 
-OPENAPI_DESCRIPTOR = spec/manifest.yaml
+OPENAPI_DESCRIPTOR = spec/manifest.json
 OPENAPI_TEMPLATES = spec/templates
 
 OPENAPI_GENERATOR_VERSION = v7.0.1
