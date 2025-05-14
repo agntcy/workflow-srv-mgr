@@ -36,13 +36,14 @@ func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (in
 	log.Info().Msgf("building image for agent: %s", inputSpec.DeploymentName)
 	deploymentSpec := internal.AgentDeploymentBuildSpec{AgentSpec: inputSpec}
 
-	deployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption]
+	deploymentManifest := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deployment := deploymentManifest.DeploymentOptions[inputSpec.SelectedDeploymentOption]
 	agSrc, err := source.GetAgentSource(deployment.SourceCodeDeployment, inputSpec.ManifestPath)
 	if err != nil {
 		return deploymentSpec, fmt.Errorf("failed to get agent source: %v", err)
 	}
 
-	imageName := strings.Join([]string{AgentImage, inputSpec.Manifest.Metadata.Ref.Name}, "-")
+	imageName := strings.Join([]string{AgentImage, inputSpec.Manifest.Name}, "-")
 	imgNameWithTag, err := EnsureContainerImage(ctx, imageName, agSrc, inputSpec, b.deleteBuildFolders, b.forceBuild, b.baseImage)
 	if err != nil {
 		return deploymentSpec, err

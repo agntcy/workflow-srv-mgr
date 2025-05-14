@@ -17,7 +17,8 @@ func NewContainerAgentBuilder() internal.AgentDeploymentBuilder {
 }
 
 func (b *cbuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
-	dockerDeployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].DockerDeployment
+	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	dockerDeployment := deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].DockerDeployment
 	return internal.AgentDeploymentBuildSpec{
 		AgentSpec:   inputSpec,
 		Image:       dockerDeployment.Image,

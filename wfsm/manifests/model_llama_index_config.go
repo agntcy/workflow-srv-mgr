@@ -21,8 +21,9 @@ var _ MappedNullable = &LlamaIndexConfig{}
 
 // LlamaIndexConfig Describes llamaindex based agent deployment config
 type LlamaIndexConfig struct {
-	FrameworkType string `json:"framework_type"`
-	Path          string `json:"path"`
+	FrameworkType string                     `json:"framework_type"`
+	Path          string                     `json:"path"`
+	Interrupts    map[string]InterruptConfig `json:"interrupts,omitempty"`
 }
 
 // NewLlamaIndexConfig instantiates a new LlamaIndexConfig object
@@ -92,6 +93,39 @@ func (o *LlamaIndexConfig) SetPath(v string) {
 	o.Path = v
 }
 
+// GetInterrupts returns the Interrupts field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *LlamaIndexConfig) GetInterrupts() map[string]InterruptConfig {
+	if o == nil {
+		var ret map[string]InterruptConfig
+		return ret
+	}
+	return o.Interrupts
+}
+
+// GetInterruptsOk returns a tuple with the Interrupts field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *LlamaIndexConfig) GetInterruptsOk() (*map[string]InterruptConfig, bool) {
+	if o == nil || IsNil(o.Interrupts) {
+		return nil, false
+	}
+	return &o.Interrupts, true
+}
+
+// HasInterrupts returns a boolean if a field has been set.
+func (o *LlamaIndexConfig) HasInterrupts() bool {
+	if o != nil && IsNil(o.Interrupts) {
+		return true
+	}
+
+	return false
+}
+
+// SetInterrupts gets a reference to the given map[string]InterruptConfig and assigns it to the Interrupts field.
+func (o *LlamaIndexConfig) SetInterrupts(v map[string]InterruptConfig) {
+	o.Interrupts = v
+}
+
 func (o LlamaIndexConfig) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -104,6 +138,9 @@ func (o LlamaIndexConfig) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	toSerialize["framework_type"] = o.FrameworkType
 	toSerialize["path"] = o.Path
+	if o.Interrupts != nil {
+		toSerialize["interrupts"] = o.Interrupts
+	}
 	return toSerialize, nil
 }
 

@@ -25,6 +25,7 @@ type AgentSpec struct {
 	K8sConfig                K8sConfig
 	ManifestPath             string
 }
+
 type K8sConfig struct {
 	EnvVarsFromSecret string      `yaml:"envVarsFromSecret"`
 	StatefulSet       StatefulSet `yaml:"statefulset"`

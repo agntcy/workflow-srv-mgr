@@ -208,7 +208,8 @@ func buildImage(ctx context.Context, client dockerclient.ImageAPIClient, img str
 		"BASE_IMAGE": &baseImage,
 	}
 
-	srcDeployment := inputSpec.Manifest.Deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].SourceCodeDeployment
+	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	srcDeployment := deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].SourceCodeDeployment
 	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
 
 		buildArgs["AGENT_FRAMEWORK"] = &srcDeployment.FrameworkConfig.LangGraphConfig.FrameworkType
