@@ -6,6 +6,13 @@
 
 WFSM_ARCHIVE_URL="https://github.com/agntcy/workflow-srv-mgr/releases/download/${WFSM_TAG}/wfsm${WFSM_TAG:1}_${WFSM_OS}_${WFSM_ARCH}.tar.gz"
 
+
+# Map x86_64 to amd64 for Linux
+if [[ "$WFSM_ARCH" == "x86_64" && "$WFSM_OS" == "linux" ]]; then
+  WFSM_ARCH="amd64"
+fi
+
+
 echo "Installing the Workflow Server Manager tool:"
 echo ""
 echo "OS:" "$WFSM_OS"
