@@ -40,4 +40,4 @@ curl -s -S -L "$WFSM_ARCHIVE_URL" | tar -xvzf - -C "$WFSM_TARGET"
 # Make the binary executable
 chmod +x "$WFSM_TARGET/wfsm"
 
-Echo "Installation complete. The 'wfsm' binary is located at $WFSM_TARGET/wfsm"
+echo "Installation complete. The 'wfsm' binary is located at $WFSM_TARGET/wfsm"
