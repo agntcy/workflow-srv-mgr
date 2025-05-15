@@ -35,7 +35,7 @@ if ! curl --head --fail --output /dev/null "$WFSM_ARCHIVE_URL" 2> /dev/null;
 fi
 
 # Download and extract the archive
-curl -s -S -L "$WFSM_ARCHIVE_URL" | tar -xf - -C "$WFSM_TARGET"
+curl -s -S -L "$WFSM_ARCHIVE_URL" | tar -xvzf - -C "$WFSM_TARGET"
 
 # Make the binary executable
 chmod +x "$WFSM_TARGET/wfsm"
