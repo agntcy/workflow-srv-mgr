@@ -189,7 +189,7 @@ func processOASFManifest(directoryManifestRaw []byte) (manifests.AgentManifest, 
 	if !ok {
 		return manifests.AgentManifest{}, fmt.Errorf("failed to get the first extension from manifest: %s", err)
 	}
-	name, ok := firstExtension["name"].(string)
+	name, ok := directoryManifest["name"].(string)
 	if !ok {
 		return manifests.AgentManifest{}, fmt.Errorf("failed to get name from directroy manifest: %s", err)
 	}
