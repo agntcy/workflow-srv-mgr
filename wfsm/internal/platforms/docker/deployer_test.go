@@ -15,6 +15,7 @@ import (
 
 func TestRunner_Deploy_DryRun(t *testing.T) {
 	ctx := context.Background()
+	version := "1.0.0"
 
 	// Mock data for agent deployment specs
 	agentDeploymentSpecs := map[string]internal.AgentDeploymentBuildSpec{
@@ -28,13 +29,21 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 					"ENV_VAR_AGENT_A": "valueA",
 				},
 				Manifest: manifests.AgentManifest{
-					Deployment: &manifests.AgentDeployment{
-						DeploymentOptions: []manifests.AgentDeploymentDeploymentOptionsInner{
-							{
-								SourceCodeDeployment: &manifests.SourceCodeDeployment{
-									FrameworkConfig: manifests.SourceCodeDeploymentFrameworkConfig{
-										LangGraphConfig: &manifests.LangGraphConfig{
-											Graph: "agentA.graph",
+					Extensions: []manifests.Manifest{
+						{
+							Name:    "oasf.agntcy.org/feature/runtime/manifest",
+							Version: &version,
+							Data: manifests.DeploymentManifest{
+								Deployment: manifests.AgentDeployment{
+									DeploymentOptions: []manifests.AgentDeploymentDeploymentOptionsInner{
+										{
+											SourceCodeDeployment: &manifests.SourceCodeDeployment{
+												FrameworkConfig: manifests.SourceCodeDeploymentFrameworkConfig{
+													LangGraphConfig: &manifests.LangGraphConfig{
+														Graph: "agentA.graph",
+													},
+												},
+											},
 										},
 									},
 								},
@@ -55,13 +64,21 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 					"ENV_VAR_AGENT_B": "valueB",
 				},
 				Manifest: manifests.AgentManifest{
-					Deployment: &manifests.AgentDeployment{
-						DeploymentOptions: []manifests.AgentDeploymentDeploymentOptionsInner{
-							{
-								SourceCodeDeployment: &manifests.SourceCodeDeployment{
-									FrameworkConfig: manifests.SourceCodeDeploymentFrameworkConfig{
-										LangGraphConfig: &manifests.LangGraphConfig{
-											Graph: "agentB.graph",
+					Extensions: []manifests.Manifest{
+						{
+							Name:    "oasf.agntcy.org/feature/runtime/manifest",
+							Version: &version,
+							Data: manifests.DeploymentManifest{
+								Deployment: manifests.AgentDeployment{
+									DeploymentOptions: []manifests.AgentDeploymentDeploymentOptionsInner{
+										{
+											SourceCodeDeployment: &manifests.SourceCodeDeployment{
+												FrameworkConfig: manifests.SourceCodeDeploymentFrameworkConfig{
+													LangGraphConfig: &manifests.LangGraphConfig{
+														Graph: "agentB.graph",
+													},
+												},
+											},
 										},
 									},
 								},
