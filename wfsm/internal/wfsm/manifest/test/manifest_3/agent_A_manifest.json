@@ -1,88 +1,108 @@
 {
-  "metadata": {
-    "ref": {
-      "name": "agent_A",
-      "version": "1.0.0"
-    },
-    "description": "Agent A description"
-  },
-  "specs": {
-    "input": {
-      "type": "object",
-      "properties": {
-        "inputA": {
-          "type": "string"
-        }
-      }
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "outputA": {
-          "type": "string"
-        }
-      }
-    },
-    "config": {
-      "type": "object",
-      "properties": {
-        "configA": {
-          "type": "boolean"
-        }
-      }
-    },
-    "capabilities": {
-      "threads": false,
-      "interrupts": false,
-      "callbacks": false
-    },
-    "interrupts": []
-  },
-  "deployment": {
-    "dependencies": [
-      {
-        "name": "agent_B_1",
-        "ref": {
-          "name": "agent_B",
-          "version": "1.0.0",
-          "url": "agent_B_manifest.json"
-        },
-        "deployment_option": "src",
-        "env_var_values": {
-          "values": {
-            "ENV_VAR_AGENT_B_1": "env_var_value_agent_b_a1",
-            "ENV_VAR_AGENT_B_2": "env_var_value_agent_b_a2"
-          },
-          "dependencies": [
-            {
-              "name": "agent_C_1",
-              "values": {
-                "ENV_VAR_AGENT_C_1": "env_var_value_agent_c_a1",
-                "ENV_VAR_AGENT_C_2": "env_var_value_agent_c_a2"
+  "name": "agent_A",
+  "version": "1.0.0",
+  "authors": [
+    "Cisco Systems"
+  ],
+  "locators": [
+    {
+      "source": {
+        "url": "https://github.com/example/agent_A"
+      },
+      "type": "package-source-code"
+    }
+  ],
+  "skills": [
+    {
+      "class_uid": 10201
+    }
+  ],
+  "extensions": [
+    {
+      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "version": "v1.0.0",
+      "data": {
+        "acp": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "inputA": {
+                "type": "string"
               }
+            }
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "outputA": {
+                "type": "string"
+              }
+            }
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "configA": {
+                "type": "boolean"
+              }
+            }
+          },
+          "capabilities": {
+            "threads": false,
+            "interrupts": false,
+            "callbacks": false
+          },
+          "interrupts": []
+        },
+        "deployment": {
+          "agent_deps": [
+            {
+              "name": "agent_B_1",
+              "ref": {
+                "name": "agent_B",
+                "version": "1.0.0",
+                "url": "agent_B_manifest.json"
+              },
+              "deployment_option": "src",
+              "env_var_values": {
+                "values": {
+                  "ENV_VAR_AGENT_B_1": "env_var_value_agent_b_a1",
+                  "ENV_VAR_AGENT_B_2": "env_var_value_agent_b_a2"
+                },
+                "env_deps": [
+                  {
+                    "name": "agent_C_1",
+                    "values": {
+                      "ENV_VAR_AGENT_C_1": "env_var_value_agent_c_a1",
+                      "ENV_VAR_AGENT_C_2": "env_var_value_agent_c_a2"
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "deployment_options": [
+            {
+              "type": "source_code",
+              "name": "src",
+              "url": "https://github.com/example/agent_A",
+              "framework_config": {
+                "framework_type": "langgraph",
+                "graph": "agentA.graph"
+              }
+            }
+          ],
+          "env_vars": [
+            {
+              "desc": "Environment variable for agent A",
+              "name": "ENV_VAR_AGENT_A_1",
+              "required": true,
+              "defaultValue": "valueA"
             }
           ]
         }
       }
-    ],
-    "deployment_options": [
-      {
-        "type": "source_code",
-        "name": "src",
-        "url": "https://github.com/example/agent_A",
-        "framework_config": {
-          "framework_type": "langgraph",
-          "graph": "agentA.graph"
-        }
-      }
-    ],
-    "env_vars": [
-      {
-        "desc": "Environment variable for agent A",
-        "name": "ENV_VAR_AGENT_A_1",
-        "required": true,
-        "defaultValue": "valueA"
-      }
-    ]
-  }
+    }
+  ]
 }
+

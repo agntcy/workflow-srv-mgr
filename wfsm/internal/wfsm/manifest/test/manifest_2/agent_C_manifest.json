@@ -1,69 +1,88 @@
 {
-  "metadata": {
-    "ref": {
-      "name": "agent_C",
-      "version": "1.0.0"
-    },
-    "description": "Agent C description"
-  },
-  "specs": {
-    "input": {
-      "type": "object",
-      "properties": {
-        "inputB": {
-          "type": "string"
-        }
-      }
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "outputB": {
-          "type": "string"
-        }
-      }
-    },
-    "config": {
-      "type": "object",
-      "properties": {
-        "configB": {
-          "type": "boolean"
-        }
-      }
-    },
-    "capabilities": {
-      "threads": false,
-      "interrupts": false,
-      "callbacks": false
-    },
-    "interrupts": []
-  },
-  "deployment": {
-    "dependencies": [],
-    "deployment_options": [
-      {
-        "type": "source_code",
-        "name": "src",
-        "url": "https://github.com/example/agent_C",
-        "framework_config": {
-          "framework_type": "langgraph",
-          "graph": "agentC.graph"
-        }
-      }
-    ],
-    "env_vars": [
-      {
-        "desc": "Environment variable for agent C",
-        "name": "ENV_VAR_AGENT_C_1",
-        "required": true,
-        "defaultValue": "valueB"
+  "name": "agent_C",
+  "version": "1.0.0",
+  "authors": [
+    "Cisco Systems"
+  ],
+  "locators": [
+    {
+      "source": {
+        "url": "https://github.com/example/agent_C"
       },
-      {
-        "desc": "Environment variable for agent C",
-        "name": "ENV_VAR_AGENT_C_2",
-        "required": true,
-        "defaultValue": "valueB"
+      "type": "package-source-code"
+    }
+  ],
+  "skills": [
+    {
+      "class_uid": 10201
+    }
+  ],
+  "extensions": [
+    {
+      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "version": "v1.0.0",
+      "data": {
+        "acp": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "inputB": {
+                "type": "string"
+              }
+            }
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "outputB": {
+                "type": "string"
+              }
+            }
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "configB": {
+                "type": "boolean"
+              }
+            }
+          },
+          "capabilities": {
+            "threads": false,
+            "interrupts": false,
+            "callbacks": false
+          },
+          "interrupts": []
+        },
+        "deployment": {
+          "agent_deps": [],
+          "deployment_options": [
+            {
+              "type": "source_code",
+              "name": "src",
+              "url": "https://github.com/example/agent_C",
+              "framework_config": {
+                "framework_type": "langgraph",
+                "graph": "agentC.graph"
+              }
+            }
+          ],
+          "env_vars": [
+            {
+              "desc": "Environment variable for agent C",
+              "name": "ENV_VAR_AGENT_C_1",
+              "required": true,
+              "defaultValue": "valueB"
+            },
+            {
+              "desc": "Environment variable for agent C",
+              "name": "ENV_VAR_AGENT_C_2",
+              "required": true,
+              "defaultValue": "valueB"
+            }
+          ]
+        }
       }
-    ]
-  }
+    }
+  ]
 }
