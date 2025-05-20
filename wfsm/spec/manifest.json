@@ -11,7 +11,10 @@
         "properties": {
           "annotations": {
             "title": "Annotations",
-            "type": "string_map_t"
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           },
           "authors": {
             "items": {
@@ -52,7 +55,7 @@
           },
           "skills": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/Skill"
             },
             "title": "Skills",
             "type": "array"
@@ -80,7 +83,10 @@
         "properties": {
           "annotations": {
             "title": "Annotations",
-            "type": "string_map_t"
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           },
           "data": {
             "$ref": "#/components/schemas/DeploymentManifest",
@@ -451,12 +457,51 @@
           }
         ]
       },
+      "Skill": {
+        "title": "Agent Skill",
+        "description": "Describes the skills of the agent.",
+        "type": "object",
+        "properties": {
+          "category_uid": {
+            "type": "integer",
+            "format": "uint64",
+            "title": "Category UID"
+          },
+          "class_uid": {
+            "type": "integer",
+            "format": "uint64",
+            "title": "Class UID"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name",
+            "nullable": true
+          },
+          "class_name": {
+            "type": "string",
+            "title": "Class Name",
+            "nullable": true
+          },
+          "annotations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "class_uid"
+        ]
+      },
       "locator": {
         "additionalProperties": false,
         "properties": {
           "annotations": {
             "title": "Annotations",
-            "type": "string_map_t"
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           },
           "digest": {
             "title": "Digest",

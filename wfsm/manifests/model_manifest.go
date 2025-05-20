@@ -21,7 +21,7 @@ var _ MappedNullable = &Manifest{}
 
 // Manifest struct for Manifest
 type Manifest struct {
-	Annotations *StringMapT        `json:"annotations,omitempty"`
+	Annotations map[string]string  `json:"annotations,omitempty"`
 	Data        DeploymentManifest `json:"data"`
 	Name        string             `json:"name"`
 	Version     *string            `json:"version,omitempty"`
@@ -46,36 +46,37 @@ func NewManifestWithDefaults() *Manifest {
 	return &this
 }
 
-// GetAnnotations returns the Annotations field value if set, zero value otherwise.
-func (o *Manifest) GetAnnotations() StringMapT {
-	if o == nil || IsNil(o.Annotations) {
-		var ret StringMapT
+// GetAnnotations returns the Annotations field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *Manifest) GetAnnotations() map[string]string {
+	if o == nil {
+		var ret map[string]string
 		return ret
 	}
-	return *o.Annotations
+	return o.Annotations
 }
 
 // GetAnnotationsOk returns a tuple with the Annotations field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Manifest) GetAnnotationsOk() (*StringMapT, bool) {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *Manifest) GetAnnotationsOk() (*map[string]string, bool) {
 	if o == nil || IsNil(o.Annotations) {
 		return nil, false
 	}
-	return o.Annotations, true
+	return &o.Annotations, true
 }
 
 // HasAnnotations returns a boolean if a field has been set.
 func (o *Manifest) HasAnnotations() bool {
-	if o != nil && !IsNil(o.Annotations) {
+	if o != nil && IsNil(o.Annotations) {
 		return true
 	}
 
 	return false
 }
 
-// SetAnnotations gets a reference to the given StringMapT and assigns it to the Annotations field.
-func (o *Manifest) SetAnnotations(v StringMapT) {
-	o.Annotations = &v
+// SetAnnotations gets a reference to the given map[string]string and assigns it to the Annotations field.
+func (o *Manifest) SetAnnotations(v map[string]string) {
+	o.Annotations = v
 }
 
 // GetData returns the Data field value
@@ -168,7 +169,7 @@ func (o Manifest) MarshalJSON() ([]byte, error) {
 
 func (o Manifest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Annotations) {
+	if o.Annotations != nil {
 		toSerialize["annotations"] = o.Annotations
 	}
 	toSerialize["data"] = o.Data

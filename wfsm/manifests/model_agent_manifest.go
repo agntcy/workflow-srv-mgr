@@ -21,23 +21,23 @@ var _ MappedNullable = &AgentManifest{}
 
 // AgentManifest struct for AgentManifest
 type AgentManifest struct {
-	Annotations   *StringMapT `json:"annotations,omitempty"`
-	Authors       []string    `json:"authors"`
-	CreatedAt     string      `json:"created_at"`
-	Description   string      `json:"description"`
-	Extensions    []Manifest  `json:"extensions"`
-	Locators      []Locator   `json:"locators"`
-	Name          string      `json:"name"`
-	SchemaVersion string      `json:"schema_version"`
-	Skills        []string    `json:"skills"`
-	Version       string      `json:"version"`
+	Annotations   map[string]string `json:"annotations,omitempty"`
+	Authors       []string          `json:"authors"`
+	CreatedAt     string            `json:"created_at"`
+	Description   string            `json:"description"`
+	Extensions    []Manifest        `json:"extensions"`
+	Locators      []Locator         `json:"locators"`
+	Name          string            `json:"name"`
+	SchemaVersion string            `json:"schema_version"`
+	Skills        []Skill           `json:"skills"`
+	Version       string            `json:"version"`
 }
 
 // NewAgentManifest instantiates a new AgentManifest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAgentManifest(authors []string, createdAt string, description string, extensions []Manifest, locators []Locator, name string, schemaVersion string, skills []string, version string) *AgentManifest {
+func NewAgentManifest(authors []string, createdAt string, description string, extensions []Manifest, locators []Locator, name string, schemaVersion string, skills []Skill, version string) *AgentManifest {
 	this := AgentManifest{}
 	this.Authors = authors
 	this.CreatedAt = createdAt
@@ -59,36 +59,37 @@ func NewAgentManifestWithDefaults() *AgentManifest {
 	return &this
 }
 
-// GetAnnotations returns the Annotations field value if set, zero value otherwise.
-func (o *AgentManifest) GetAnnotations() StringMapT {
-	if o == nil || IsNil(o.Annotations) {
-		var ret StringMapT
+// GetAnnotations returns the Annotations field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *AgentManifest) GetAnnotations() map[string]string {
+	if o == nil {
+		var ret map[string]string
 		return ret
 	}
-	return *o.Annotations
+	return o.Annotations
 }
 
 // GetAnnotationsOk returns a tuple with the Annotations field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentManifest) GetAnnotationsOk() (*StringMapT, bool) {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *AgentManifest) GetAnnotationsOk() (*map[string]string, bool) {
 	if o == nil || IsNil(o.Annotations) {
 		return nil, false
 	}
-	return o.Annotations, true
+	return &o.Annotations, true
 }
 
 // HasAnnotations returns a boolean if a field has been set.
 func (o *AgentManifest) HasAnnotations() bool {
-	if o != nil && !IsNil(o.Annotations) {
+	if o != nil && IsNil(o.Annotations) {
 		return true
 	}
 
 	return false
 }
 
-// SetAnnotations gets a reference to the given StringMapT and assigns it to the Annotations field.
-func (o *AgentManifest) SetAnnotations(v StringMapT) {
-	o.Annotations = &v
+// SetAnnotations gets a reference to the given map[string]string and assigns it to the Annotations field.
+func (o *AgentManifest) SetAnnotations(v map[string]string) {
+	o.Annotations = v
 }
 
 // GetAuthors returns the Authors field value
@@ -260,9 +261,9 @@ func (o *AgentManifest) SetSchemaVersion(v string) {
 }
 
 // GetSkills returns the Skills field value
-func (o *AgentManifest) GetSkills() []string {
+func (o *AgentManifest) GetSkills() []Skill {
 	if o == nil {
-		var ret []string
+		var ret []Skill
 		return ret
 	}
 
@@ -271,7 +272,7 @@ func (o *AgentManifest) GetSkills() []string {
 
 // GetSkillsOk returns a tuple with the Skills field value
 // and a boolean to check if the value has been set.
-func (o *AgentManifest) GetSkillsOk() ([]string, bool) {
+func (o *AgentManifest) GetSkillsOk() ([]Skill, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -279,7 +280,7 @@ func (o *AgentManifest) GetSkillsOk() ([]string, bool) {
 }
 
 // SetSkills sets field value
-func (o *AgentManifest) SetSkills(v []string) {
+func (o *AgentManifest) SetSkills(v []Skill) {
 	o.Skills = v
 }
 
@@ -317,7 +318,7 @@ func (o AgentManifest) MarshalJSON() ([]byte, error) {
 
 func (o AgentManifest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Annotations) {
+	if o.Annotations != nil {
 		toSerialize["annotations"] = o.Annotations
 	}
 	toSerialize["authors"] = o.Authors

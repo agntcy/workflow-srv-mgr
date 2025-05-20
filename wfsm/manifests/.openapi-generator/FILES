@@ -19,6 +19,7 @@ model_llama_index_config.go
 model_locator.go
 model_manifest.go
 model_remote_service_deployment.go
+model_skill.go
 model_source_code_deployment.go
 model_source_code_deployment_framework_config.go
 model_streaming_modes.go

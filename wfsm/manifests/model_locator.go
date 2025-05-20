@@ -21,11 +21,11 @@ var _ MappedNullable = &Locator{}
 
 // Locator struct for Locator
 type Locator struct {
-	Annotations          interface{} `json:"annotations,omitempty"`
-	Digest               interface{} `json:"digest,omitempty"`
-	Size                 interface{} `json:"size,omitempty"`
-	Type                 interface{} `json:"type"`
-	Url                  interface{} `json:"url"`
+	Annotations          map[string]interface{} `json:"annotations,omitempty"`
+	Digest               interface{}            `json:"digest,omitempty"`
+	Size                 interface{}            `json:"size,omitempty"`
+	Type                 interface{}            `json:"type"`
+	Url                  interface{}            `json:"url"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -51,9 +51,9 @@ func NewLocatorWithDefaults() *Locator {
 }
 
 // GetAnnotations returns the Annotations field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Locator) GetAnnotations() interface{} {
+func (o *Locator) GetAnnotations() map[string]interface{} {
 	if o == nil {
-		var ret interface{}
+		var ret map[string]interface{}
 		return ret
 	}
 	return o.Annotations
@@ -62,7 +62,7 @@ func (o *Locator) GetAnnotations() interface{} {
 // GetAnnotationsOk returns a tuple with the Annotations field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Locator) GetAnnotationsOk() (*interface{}, bool) {
+func (o *Locator) GetAnnotationsOk() (*map[string]interface{}, bool) {
 	if o == nil || IsNil(o.Annotations) {
 		return nil, false
 	}
@@ -78,8 +78,8 @@ func (o *Locator) HasAnnotations() bool {
 	return false
 }
 
-// SetAnnotations gets a reference to the given interface{} and assigns it to the Annotations field.
-func (o *Locator) SetAnnotations(v interface{}) {
+// SetAnnotations gets a reference to the given map[string]interface{} and assigns it to the Annotations field.
+func (o *Locator) SetAnnotations(v map[string]interface{}) {
 	o.Annotations = v
 }
 
