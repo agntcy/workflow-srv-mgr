@@ -494,7 +494,6 @@
         ]
       },
       "locator": {
-        "additionalProperties": false,
         "properties": {
           "annotations": {
             "title": "Annotations",

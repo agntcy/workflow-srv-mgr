@@ -21,21 +21,18 @@ var _ MappedNullable = &Locator{}
 
 // Locator struct for Locator
 type Locator struct {
-	Annotations          map[string]interface{} `json:"annotations,omitempty"`
-	Digest               interface{}            `json:"digest,omitempty"`
-	Size                 interface{}            `json:"size,omitempty"`
-	Type                 interface{}            `json:"type"`
-	Url                  interface{}            `json:"url"`
-	AdditionalProperties map[string]interface{}
+	Annotations map[string]string `json:"annotations,omitempty"`
+	Digest      *string           `json:"digest,omitempty"`
+	Size        *int32            `json:"size,omitempty"`
+	Type        string            `json:"type"`
+	Url         string            `json:"url"`
 }
-
-type _Locator Locator
 
 // NewLocator instantiates a new Locator object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLocator(type_ interface{}, url interface{}) *Locator {
+func NewLocator(type_ string, url string) *Locator {
 	this := Locator{}
 	this.Type = type_
 	this.Url = url
@@ -51,9 +48,9 @@ func NewLocatorWithDefaults() *Locator {
 }
 
 // GetAnnotations returns the Annotations field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Locator) GetAnnotations() map[string]interface{} {
+func (o *Locator) GetAnnotations() map[string]string {
 	if o == nil {
-		var ret map[string]interface{}
+		var ret map[string]string
 		return ret
 	}
 	return o.Annotations
@@ -62,7 +59,7 @@ func (o *Locator) GetAnnotations() map[string]interface{} {
 // GetAnnotationsOk returns a tuple with the Annotations field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Locator) GetAnnotationsOk() (*map[string]interface{}, bool) {
+func (o *Locator) GetAnnotationsOk() (*map[string]string, bool) {
 	if o == nil || IsNil(o.Annotations) {
 		return nil, false
 	}
@@ -78,82 +75,79 @@ func (o *Locator) HasAnnotations() bool {
 	return false
 }
 
-// SetAnnotations gets a reference to the given map[string]interface{} and assigns it to the Annotations field.
-func (o *Locator) SetAnnotations(v map[string]interface{}) {
+// SetAnnotations gets a reference to the given map[string]string and assigns it to the Annotations field.
+func (o *Locator) SetAnnotations(v map[string]string) {
 	o.Annotations = v
 }
 
-// GetDigest returns the Digest field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Locator) GetDigest() interface{} {
-	if o == nil {
-		var ret interface{}
+// GetDigest returns the Digest field value if set, zero value otherwise.
+func (o *Locator) GetDigest() string {
+	if o == nil || IsNil(o.Digest) {
+		var ret string
 		return ret
 	}
-	return o.Digest
+	return *o.Digest
 }
 
 // GetDigestOk returns a tuple with the Digest field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Locator) GetDigestOk() (*interface{}, bool) {
+func (o *Locator) GetDigestOk() (*string, bool) {
 	if o == nil || IsNil(o.Digest) {
 		return nil, false
 	}
-	return &o.Digest, true
+	return o.Digest, true
 }
 
 // HasDigest returns a boolean if a field has been set.
 func (o *Locator) HasDigest() bool {
-	if o != nil && IsNil(o.Digest) {
+	if o != nil && !IsNil(o.Digest) {
 		return true
 	}
 
 	return false
 }
 
-// SetDigest gets a reference to the given interface{} and assigns it to the Digest field.
-func (o *Locator) SetDigest(v interface{}) {
-	o.Digest = v
+// SetDigest gets a reference to the given string and assigns it to the Digest field.
+func (o *Locator) SetDigest(v string) {
+	o.Digest = &v
 }
 
-// GetSize returns the Size field value if set, zero value otherwise (both if not set or set to explicit null).
-func (o *Locator) GetSize() interface{} {
-	if o == nil {
-		var ret interface{}
+// GetSize returns the Size field value if set, zero value otherwise.
+func (o *Locator) GetSize() int32 {
+	if o == nil || IsNil(o.Size) {
+		var ret int32
 		return ret
 	}
-	return o.Size
+	return *o.Size
 }
 
 // GetSizeOk returns a tuple with the Size field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Locator) GetSizeOk() (*interface{}, bool) {
+func (o *Locator) GetSizeOk() (*int32, bool) {
 	if o == nil || IsNil(o.Size) {
 		return nil, false
 	}
-	return &o.Size, true
+	return o.Size, true
 }
 
 // HasSize returns a boolean if a field has been set.
 func (o *Locator) HasSize() bool {
-	if o != nil && IsNil(o.Size) {
+	if o != nil && !IsNil(o.Size) {
 		return true
 	}
 
 	return false
 }
 
-// SetSize gets a reference to the given interface{} and assigns it to the Size field.
-func (o *Locator) SetSize(v interface{}) {
-	o.Size = v
+// SetSize gets a reference to the given int32 and assigns it to the Size field.
+func (o *Locator) SetSize(v int32) {
+	o.Size = &v
 }
 
 // GetType returns the Type field value
-// If the value is explicit nil, the zero value for interface{} will be returned
-func (o *Locator) GetType() interface{} {
+func (o *Locator) GetType() string {
 	if o == nil {
-		var ret interface{}
+		var ret string
 		return ret
 	}
 
@@ -162,24 +156,22 @@ func (o *Locator) GetType() interface{} {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Locator) GetTypeOk() (*interface{}, bool) {
-	if o == nil || IsNil(o.Type) {
+func (o *Locator) GetTypeOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Type, true
 }
 
 // SetType sets field value
-func (o *Locator) SetType(v interface{}) {
+func (o *Locator) SetType(v string) {
 	o.Type = v
 }
 
 // GetUrl returns the Url field value
-// If the value is explicit nil, the zero value for interface{} will be returned
-func (o *Locator) GetUrl() interface{} {
+func (o *Locator) GetUrl() string {
 	if o == nil {
-		var ret interface{}
+		var ret string
 		return ret
 	}
 
@@ -188,16 +180,15 @@ func (o *Locator) GetUrl() interface{} {
 
 // GetUrlOk returns a tuple with the Url field value
 // and a boolean to check if the value has been set.
-// NOTE: If the value is an explicit nil, `nil, true` will be returned
-func (o *Locator) GetUrlOk() (*interface{}, bool) {
-	if o == nil || IsNil(o.Url) {
+func (o *Locator) GetUrlOk() (*string, bool) {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Url, true
 }
 
 // SetUrl sets field value
-func (o *Locator) SetUrl(v interface{}) {
+func (o *Locator) SetUrl(v string) {
 	o.Url = v
 }
 
@@ -214,49 +205,15 @@ func (o Locator) ToMap() (map[string]interface{}, error) {
 	if o.Annotations != nil {
 		toSerialize["annotations"] = o.Annotations
 	}
-	if o.Digest != nil {
+	if !IsNil(o.Digest) {
 		toSerialize["digest"] = o.Digest
 	}
-	if o.Size != nil {
+	if !IsNil(o.Size) {
 		toSerialize["size"] = o.Size
 	}
-	if o.Type != nil {
-		toSerialize["type"] = o.Type
-	}
-	if o.Url != nil {
-		toSerialize["url"] = o.Url
-	}
-
-	for key, value := range o.AdditionalProperties {
-		toSerialize[key] = value
-	}
-
+	toSerialize["type"] = o.Type
+	toSerialize["url"] = o.Url
 	return toSerialize, nil
-}
-
-func (o *Locator) UnmarshalJSON(bytes []byte) (err error) {
-	varLocator := _Locator{}
-
-	err = json.Unmarshal(bytes, &varLocator)
-
-	if err != nil {
-		return err
-	}
-
-	*o = Locator(varLocator)
-
-	additionalProperties := make(map[string]interface{})
-
-	if err = json.Unmarshal(bytes, &additionalProperties); err == nil {
-		delete(additionalProperties, "annotations")
-		delete(additionalProperties, "digest")
-		delete(additionalProperties, "size")
-		delete(additionalProperties, "type")
-		delete(additionalProperties, "url")
-		o.AdditionalProperties = additionalProperties
-	}
-
-	return err
 }
 
 type NullableLocator struct {
