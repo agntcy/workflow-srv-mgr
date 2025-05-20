@@ -21,16 +21,18 @@ var _ MappedNullable = &DeploymentManifest{}
 
 // DeploymentManifest Describe all the ACP specs of an agent, including schemas and protocol features.
 type DeploymentManifest struct {
-	Acp        *AgentACPSpecs   `json:"acp,omitempty"`
-	Deployment *AgentDeployment `json:"deployment,omitempty"`
+	Acp        AgentACPSpecs   `json:"acp"`
+	Deployment AgentDeployment `json:"deployment"`
 }
 
 // NewDeploymentManifest instantiates a new DeploymentManifest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewDeploymentManifest() *DeploymentManifest {
+func NewDeploymentManifest(acp AgentACPSpecs, deployment AgentDeployment) *DeploymentManifest {
 	this := DeploymentManifest{}
+	this.Acp = acp
+	this.Deployment = deployment
 	return &this
 }
 
@@ -42,68 +44,52 @@ func NewDeploymentManifestWithDefaults() *DeploymentManifest {
 	return &this
 }
 
-// GetAcp returns the Acp field value if set, zero value otherwise.
+// GetAcp returns the Acp field value
 func (o *DeploymentManifest) GetAcp() AgentACPSpecs {
-	if o == nil || IsNil(o.Acp) {
+	if o == nil {
 		var ret AgentACPSpecs
 		return ret
 	}
-	return *o.Acp
+
+	return o.Acp
 }
 
-// GetAcpOk returns a tuple with the Acp field value if set, nil otherwise
+// GetAcpOk returns a tuple with the Acp field value
 // and a boolean to check if the value has been set.
 func (o *DeploymentManifest) GetAcpOk() (*AgentACPSpecs, bool) {
-	if o == nil || IsNil(o.Acp) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Acp, true
+	return &o.Acp, true
 }
 
-// HasAcp returns a boolean if a field has been set.
-func (o *DeploymentManifest) HasAcp() bool {
-	if o != nil && !IsNil(o.Acp) {
-		return true
-	}
-
-	return false
-}
-
-// SetAcp gets a reference to the given AgentACPSpecs and assigns it to the Acp field.
+// SetAcp sets field value
 func (o *DeploymentManifest) SetAcp(v AgentACPSpecs) {
-	o.Acp = &v
+	o.Acp = v
 }
 
-// GetDeployment returns the Deployment field value if set, zero value otherwise.
+// GetDeployment returns the Deployment field value
 func (o *DeploymentManifest) GetDeployment() AgentDeployment {
-	if o == nil || IsNil(o.Deployment) {
+	if o == nil {
 		var ret AgentDeployment
 		return ret
 	}
-	return *o.Deployment
+
+	return o.Deployment
 }
 
-// GetDeploymentOk returns a tuple with the Deployment field value if set, nil otherwise
+// GetDeploymentOk returns a tuple with the Deployment field value
 // and a boolean to check if the value has been set.
 func (o *DeploymentManifest) GetDeploymentOk() (*AgentDeployment, bool) {
-	if o == nil || IsNil(o.Deployment) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Deployment, true
+	return &o.Deployment, true
 }
 
-// HasDeployment returns a boolean if a field has been set.
-func (o *DeploymentManifest) HasDeployment() bool {
-	if o != nil && !IsNil(o.Deployment) {
-		return true
-	}
-
-	return false
-}
-
-// SetDeployment gets a reference to the given AgentDeployment and assigns it to the Deployment field.
+// SetDeployment sets field value
 func (o *DeploymentManifest) SetDeployment(v AgentDeployment) {
-	o.Deployment = &v
+	o.Deployment = v
 }
 
 func (o DeploymentManifest) MarshalJSON() ([]byte, error) {
@@ -116,12 +102,8 @@ func (o DeploymentManifest) MarshalJSON() ([]byte, error) {
 
 func (o DeploymentManifest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	if !IsNil(o.Acp) {
-		toSerialize["acp"] = o.Acp
-	}
-	if !IsNil(o.Deployment) {
-		toSerialize["deployment"] = o.Deployment
-	}
+	toSerialize["acp"] = o.Acp
+	toSerialize["deployment"] = o.Deployment
 	return toSerialize, nil
 }
 

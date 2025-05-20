@@ -55,9 +55,6 @@ func (m manifestService) Validate() error {
 
 func (m manifestService) ValidateDeploymentOptions() error {
 	deployment := m.manifest.Extensions[0].Data.Deployment
-	if deployment == nil {
-		return errors.New("invalid agent manifest: no deployment found in manifest")
-	}
 	if len(deployment.DeploymentOptions) == 0 {
 		return errors.New("invalid agent manifest: no deployment option found in manifest")
 	}

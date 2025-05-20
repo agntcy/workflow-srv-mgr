@@ -121,8 +121,8 @@
           }
         },
         "required": [
-          "metadata",
-          "specs"
+          "acp",
+          "deployment"
         ]
       },
       "AgentDeployment": {
