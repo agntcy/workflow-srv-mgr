@@ -166,11 +166,11 @@ func (l *httpManifestLoader) loadManifest(ctx context.Context) (manifests.AgentM
 		return manifests.AgentManifest{}, fmt.Errorf("failed to read response body: %s", err)
 	}
 
-	manifest := manifests.AgentManifest{}
-	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to unmarshal OASF manifest: %s", err)
+	agentManifest, err := processOASFManifest(byteSlice)
+	if err != nil {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to process directory manifest: %s", err)
 	}
-	return manifest, nil
+	return agentManifest, nil
 }
 
 func processOASFManifest(OASFManifestRaw []byte) (manifests.AgentManifest, error) {

@@ -1,14 +1,14 @@
 {
   "name": "agent_B",
   "version": "1.0.0",
+  "schema_version": "0.3.1",
+  "description": "Agent B description",
   "authors": [
     "Cisco Systems"
   ],
   "locators": [
     {
-      "source": {
-        "url": "https://github.com/example/agent_B"
-      },
+      "url": "https://github.com/example/agent_B",
       "type": "package-source-code"
     }
   ],

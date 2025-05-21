@@ -1,15 +1,15 @@
 {
   "name": "mailcomposer.with.deps",
   "version": "0.0.1",
+  "schema_version": "0.3.1",
+  "description": "A mail composer agent that can compose emails based on a conversation history.",
   "authors": [
     "Cisco Systems"
   ],
   "locators": [
     {
-      "source": {
-        "url": "github.com/agntcy/agentic-apps.git//mailcomposer"
-      },
-      "type": "package-source-code"
+      "url": "github.com/agntcy/agentic-apps.git//mailcomposer",
+      "type": "source-code"
     }
   ],
   "skills": [

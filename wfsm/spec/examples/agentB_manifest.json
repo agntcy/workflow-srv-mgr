@@ -1,66 +1,104 @@
 {
-  "metadata": {
-    "name": "agentB",
-    "version": "1.0.0",
-    "description": "Agent B description"
-  },
-  "specs": {
-    "input": {
-      "type": "object",
-      "properties": {
-        "inputB": {
-          "type": "string"
+  "name": "agent_B",
+  "version": "1.0.0",
+  "schema_version": "0.3.1",
+  "description": "Agent B description",
+  "authors": [
+    "Cisco Systems"
+  ],
+  "locators": [
+    {
+      "url": "https://github.com/example/agent_B",
+      "type": "package-source-code"
+    }
+  ],
+  "skills": [
+    {
+      "class_uid": 10201
+    }
+  ],
+  "extensions": [
+    {
+      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "version": "v1.0.0",
+      "data": {
+        "acp": {
+          "input": {
+            "type": "object",
+            "properties": {
+              "inputA": {
+                "type": "string"
+              }
+            }
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "outputA": {
+                "type": "string"
+              }
+            }
+          },
+          "config": {
+            "type": "object",
+            "properties": {
+              "configA": {
+                "type": "boolean"
+              }
+            }
+          },
+          "capabilities": {
+            "threads": false,
+            "interrupts": false,
+            "callbacks": false
+          },
+          "interrupts": []
+        },
+        "deployment": {
+          "agent_deps": [
+            {
+              "name": "agent_C_1",
+              "ref": {
+                "name": "agent_C",
+                "version": "1.0.0",
+                "url": "agent_C_manifest.json"
+              },
+              "deployment_option": "src",
+              "env_var_values": {
+                "values": {
+                  "ENV_VAR_AGENT_C_1": "env_var_value_agent_c_b1",
+                  "ENV_VAR_AGENT_C_2": "env_var_value_agent_c_b2"
+                }
+              }
+            }
+          ],
+          "deployment_options": [
+            {
+              "type": "source_code",
+              "name": "src",
+              "url": "https://github.com/example/agent_B",
+              "framework_config": {
+                "framework_type": "langgraph",
+                "graph": "agentB.graph"
+              }
+            }
+          ],
+          "env_vars": [
+            {
+              "desc": "Environment variable for agent B",
+              "name": "ENV_VAR_AGENT_B_1",
+              "required": true,
+              "defaultValue": "valueB"
+            },
+            {
+              "desc": "Environment variable for agent B",
+              "name": "ENV_VAR_AGENT_B_2",
+              "required": true,
+              "defaultValue": "valueB"
+            }
+          ]
         }
       }
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "outputB": {
-          "type": "string"
-        }
-      }
-    },
-    "config": {
-      "type": "object",
-      "properties": {
-        "configB": {
-          "type": "boolean"
-        }
-      }
-    },
-    "capabilities": {
-      "threads": false,
-      "interrupts": false,
-      "callbacks": false
-    },
-    "interrupts": []
-  },
-  "deployment": {
-    "dependencies": [],
-    "deployment_options": [
-      {
-        "type": "source_code",
-        "name": "src",
-        "url": "https://github.com/example/agentB",
-        "framework_config": {
-          "framework_type": "langgraph",
-          "graph": "agentB.graph"
-        }
-      }
-    ],
-    "env_vars": [
-      {
-        "desc": "Environment variable for agentB",
-        "name": "ENV_VAR_B",
-        "required": true,
-        "defaultValue": "valueB"
-      },
-      {
-        "desc": "Open AI API Key",
-        "name": "OPENAI_API_KEY",
-        "required": true
-      }
-    ]
-  }
+    }
+  ]
 }

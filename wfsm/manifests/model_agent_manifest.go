@@ -23,7 +23,7 @@ var _ MappedNullable = &AgentManifest{}
 type AgentManifest struct {
 	Annotations   map[string]string `json:"annotations,omitempty"`
 	Authors       []string          `json:"authors"`
-	CreatedAt     string            `json:"created_at"`
+	CreatedAt     *string           `json:"created_at,omitempty"`
 	Description   string            `json:"description"`
 	Extensions    []Manifest        `json:"extensions"`
 	Locators      []Locator         `json:"locators"`
@@ -37,10 +37,9 @@ type AgentManifest struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAgentManifest(authors []string, createdAt string, description string, extensions []Manifest, locators []Locator, name string, schemaVersion string, skills []Skill, version string) *AgentManifest {
+func NewAgentManifest(authors []string, description string, extensions []Manifest, locators []Locator, name string, schemaVersion string, skills []Skill, version string) *AgentManifest {
 	this := AgentManifest{}
 	this.Authors = authors
-	this.CreatedAt = createdAt
 	this.Description = description
 	this.Extensions = extensions
 	this.Locators = locators
@@ -116,28 +115,36 @@ func (o *AgentManifest) SetAuthors(v []string) {
 	o.Authors = v
 }
 
-// GetCreatedAt returns the CreatedAt field value
+// GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
 func (o *AgentManifest) GetCreatedAt() string {
-	if o == nil {
+	if o == nil || IsNil(o.CreatedAt) {
 		var ret string
 		return ret
 	}
-
-	return o.CreatedAt
+	return *o.CreatedAt
 }
 
-// GetCreatedAtOk returns a tuple with the CreatedAt field value
+// GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
 // and a boolean to check if the value has been set.
 func (o *AgentManifest) GetCreatedAtOk() (*string, bool) {
-	if o == nil {
+	if o == nil || IsNil(o.CreatedAt) {
 		return nil, false
 	}
-	return &o.CreatedAt, true
+	return o.CreatedAt, true
 }
 
-// SetCreatedAt sets field value
+// HasCreatedAt returns a boolean if a field has been set.
+func (o *AgentManifest) HasCreatedAt() bool {
+	if o != nil && !IsNil(o.CreatedAt) {
+		return true
+	}
+
+	return false
+}
+
+// SetCreatedAt gets a reference to the given string and assigns it to the CreatedAt field.
 func (o *AgentManifest) SetCreatedAt(v string) {
-	o.CreatedAt = v
+	o.CreatedAt = &v
 }
 
 // GetDescription returns the Description field value
@@ -322,7 +329,9 @@ func (o AgentManifest) ToMap() (map[string]interface{}, error) {
 		toSerialize["annotations"] = o.Annotations
 	}
 	toSerialize["authors"] = o.Authors
-	toSerialize["created_at"] = o.CreatedAt
+	if !IsNil(o.CreatedAt) {
+		toSerialize["created_at"] = o.CreatedAt
+	}
 	toSerialize["description"] = o.Description
 	toSerialize["extensions"] = o.Extensions
 	toSerialize["locators"] = o.Locators

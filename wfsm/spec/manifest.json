@@ -67,7 +67,6 @@
         },
         "required": [
           "authors",
-          "created_at",
           "description",
           "extensions",
           "locators",
