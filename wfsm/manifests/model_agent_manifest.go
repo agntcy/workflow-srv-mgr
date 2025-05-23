@@ -19,21 +19,34 @@ import (
 // checks if the AgentManifest type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &AgentManifest{}
 
-// AgentManifest Describe all the ACP specs of an agent, including schemas and protocol features.
+// AgentManifest struct for AgentManifest
 type AgentManifest struct {
-	Metadata   AgentMetadata    `json:"metadata"`
-	Specs      AgentACPSpecs    `json:"specs"`
-	Deployment *AgentDeployment `json:"deployment,omitempty"`
+	Annotations   map[string]string `json:"annotations,omitempty"`
+	Authors       []string          `json:"authors"`
+	CreatedAt     *string           `json:"created_at,omitempty"`
+	Description   string            `json:"description"`
+	Extensions    []Manifest        `json:"extensions"`
+	Locators      []Locator         `json:"locators"`
+	Name          string            `json:"name"`
+	SchemaVersion string            `json:"schema_version"`
+	Skills        []Skill           `json:"skills"`
+	Version       string            `json:"version"`
 }
 
 // NewAgentManifest instantiates a new AgentManifest object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewAgentManifest(metadata AgentMetadata, specs AgentACPSpecs) *AgentManifest {
+func NewAgentManifest(authors []string, description string, extensions []Manifest, locators []Locator, name string, schemaVersion string, skills []Skill, version string) *AgentManifest {
 	this := AgentManifest{}
-	this.Metadata = metadata
-	this.Specs = specs
+	this.Authors = authors
+	this.Description = description
+	this.Extensions = extensions
+	this.Locators = locators
+	this.Name = name
+	this.SchemaVersion = schemaVersion
+	this.Skills = skills
+	this.Version = version
 	return &this
 }
 
@@ -45,84 +58,261 @@ func NewAgentManifestWithDefaults() *AgentManifest {
 	return &this
 }
 
-// GetMetadata returns the Metadata field value
-func (o *AgentManifest) GetMetadata() AgentMetadata {
+// GetAnnotations returns the Annotations field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *AgentManifest) GetAnnotations() map[string]string {
 	if o == nil {
-		var ret AgentMetadata
+		var ret map[string]string
 		return ret
 	}
-
-	return o.Metadata
+	return o.Annotations
 }
 
-// GetMetadataOk returns a tuple with the Metadata field value
+// GetAnnotationsOk returns a tuple with the Annotations field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *AgentManifest) GetMetadataOk() (*AgentMetadata, bool) {
-	if o == nil {
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *AgentManifest) GetAnnotationsOk() (*map[string]string, bool) {
+	if o == nil || IsNil(o.Annotations) {
 		return nil, false
 	}
-	return &o.Metadata, true
+	return &o.Annotations, true
 }
 
-// SetMetadata sets field value
-func (o *AgentManifest) SetMetadata(v AgentMetadata) {
-	o.Metadata = v
-}
-
-// GetSpecs returns the Specs field value
-func (o *AgentManifest) GetSpecs() AgentACPSpecs {
-	if o == nil {
-		var ret AgentACPSpecs
-		return ret
-	}
-
-	return o.Specs
-}
-
-// GetSpecsOk returns a tuple with the Specs field value
-// and a boolean to check if the value has been set.
-func (o *AgentManifest) GetSpecsOk() (*AgentACPSpecs, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Specs, true
-}
-
-// SetSpecs sets field value
-func (o *AgentManifest) SetSpecs(v AgentACPSpecs) {
-	o.Specs = v
-}
-
-// GetDeployment returns the Deployment field value if set, zero value otherwise.
-func (o *AgentManifest) GetDeployment() AgentDeployment {
-	if o == nil || IsNil(o.Deployment) {
-		var ret AgentDeployment
-		return ret
-	}
-	return *o.Deployment
-}
-
-// GetDeploymentOk returns a tuple with the Deployment field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *AgentManifest) GetDeploymentOk() (*AgentDeployment, bool) {
-	if o == nil || IsNil(o.Deployment) {
-		return nil, false
-	}
-	return o.Deployment, true
-}
-
-// HasDeployment returns a boolean if a field has been set.
-func (o *AgentManifest) HasDeployment() bool {
-	if o != nil && !IsNil(o.Deployment) {
+// HasAnnotations returns a boolean if a field has been set.
+func (o *AgentManifest) HasAnnotations() bool {
+	if o != nil && IsNil(o.Annotations) {
 		return true
 	}
 
 	return false
 }
 
-// SetDeployment gets a reference to the given AgentDeployment and assigns it to the Deployment field.
-func (o *AgentManifest) SetDeployment(v AgentDeployment) {
-	o.Deployment = &v
+// SetAnnotations gets a reference to the given map[string]string and assigns it to the Annotations field.
+func (o *AgentManifest) SetAnnotations(v map[string]string) {
+	o.Annotations = v
+}
+
+// GetAuthors returns the Authors field value
+func (o *AgentManifest) GetAuthors() []string {
+	if o == nil {
+		var ret []string
+		return ret
+	}
+
+	return o.Authors
+}
+
+// GetAuthorsOk returns a tuple with the Authors field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetAuthorsOk() ([]string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Authors, true
+}
+
+// SetAuthors sets field value
+func (o *AgentManifest) SetAuthors(v []string) {
+	o.Authors = v
+}
+
+// GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
+func (o *AgentManifest) GetCreatedAt() string {
+	if o == nil || IsNil(o.CreatedAt) {
+		var ret string
+		return ret
+	}
+	return *o.CreatedAt
+}
+
+// GetCreatedAtOk returns a tuple with the CreatedAt field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetCreatedAtOk() (*string, bool) {
+	if o == nil || IsNil(o.CreatedAt) {
+		return nil, false
+	}
+	return o.CreatedAt, true
+}
+
+// HasCreatedAt returns a boolean if a field has been set.
+func (o *AgentManifest) HasCreatedAt() bool {
+	if o != nil && !IsNil(o.CreatedAt) {
+		return true
+	}
+
+	return false
+}
+
+// SetCreatedAt gets a reference to the given string and assigns it to the CreatedAt field.
+func (o *AgentManifest) SetCreatedAt(v string) {
+	o.CreatedAt = &v
+}
+
+// GetDescription returns the Description field value
+func (o *AgentManifest) GetDescription() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Description
+}
+
+// GetDescriptionOk returns a tuple with the Description field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetDescriptionOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Description, true
+}
+
+// SetDescription sets field value
+func (o *AgentManifest) SetDescription(v string) {
+	o.Description = v
+}
+
+// GetExtensions returns the Extensions field value
+func (o *AgentManifest) GetExtensions() []Manifest {
+	if o == nil {
+		var ret []Manifest
+		return ret
+	}
+
+	return o.Extensions
+}
+
+// GetExtensionsOk returns a tuple with the Extensions field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetExtensionsOk() ([]Manifest, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Extensions, true
+}
+
+// SetExtensions sets field value
+func (o *AgentManifest) SetExtensions(v []Manifest) {
+	o.Extensions = v
+}
+
+// GetLocators returns the Locators field value
+func (o *AgentManifest) GetLocators() []Locator {
+	if o == nil {
+		var ret []Locator
+		return ret
+	}
+
+	return o.Locators
+}
+
+// GetLocatorsOk returns a tuple with the Locators field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetLocatorsOk() ([]Locator, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Locators, true
+}
+
+// SetLocators sets field value
+func (o *AgentManifest) SetLocators(v []Locator) {
+	o.Locators = v
+}
+
+// GetName returns the Name field value
+func (o *AgentManifest) GetName() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Name
+}
+
+// GetNameOk returns a tuple with the Name field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetNameOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Name, true
+}
+
+// SetName sets field value
+func (o *AgentManifest) SetName(v string) {
+	o.Name = v
+}
+
+// GetSchemaVersion returns the SchemaVersion field value
+func (o *AgentManifest) GetSchemaVersion() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.SchemaVersion
+}
+
+// GetSchemaVersionOk returns a tuple with the SchemaVersion field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetSchemaVersionOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.SchemaVersion, true
+}
+
+// SetSchemaVersion sets field value
+func (o *AgentManifest) SetSchemaVersion(v string) {
+	o.SchemaVersion = v
+}
+
+// GetSkills returns the Skills field value
+func (o *AgentManifest) GetSkills() []Skill {
+	if o == nil {
+		var ret []Skill
+		return ret
+	}
+
+	return o.Skills
+}
+
+// GetSkillsOk returns a tuple with the Skills field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetSkillsOk() ([]Skill, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.Skills, true
+}
+
+// SetSkills sets field value
+func (o *AgentManifest) SetSkills(v []Skill) {
+	o.Skills = v
+}
+
+// GetVersion returns the Version field value
+func (o *AgentManifest) GetVersion() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Version
+}
+
+// GetVersionOk returns a tuple with the Version field value
+// and a boolean to check if the value has been set.
+func (o *AgentManifest) GetVersionOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Version, true
+}
+
+// SetVersion sets field value
+func (o *AgentManifest) SetVersion(v string) {
+	o.Version = v
 }
 
 func (o AgentManifest) MarshalJSON() ([]byte, error) {
@@ -135,11 +325,20 @@ func (o AgentManifest) MarshalJSON() ([]byte, error) {
 
 func (o AgentManifest) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
-	toSerialize["metadata"] = o.Metadata
-	toSerialize["specs"] = o.Specs
-	if !IsNil(o.Deployment) {
-		toSerialize["deployment"] = o.Deployment
+	if o.Annotations != nil {
+		toSerialize["annotations"] = o.Annotations
 	}
+	toSerialize["authors"] = o.Authors
+	if !IsNil(o.CreatedAt) {
+		toSerialize["created_at"] = o.CreatedAt
+	}
+	toSerialize["description"] = o.Description
+	toSerialize["extensions"] = o.Extensions
+	toSerialize["locators"] = o.Locators
+	toSerialize["name"] = o.Name
+	toSerialize["schema_version"] = o.SchemaVersion
+	toSerialize["skills"] = o.Skills
+	toSerialize["version"] = o.Version
 	return toSerialize, nil
 }
 

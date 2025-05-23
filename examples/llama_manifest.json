@@ -1,91 +1,141 @@
 {
-  "metadata": {
-    "ref": {
-      "name": "org.agntcy.email_reviewer",
-      "version": "0.0.1"
-    },
-    "description": "In charge of reviewing and correcting emails addressed to a specific audience"
-  },
-  "specs": {
-    "input": {
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": "string"
+  "authors": [
+    "Cisco Systems"
+  ],
+  "name": "org.agntcy.mail_reviewer",
+  "version": "0.0.1",  
+  "schema_version": "0.3.1",
+  "created_at": "2025-05-21T00:00:00Z",
+  "description": "Email Reviewer Agent",  
+  "locators": [
+    {
+      "url": "github.com/agntcy/agentic-apps.git//email_reviewer",      
+      "type": "source-code"
+    }
+  ],
+  "skills": [
+    {
+      "class_uid": 10201
+    }
+  ],
+  "extensions": [
+    {
+      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "data": {
+        "acp": {
+          "capabilities": {
+            "threads": false,
+            "interrupts": false,
+            "callbacks": false
+          },
+          "input": {
+            "$defs": {
+              "TargetAudience": {
+                "enum": [
+                  "general",
+                  "technical",
+                  "business",
+                  "academic"
+                ],
+                "title": "TargetAudience",
+                "type": "string"
+              }
+            },
+            "properties": {
+              "email": {
+                "description": "The email content to be reviewed and corrected",
+                "title": "Email",
+                "type": "string"
+              },
+              "target_audience": {
+                "$ref": "#/$defs/TargetAudience",
+                "description": "The target audience for the email, affecting the style of review"
+              }
+            },
+            "required": [
+              "email",
+              "target_audience"
+            ],
+            "title": "EmailReviewerInput",
+            "type": "object"
+          },
+          "output": {
+            "properties": {
+              "correct": {
+                "description": "Indicates whether the email is correct and requires no changes",
+                "title": "Correct",
+                "type": "boolean"
+              },
+              "corrected_email": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "The corrected version of the email, if changes were necessary",
+                "title": "Corrected Email"
+              },
+              "review_result": {
+                "default": "",
+                "description": "A description containing the email changes",
+                "title": "Review Result",
+                "type": "string"
+              }
+            },
+            "required": [
+              "correct"
+            ],
+            "title": "EmailReview",
+            "type": "object"
+          },
+          "config": {
+            "properties": {},
+            "title": "ConfigSchema",
+            "type": "object"
+          }
         },
-        "audience": {
-          "type": "string",
-          "enum": [
-            "general",
-            "technical",
-            "business",
-            "academic"
-          ]
+        "deployment": {
+          "deployment_options": [
+            {
+              "type": "source_code",
+              "name": "src",
+              "url": "github.com/agntcy/agentic-apps.git//email_reviewer",
+              "framework_config": {
+                "framework_type": "llamaindex",
+                "path": "email_reviewer:email_reviewer_workflow"
+              }
+            }
+          ],
+          "env_vars": [
+            {
+              "desc": "Azure key for the OpenAI service",
+              "name": "AZURE_OPENAI_API_KEY"
+            },
+            {
+              "desc": "Azure model for the OpenAI service",
+              "name": "AZURE_OPENAI_MODEL"
+            },
+            {
+              "desc": "Azure deployment name for the OpenAI service",
+              "name": "AZURE_OPENAI_DEPLOYMENT_NAME"
+            },
+            {
+              "desc": "Azure API version for the OpenAI service",
+              "name": "AZURE_OPENAI_API_VERSION"
+            },
+            {
+              "desc": "Azure endpoint for the OpenAI service",
+              "name": "AZURE_OPENAI_ENDPOINT"
+            }
+          ],
+          "agent_deps": []
         }
       },
-      "required": [
-        "email",
-        "audience"
-      ]
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "correct": {
-          "type": "boolean"
-        },
-        "corrected_email": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "correct"
-      ]
-    },
-    "capabilities": {
-      "threads": false,
-      "interrupts": false,
-      "callbacks": false
-    },
-    "config": {},
-    "interrupts": []
-  },
-  "deployment": {
-    "dependencies": [],
-    "deployment_options": [
-      {
-        "type": "source_code",
-        "name": "src",
-        "url": "github.com/cisco-eti/agent-connect-protocol.git//examples/agents/email_reviewer",
-        "framework_config": {
-          "framework_type": "llamaindex",
-          "path": "email_reviewer:email_reviewer_workflow"
-        }
-      }
-    ],
-    "env_vars": [
-      {
-        "desc": "Environment variable for agentA",
-        "name": "AZURE_OPENAI_MODEL",
-        "required": true,
-        "defaultValue": "gpt-4o-mini"        
-      },
-      {
-        "desc": "Azure OpenAI API Key",
-        "name": "AZURE_OPENAI_API_KEY",
-        "required": true
-      },
-      {
-        "desc": "Azure OpenAI Endpoint",
-        "name": "AZURE_OPENAI_ENDPOINT",
-        "required": true      
-      },
-      {
-        "desc": "OpenAI API Version",
-        "name": "OPENAI_API_VERSION",
-        "required": true,
-        "defaultValue": "2024-07-01-preview"
-      }  
-    ]
-  }
+      "version": "v0.0.1"
+    }
+  ]
 }

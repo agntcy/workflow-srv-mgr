@@ -41,20 +41,20 @@ func (m manifestService) GetManifest() manifests.AgentManifest {
 
 func (m manifestService) Validate() error {
 	// validate ref name and version
-	if m.manifest.Metadata.Ref.Name == "" {
+	if m.manifest.Name == "" {
 		return errors.New("invalid agent manifest: no name found in manifest")
 	}
-	if m.manifest.Metadata.Ref.Version == "" {
+	if m.manifest.Version == "" {
 		return errors.New("invalid agent manifest: no version found in manifest")
+	}
+	if len(m.manifest.Extensions) == 0 {
+		return errors.New("invalid agent manifest: no deployment extension found in manifest")
 	}
 	return m.ValidateDeploymentOptions()
 }
 
 func (m manifestService) ValidateDeploymentOptions() error {
-	deployment := m.manifest.Deployment
-	if deployment == nil {
-		return errors.New("invalid agent manifest: no deployment found in manifest")
-	}
+	deployment := m.manifest.Extensions[0].Data.Deployment
 	if len(deployment.DeploymentOptions) == 0 {
 		return errors.New("invalid agent manifest: no deployment option found in manifest")
 	}
@@ -65,7 +65,8 @@ func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
 	if option == nil || len(*option) == 0 {
 		return 0, nil
 	}
-	for i, opt := range m.manifest.Deployment.DeploymentOptions {
+	deployment := m.manifest.Extensions[0].Data.Deployment
+	for i, opt := range deployment.DeploymentOptions {
 		if opt.SourceCodeDeployment != nil &&
 			opt.SourceCodeDeployment.Name != nil &&
 			*opt.SourceCodeDeployment.Name == *option {

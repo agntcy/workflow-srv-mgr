@@ -1,92 +1,111 @@
 {
-  "metadata": {
-    "ref": {
-      "name": "mailcomposer",
-      "version": "0.0.1"
-    },
-    "description": "Offer a chat interface to compose an email for a marketing campaign. Final output is the email that could be used for the campaign"
-  },
-  "specs": {
-    "input": {
-      "type": "object",
-      "properties": {
-        "messages": {
-          "type": "array",
-          "items": {
+  "name": "mailcomposer.with.deps",
+  "version": "0.0.1",
+  "schema_version": "0.3.1",
+  "description": "A mail composer agent that can compose emails based on a conversation history.",
+  "authors": [
+    "Cisco Systems"
+  ],
+  "locators": [
+    {
+      "url": "github.com/agntcy/agentic-apps.git//mailcomposer",
+      "type": "source-code"
+    }
+  ],
+  "skills": [
+    {
+      "class_uid":10201
+    }
+  ],
+  "extensions": [
+    {
+      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "version": "v0.0.1",
+      "data": {
+        "acp": {
+          "input": {
             "type": "object",
             "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "human",
-                  "assistant"
-                ]
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "human",
+                        "assistant"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  }
+                }
               },
-              "content": {
-                "type": "string"
+              "is_completed": {
+                "type": "boolean"
               }
             }
-          }
-        },
-        "is_completed": {
-          "type": "boolean"
-        }
-      }
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "messages": {
-          "type": "array",
-          "items": {
+          },
+          "output": {
             "type": "object",
             "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "human",
-                  "assistant"
-                ]
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "human",
+                        "assistant"
+                      ]
+                    },
+                    "final_email": {
+                      "type": "string"
+                    }
+                  }
+                }
               },
-              "final_email": {
-                "type": "string"
+              "is_completed": {
+                "type": "boolean"
               }
             }
-          }
+          },
+          "config": {
+            "type": "object",
+            "description": "The configuration of the agent",
+            "properties": {
+              "test": {
+                "type": "boolean"
+              }
+            }
+          },
+          "capabilities": {
+            "threads": false,
+            "interrupts": false,
+            "callbacks": false
+          },
+          "interrupts": []
         },
-        "is_completed": {
-          "type": "boolean"
+        "deployment": {
+          "dependencies": [],
+          "deployment_options": [
+            {
+              "type": "source_code",
+              "name": "src",
+              "url": "github.com/agntcy/agentic-apps.git//mailcomposer",
+              "framework_config": {
+                "framework_type": "langgraph",
+                "graph": "mailcomposer.mailcomposer:graph"
+              }
+            }
+          ]
         }
       }
-    },
-    "config": {
-      "type": "object",
-      "description": "The configuration of the agent",
-      "properties": {
-        "test": {
-          "type": "boolean"
-        }
-      }
-    },
-    "capabilities": {
-      "threads": false,
-      "interrupts": false,
-      "callbacks": false
-    },
-    "interrupts": []
-  },
-  "deployment": {
-    "dependencies": [],
-    "deployment_options": [
-      {
-        "type": "source_code",
-        "name": "src",
-        "url": "github.com/cisco-eti/agent-connect-protocol.git//examples/agents/mailcomposer",
-        "framework_config": {
-          "framework_type": "langgraph",
-          "graph": "mailcomposer.mailcomposer:graph"
-        }
-      }
-    ]
-  }
+    }
+  ]
 }

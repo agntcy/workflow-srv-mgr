@@ -22,6 +22,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const AgentExtensionName = "oasf.agntcy.org/feature/runtime/manifest"
+
 type fileManifestLoader struct {
 	filePath string
 }
@@ -92,14 +94,11 @@ func (f *fileManifestLoader) loadManifest(ctx context.Context) (manifests.AgentM
 	if err != nil {
 		log.Fatalf("failed to read file: %s", err)
 	}
-
-	manifest := manifests.AgentManifest{}
-
-	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
-		return manifests.AgentManifest{}, err
+	agentManifest, err := processOASFManifest(byteSlice)
+	if err != nil {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to process OASF manifest: %s", err)
 	}
-
-	return manifest, nil
+	return agentManifest, nil
 }
 
 func (l *hubManifestLoader) loadManifest(ctx context.Context) (manifests.AgentManifest, error) {
@@ -166,48 +165,20 @@ func (l *httpManifestLoader) loadManifest(ctx context.Context) (manifests.AgentM
 	if err != nil {
 		return manifests.AgentManifest{}, fmt.Errorf("failed to read response body: %s", err)
 	}
-	manifest := manifests.AgentManifest{}
-	if err := json.Unmarshal(byteSlice, &manifest); err != nil {
-		return manifests.AgentManifest{}, err
+
+	agentManifest, err := processOASFManifest(byteSlice)
+	if err != nil {
+		return manifests.AgentManifest{}, fmt.Errorf("failed to process directory manifest: %s", err)
 	}
-	return manifest, nil
+	return agentManifest, nil
 }
 
-func processOASFManifest(directoryManifestRaw []byte) (manifests.AgentManifest, error) {
-	var directoryManifest map[string]interface{}
-	err := json.Unmarshal(directoryManifestRaw, &directoryManifest)
-	if err != nil {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to unmarshal directory manifest: %s", err)
-	}
+func processOASFManifest(OASFManifestRaw []byte) (manifests.AgentManifest, error) {
 
-	extensions, ok := directoryManifest["extensions"].([]interface{})
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get extensions from directory manifest: %s", err)
-	}
-	// currently the first one is used
-	firstExtension, ok := extensions[0].(map[string]interface{})
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get the first extension from manifest: %s", err)
-	}
-	name, ok := firstExtension["name"].(string)
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get name from directroy manifest: %s", err)
-	}
-	version, ok := firstExtension["version"].(string)
-	if !ok {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to get version from directroy manifest: %s", err)
-	}
 	var agentManifest manifests.AgentManifest
-	byteManifest, err := json.Marshal(firstExtension["data"])
-	if err != nil {
-		return manifests.AgentManifest{}, fmt.Errorf("failed to marshal agent manifest: %s", err)
-	}
-	err = json.Unmarshal(byteManifest, &agentManifest)
+	err := json.Unmarshal(OASFManifestRaw, &agentManifest)
 	if err != nil {
 		return manifests.AgentManifest{}, fmt.Errorf("failed to unmarshal agent manifest: %s", err)
 	}
-	agentManifest.Metadata.Ref.Name = name
-	agentManifest.Metadata.Ref.Version = version
-
 	return agentManifest, nil
 }
