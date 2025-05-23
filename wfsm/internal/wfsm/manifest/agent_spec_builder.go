@@ -87,7 +87,7 @@ func (a *AgentSpecBuilder) BuildAgentSpec(ctx context.Context, manifestPath stri
 	}
 	a.AgentSpecs[deploymentName] = agentSpec
 
-	deployment := manifest.Extensions[0].Data.Deployment
+	deployment := GetDeployment(manifest)
 	if len(deployment.AgentDeps) > 0 {
 		depNames := make([]string, 0, len(deployment.AgentDeps))
 		for _, dependency := range deployment.AgentDeps {
@@ -213,7 +213,7 @@ func setPrefixedEnvVars(inputSpec internal.AgentSpec, envVars map[string]string)
 
 // set env vars for the agent spec which are declared in the agent manifest
 func setDeclaredEnvVars(inputSpec internal.AgentSpec, envFile map[string]string) {
-	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deployment := GetDeployment(inputSpec.Manifest)
 	for _, envVarDefs := range deployment.EnvVars {
 		if value := getEnvVarValue(envVarDefs.GetName(), envFile); value != "" {
 			inputSpec.EnvVars[envVarDefs.GetName()] = value
@@ -232,7 +232,7 @@ func getEnvVarValue(envVarName string, envFile map[string]string) string {
 }
 
 func setDefaultsForEnvVars(ctx context.Context, inputSpec internal.AgentSpec) {
-	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deployment := GetDeployment(inputSpec.Manifest)
 	for _, envVarDefs := range deployment.EnvVars {
 		if inputSpec.EnvVars[envVarDefs.GetName()] == "" && envVarDefs.HasDefaultValue() {
 			inputSpec.EnvVars[envVarDefs.GetName()] = envVarDefs.GetDefaultValue()
@@ -243,7 +243,7 @@ func setDefaultsForEnvVars(ctx context.Context, inputSpec internal.AgentSpec) {
 func validateAgentEnvVars(ctx context.Context, inputSpec internal.AgentSpec) error {
 	log := zerolog.Ctx(ctx)
 	// validate that all required env vars are present in inputSpec.EnvVars
-	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deployment := GetDeployment(inputSpec.Manifest)
 	for _, envVarDefs := range deployment.EnvVars {
 		if envVarDefs.GetRequired() {
 			if _, ok := inputSpec.EnvVars[envVarDefs.GetName()]; !ok {

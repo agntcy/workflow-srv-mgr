@@ -15,10 +15,11 @@ func Test_manifestService_Validate(t *testing.T) {
 		ctx context.Context
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name              string
+		fields            fields
+		args              args
+		wantErr           bool
+		wantValidationErr bool
 	}{
 		{
 			name: "read the manifest from the file",
@@ -28,7 +29,19 @@ func Test_manifestService_Validate(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 			},
-			wantErr: false,
+			wantErr:           false,
+			wantValidationErr: false,
+		},
+		{
+			name: "read the manifest with wrong extension name from the file",
+			fields: fields{
+				filePath: "test/manifest_1/manifest_with_err.json",
+			},
+			args: args{
+				ctx: context.Background(),
+			},
+			wantErr:           false,
+			wantValidationErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -39,8 +52,8 @@ func Test_manifestService_Validate(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewManifestService error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if err := m.Validate(); (err != nil) != tt.wantErr {
-				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			if err := m.Validate(); (err != nil) != tt.wantValidationErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantValidationErr)
 			}
 		})
 	}

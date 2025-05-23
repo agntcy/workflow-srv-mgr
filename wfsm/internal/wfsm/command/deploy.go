@@ -190,7 +190,7 @@ func runDeploy(ctx context.Context, params DeployParams) error {
 	// run agent builder
 	agDeploymentSpecs := make(map[string]internal.AgentDeploymentBuildSpec, len(agentSpecBuilder.AgentSpecs))
 	for depName, agentSpec := range agentSpecBuilder.AgentSpecs {
-		deployment := agentSpec.Manifest.Extensions[0].Data.Deployment
+		deployment := manifest.GetDeployment(agentSpec.Manifest)
 		builder := builder.GetAgentBuilder(deployment.DeploymentOptions[agentSpec.SelectedDeploymentOption],
 			params.DeleteBuildFolders, params.ForceBuild, params.BaseImage)
 		agdbSpec, err := builder.Build(ctx, agentSpec)

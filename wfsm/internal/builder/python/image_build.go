@@ -16,6 +16,7 @@ import (
 	"github.com/cisco-eti/wfsm/internal/builder/python/source"
 	containerclient "github.com/cisco-eti/wfsm/internal/container_client"
 	"github.com/cisco-eti/wfsm/internal/util"
+	"github.com/cisco-eti/wfsm/internal/wfsm/manifest"
 	"github.com/cisco-eti/wfsm/manifests"
 	"github.com/containerd/errdefs"
 	"github.com/docker/docker/api/types"
@@ -208,7 +209,7 @@ func buildImage(ctx context.Context, client dockerclient.ImageAPIClient, img str
 		"BASE_IMAGE": &baseImage,
 	}
 
-	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deployment := manifest.GetDeployment(inputSpec.Manifest)
 	srcDeployment := deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].SourceCodeDeployment
 	if srcDeployment.FrameworkConfig.LangGraphConfig != nil {
 

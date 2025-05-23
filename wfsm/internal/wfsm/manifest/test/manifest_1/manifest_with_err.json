@@ -19,42 +19,7 @@
   ],
   "extensions": [
     {
-      "name": "schema.oasf.agntcy.org/features/runtime/framework",
-      "version": "v0.0.0",
-      "data": {
-        "sbom": {
-          "name": "mailcomposer",
-          "packages": [
-            {
-              "name": "langchain",
-              "version": "^0.3.17"
-            },
-            {
-              "name": "langgraph",
-              "version": "^0.3.5"
-            },
-            {
-              "name": "langchain-openai",
-              "version": "^0.3.3"
-            },
-            {
-              "name": "jinja2",
-              "version": "^3.1.5"
-            },
-            {
-              "name": "python-dotenv",
-              "version": "^1.0.1"
-            },
-            {
-              "name": "agntcy_acp",
-              "version": "v0.1.0a2"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "oasf.agntcy.org/feature/runtime/manifest",
+      "name": "oasf.agntcy.org/feature/runtime/manifest23",
       "version": "v0.0.1",
       "data": {
         "acp": {

@@ -6,6 +6,7 @@ import (
 	"context"
 
 	"github.com/cisco-eti/wfsm/internal"
+	"github.com/cisco-eti/wfsm/internal/wfsm/manifest"
 )
 
 // builder implementation of AgentDeployer
@@ -17,7 +18,7 @@ func NewContainerAgentBuilder() internal.AgentDeploymentBuilder {
 }
 
 func (b *cbuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (internal.AgentDeploymentBuildSpec, error) {
-	deployment := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deployment := manifest.GetDeployment(inputSpec.Manifest)
 	dockerDeployment := deployment.DeploymentOptions[inputSpec.SelectedDeploymentOption].DockerDeployment
 	return internal.AgentDeploymentBuildSpec{
 		AgentSpec:   inputSpec,
