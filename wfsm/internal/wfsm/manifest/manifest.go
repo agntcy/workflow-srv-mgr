@@ -48,13 +48,16 @@ func (m manifestService) Validate() error {
 		return errors.New("invalid agent manifest: no version found in manifest")
 	}
 	if len(m.manifest.Extensions) == 0 {
-		return errors.New("invalid agent manifest: no deployment extension found in manifest")
+		return errors.New("invalid agent manifest: no deployment extensions found in manifest")
+	}
+	if !depoloymentExtensionIsPresent(m.manifest) {
+		return errors.New("invalid agent manifest: no deployment extension 'oasf.agntcy.org/feature/runtime/manifest' found in manifest")
 	}
 	return m.ValidateDeploymentOptions()
 }
 
 func (m manifestService) ValidateDeploymentOptions() error {
-	deployment := m.manifest.Extensions[0].Data.Deployment
+	deployment := GetDeployment(m.manifest)
 	if len(deployment.DeploymentOptions) == 0 {
 		return errors.New("invalid agent manifest: no deployment option found in manifest")
 	}
@@ -65,7 +68,7 @@ func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
 	if option == nil || len(*option) == 0 {
 		return 0, nil
 	}
-	deployment := m.manifest.Extensions[0].Data.Deployment
+	deployment := GetDeployment(m.manifest)
 	for i, opt := range deployment.DeploymentOptions {
 		if opt.SourceCodeDeployment != nil &&
 			opt.SourceCodeDeployment.Name != nil &&
@@ -79,4 +82,22 @@ func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
 		}
 	}
 	return 0, fmt.Errorf("invalid agent manifest: deployment option %s not found", *option)
+}
+
+func depoloymentExtensionIsPresent(manifest manifests.AgentManifest) bool {
+	for _, ext := range manifest.Extensions {
+		if ext.Name == "oasf.agntcy.org/feature/runtime/manifest" {
+			return true
+		}
+	}
+	return false
+}
+
+func GetDeployment(manifest manifests.AgentManifest) manifests.AgentDeployment {
+	for _, ext := range manifest.Extensions {
+		if ext.Name == "oasf.agntcy.org/feature/runtime/manifest" {
+			return ext.Data.Deployment
+		}
+	}
+	return manifests.AgentDeployment{}
 }

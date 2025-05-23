@@ -9,6 +9,7 @@ import (
 
 	"github.com/cisco-eti/wfsm/internal"
 	"github.com/cisco-eti/wfsm/internal/builder/python/source"
+	"github.com/cisco-eti/wfsm/internal/wfsm/manifest"
 
 	"github.com/rs/zerolog"
 )
@@ -36,7 +37,7 @@ func (b *pyBuilder) Build(ctx context.Context, inputSpec internal.AgentSpec) (in
 	log.Info().Msgf("building image for agent: %s", inputSpec.DeploymentName)
 	deploymentSpec := internal.AgentDeploymentBuildSpec{AgentSpec: inputSpec}
 
-	deploymentManifest := inputSpec.Manifest.Extensions[0].Data.Deployment
+	deploymentManifest := manifest.GetDeployment(inputSpec.Manifest)
 	deployment := deploymentManifest.DeploymentOptions[inputSpec.SelectedDeploymentOption]
 	agSrc, err := source.GetAgentSource(deployment.SourceCodeDeployment, inputSpec.ManifestPath)
 	if err != nil {
