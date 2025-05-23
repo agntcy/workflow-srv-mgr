@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-: ${WFSM_TAG:="v0.2.1"}
+: ${WFSM_TAG:="v0.2.2"}
 : ${WFSM_ARCH:=$(arch)}
 : ${WFSM_OS:=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')}
 : ${WFSM_TARGET:=${HOME}/.wfsm/bin}
