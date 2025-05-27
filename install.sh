@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-: ${WFSM_TAG:="v0.2.2"}
+WFSM_TAG="v0.3.1"
+
+# Parse command line options
+while getopts "t:" opt; do
+  case $opt in
+    t) WFSM_TAG="$OPTARG" ;;
+    *) echo "Usage: $0 [-t WFSM_TAG]" >&2; exit 1 ;;
+  esac
+done
 : ${WFSM_ARCH:=$(arch)}
 : ${WFSM_OS:=$(echo $(uname -s) | tr '[:upper:]' '[:lower:]')}
 : ${WFSM_TARGET:=${HOME}/.wfsm/bin}
