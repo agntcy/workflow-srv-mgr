@@ -19,7 +19,7 @@
   ],
   "extensions": [
     {
-      "name": "oasf.agntcy.org/feature/runtime/manifest23",
+      "name": "schema.oasf.agntcy.org/features/runtime/manifest23",
       "version": "v0.0.1",
       "data": {
         "acp": {

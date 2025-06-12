@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-const AgentExtensionName = "oasf.agntcy.org/feature/runtime/manifest"
+const AgentExtensionName = "schema.oasf.agntcy.org/features/runtime/manifest"
 
 type fileManifestLoader struct {
 	filePath string
