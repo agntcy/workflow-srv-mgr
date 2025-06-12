@@ -31,7 +31,7 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 				Manifest: manifests.AgentManifest{
 					Extensions: []manifests.Manifest{
 						{
-							Name:    "oasf.agntcy.org/feature/runtime/manifest",
+							Name:    "schema.oasf.agntcy.org/features/runtime/manifest",
 							Version: &version,
 							Data: manifests.DeploymentManifest{
 								Deployment: manifests.AgentDeployment{
@@ -66,7 +66,7 @@ func TestRunner_Deploy_DryRun(t *testing.T) {
 				Manifest: manifests.AgentManifest{
 					Extensions: []manifests.Manifest{
 						{
-							Name:    "oasf.agntcy.org/feature/runtime/manifest",
+							Name:    "schema.oasf.agntcy.org/features/runtime/manifest",
 							Version: &version,
 							Data: manifests.DeploymentManifest{
 								Deployment: manifests.AgentDeployment{

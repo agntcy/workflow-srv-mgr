@@ -51,7 +51,7 @@ func (m manifestService) Validate() error {
 		return errors.New("invalid agent manifest: no deployment extensions found in manifest")
 	}
 	if !depoloymentExtensionIsPresent(m.manifest) {
-		return errors.New("invalid agent manifest: no deployment extension 'oasf.agntcy.org/feature/runtime/manifest' found in manifest")
+		return errors.New("invalid agent manifest: no deployment extension 'schema.oasf.agntcy.org/features/runtime/manifest' found in manifest")
 	}
 	return m.ValidateDeploymentOptions()
 }
@@ -86,7 +86,7 @@ func (m manifestService) GetDeploymentOptionIdx(option *string) (int, error) {
 
 func depoloymentExtensionIsPresent(manifest manifests.AgentManifest) bool {
 	for _, ext := range manifest.Extensions {
-		if ext.Name == "oasf.agntcy.org/feature/runtime/manifest" {
+		if ext.Name == "schema.oasf.agntcy.org/features/runtime/manifest" {
 			return true
 		}
 	}
@@ -95,7 +95,7 @@ func depoloymentExtensionIsPresent(manifest manifests.AgentManifest) bool {
 
 func GetDeployment(manifest manifests.AgentManifest) manifests.AgentDeployment {
 	for _, ext := range manifest.Extensions {
-		if ext.Name == "oasf.agntcy.org/feature/runtime/manifest" {
+		if ext.Name == "schema.oasf.agntcy.org/features/runtime/manifest" {
 			return ext.Data.Deployment
 		}
 	}
