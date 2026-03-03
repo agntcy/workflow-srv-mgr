@@ -1,3 +1,8 @@
+> [!CAUTION]
+> **This repository is no longer maintained.**  It is archived for informational purposes.
+
+---
+
 # Workflow Server Manager
 
 [![Release](https://img.shields.io/github/v/release/agntcy/workflow-srv-mgr?display_name=tag)](CHANGELOG.md)
